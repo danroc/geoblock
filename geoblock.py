@@ -83,14 +83,14 @@ def lookup_ip(db, ip):
     """Lookup the country of the given IP address in the given database.
 
     Args:
-        db (list): Database of IP address ranges and their corresponding country
-        codes.
+        db (list): Database of IP address ranges and their corresponding
+        country codes.
 
         ip (object): IP object of the address to lookup.
 
     Returns:
-        str | None: The country code of the given IP address, or None if the
-        IP address is not found in the database.
+        str | None: The country code of the given IP address, or None if the IP
+        address is not found in the database.
     """
     i = bisect_right(db, ip, key=lambda x: x[0])
     if i:
