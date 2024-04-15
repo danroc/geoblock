@@ -18,12 +18,6 @@ dev = [
 
 [tool.pyright]
 
-[tool.black]
-preview = true
-
-[tool.isort]
-profile = "black"
-
 [tool.mypy]
 python_version = "3.12"
 show_error_codes = true
@@ -32,9 +26,6 @@ no_implicit_reexport = true
 warn_redundant_casts = true
 warn_unused_ignores = true
 
-[tool.bandit.assert_used]
-skips = ["*/test_*.py", "tests/*.py"]
-
 [tool.ruff.lint]
 # See: https://docs.astral.sh/ruff/rules/
 extend-select = [
@@ -42,6 +33,7 @@ extend-select = [
   "C4",   # flake8-comprehensions
   "D",    # pydocstyle
   "I",    # isort
+  "S",    # flake8-bandit
   "SIM",  # flake8-simplify
   "UP",   # pyupgrade
 ]

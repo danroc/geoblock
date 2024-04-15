@@ -45,14 +45,6 @@ repos:
         args: [ --fix ]
       - id: ruff-format
 
-  - repo: https://github.com/PyCQA/bandit
-    rev: 1.7.8
-    hooks:
-      - id: bandit
-        args: ["-c", "pyproject.toml"]
-        additional_dependencies:
-          - bandit[toml]
-
   - repo: https://github.com/fsouza/mirrors-pyright
     rev: v1.1.275
     hooks:
