@@ -3,8 +3,10 @@
 __version__ = "0.1.0"
 
 import csv
+import os
 from bisect import bisect_right
-from ipaddress import ip_address
+from dataclasses import dataclass
+from ipaddress import IPv4Address, IPv6Address, ip_address
 
 import requests
 
@@ -60,6 +62,39 @@ def download_file(
     return response
 
 
+@dataclass
+class IPRangeData:
+    """IP Range Data class."""
+
+    country_code: str
+
+
+@dataclass(order=True)
+class IPRange:
+    """IP Range class."""
+
+    start: IPv4Address | IPv6Address
+    end: IPv4Address | IPv6Address
+    data: IPRangeData
+
+
+def ip_range_from_csv(row):
+    """Create an IPRange object from a CSV row.
+
+    Args:
+        row (list): A row from a CSV file containing an IP address range and a
+        country code.
+
+    Returns:
+        IPRange: An IPRange object.
+    """
+    return IPRange(
+        ip_address(row[0]),
+        ip_address(row[1]),
+        IPRangeData(row[2]),
+    )
+
+
 def read_db(path: str):
     """Read the CSV database from the given file path.
 
@@ -72,41 +107,64 @@ def read_db(path: str):
     """
     with open(path, newline="") as file:
         return sorted(
-            [
-                (ip_address(row[0]), ip_address(row[1]), row[2])
-                for row in csv.reader(file)
-            ],
+            [ip_range_from_csv(row) for row in csv.reader(file)],
         )
 
 
-def lookup_ip(db, ip):
-    """Lookup the country of the given IP address in the given database.
+def search_ip_range(database: list[IPRange], ip) -> IPRangeData | None:
+    """Search for the IP range containing the given IP address.
 
     Args:
-        db (list): Database of IP address ranges and their corresponding
-        country codes.
+        database (list): Database of IP address ranges.
 
         ip (object): IP object of the address to lookup.
+
+    Returns:
+        IPRange | None: The IPRange object matching the given IP address, or
+        None if the IP address is not found in the database.
+    """
+    i = bisect_right(database, ip, key=lambda x: x.start)
+    if i:
+        row = database[i - 1]
+        if row.start <= ip <= row.end:
+            return row.data
+    return None
+
+
+def country_code(databases, address) -> str | None:
+    """Lookup the country of the given IP address in the given databases.
+
+    Args:
+        databases (tuple): Tuple of databases for IPv4 and IPv6 IP address.
+
+        address (str): IP address to lookup.
 
     Returns:
         str | None: The country code of the given IP address, or None if the IP
         address is not found in the database.
     """
-    i = bisect_right(db, ip, key=lambda x: x[0])
-    if i:
-        row = db[i - 1]
-        if row[0] <= ip <= row[1]:
-            return row[2]
-    return None
+    ip = ip_address(address)
+    db = databases[0] if ip.version == 4 else databases[1]
+
+    match = search_ip_range(db, ip)
+    return match.country_code if match else None
 
 
 if __name__ == "__main__":
-    download_file(COUNTRY_IPV4_DB_URL, COUNTRY_IPV4_DB_FILE, 10)
-    db = read_db(COUNTRY_IPV4_DB_FILE)
-    print(lookup_ip(db, ip_address("62.35.85.135")))
-    print(lookup_ip(db, ip_address("34.149.229.210")))
-    print(lookup_ip(db, ip_address("142.251.220.163")))
+    if not os.path.exists(COUNTRY_IPV4_DB_FILE):
+        print("Downloading the IPv4 database...")
+        download_file(COUNTRY_IPV4_DB_URL, COUNTRY_IPV4_DB_FILE, 10)
 
-    download_file(COUNTRY_IPV6_DB_URL, COUNTRY_IPV6_DB_FILE, 10)
-    db = read_db(COUNTRY_IPV6_DB_FILE)
-    print(lookup_ip(db, ip_address("2a02:26f7:c9c8:4000:950e:981f:cef4:b0ed")))
+    if not os.path.exists(COUNTRY_IPV6_DB_FILE):
+        print("Downloading the IPv6 database...")
+        download_file(COUNTRY_IPV6_DB_URL, COUNTRY_IPV6_DB_FILE, 10)
+
+    databases = (
+        read_db(COUNTRY_IPV4_DB_FILE),
+        read_db(COUNTRY_IPV6_DB_FILE),
+    )
+
+    print(country_code(databases, "62.35.85.135"))
+    print(country_code(databases, "34.149.229.210"))
+    print(country_code(databases, "142.251.220.163"))
+    print(country_code(databases, "2a02:26f7:c9c8:4000:950e:981f:cef4:b0ed"))
