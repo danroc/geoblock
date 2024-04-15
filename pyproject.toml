@@ -36,6 +36,7 @@ warn_unused_ignores = true
 skips = ["*/test_*.py", "tests/*.py"]
 
 [tool.ruff.lint]
+# See: https://docs.astral.sh/ruff/rules/
 extend-select = [
   "B",    # flake8-bugbear
   "C4",   # flake8-comprehensions
