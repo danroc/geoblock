@@ -16,11 +16,6 @@ repos:
     hooks:
       - id: codespell
 
-  # - repo: https://github.com/asottile/pyupgrade
-  #   rev: v3.15.2
-  #   hooks:
-  #     - id: pyupgrade
-
   - repo: https://github.com/asottile/add-trailing-comma
     rev: v3.1.0
     hooks:
@@ -34,25 +29,6 @@ repos:
           - --contrib=CT1
           - --ignore=B6,T5
           - --msg-filename
-
-  # - repo: https://github.com/psf/black
-  #   rev: 24.4.0
-  #   hooks:
-  #     - id: black
-
-  # - repo: https://github.com/PyCQA/flake8
-  #   rev: 7.0.0
-  #   hooks:
-  #     - id: flake8
-  #       additional_dependencies:
-  #         - flake8-bugbear
-  #         - flake8-comprehensions
-  #         - flake8-simplify
-
-  # - repo: https://github.com/PyCQA/autoflake
-  #   rev: v2.3.1
-  #   hooks:
-  #     - id: autoflake
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.9.0
@@ -81,8 +57,3 @@ repos:
     rev: v1.1.275
     hooks:
       - id: pyright
-
-  # - repo: https://github.com/PyCQA/isort
-  #   rev: 5.13.2
-  #   hooks:
-  #     - id: isort
