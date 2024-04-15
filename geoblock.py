@@ -46,7 +46,7 @@ def download_file(
         timeout (float or tuple[float, float], optional): The timeout value for
         the request. Can be a float representing the timeout in seconds, or a
         tuple of two floats representing the connection timeout and read
-        timeout respectively. Defaults to None.
+        timeout respectively. Defaults to None, which means no timeout.
 
     Returns:
         requests.Response: The response object.
