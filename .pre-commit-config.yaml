@@ -37,6 +37,7 @@ repos:
         args: ["--python-version=3.12"]
         additional_dependencies:
           - types-requests
+          - fastapi
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.3.7
