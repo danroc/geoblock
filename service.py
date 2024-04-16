@@ -1,6 +1,6 @@
 import os
-from geoblock import country_code, download_file, read_db
 
+from geoblock import IPRanges, country_code, download_file, read_db
 
 COUNTRY_IPV4_DB_URL = (
     "https://cdn.jsdelivr.net/npm/"
@@ -32,7 +32,7 @@ class Service:
             download_file(COUNTRY_IPV6_DB_URL, COUNTRY_IPV6_DB_FILE, 10)
 
         print("Reading databases...")
-        self.databases = (
+        self.databases = IPRanges(
             read_db(COUNTRY_IPV4_DB_FILE),
             read_db(COUNTRY_IPV6_DB_FILE),
         )
