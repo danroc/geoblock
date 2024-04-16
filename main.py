@@ -18,5 +18,6 @@ def check_source_ip(
     print("host", x_forwarded_host)
     print("uri", x_forwarded_uri)
     print("for", x_forwarded_for)
-    print("country_code", service.country_code(x_forwarded_for))
+    if x_forwarded_for:
+        print("country_code", service.country_code(x_forwarded_for))
     return service.country_code("62.35.85.135")

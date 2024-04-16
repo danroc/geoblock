@@ -10,7 +10,6 @@ from typing import Generic, NewType, TypeGuard, TypeVar
 
 import requests
 
-
 CountryCode = NewType("CountryCode", str)
 
 
@@ -33,7 +32,7 @@ class RangeEntry(Generic[AddressType]):
     data: RangeData
 
 
-RowType = RangeEntry[IPv4Address] | RangeEntry[IPv6Address]
+EntryType = RangeEntry[IPv4Address] | RangeEntry[IPv6Address]
 
 
 DatabaseType = list[RangeEntry[IPv4Address]] | list[RangeEntry[IPv6Address]]
@@ -41,6 +40,8 @@ DatabaseType = list[RangeEntry[IPv4Address]] | list[RangeEntry[IPv6Address]]
 
 @dataclass
 class Databases:
+    """IPv4 and IPv6 databases class."""
+
     v4: list[RangeEntry[IPv4Address]]
     v6: list[RangeEntry[IPv6Address]]
 
@@ -78,43 +79,42 @@ def download_file(
     return response
 
 
-def ip_range_from_csv(row) -> RangeEntry[IPv4Address] | RangeEntry[IPv6Address]:
-    """Create an IPRange object from a CSV row.
+def read_entry(row: list[str]) -> RangeEntry[IPv4Address] | RangeEntry[IPv6Address]:
+    """Read an entry from a CSV row.
 
     Args:
-        row (list): A row from a CSV file containing an IP address range and a
-        country code.
+        row (list): A row from a CSV file containing an IP address range and
+        its associated data.
 
     Returns:
         IPRange: An IPRange object.
     """
-    start, end, *data = row
+    start = ip_address(row[0])
+    end = ip_address(row[1])
+    country = CountryCode(row[2])
 
-    start_ip = ip_address(row[0])
-    end_ip = ip_address(row[1])
+    if start.version == 4 and end.version == 4:
+        return RangeEntry[IPv4Address](start, end, RangeData(country))
 
-    if start_ip.version == 4 and end_ip.version == 4:
-        return RangeEntry[IPv4Address](start, end, RangeData(*data))
-
-    if start_ip.version == 6 and end_ip.version == 6:
-        return RangeEntry[IPv6Address](start, end, RangeData(*data))
+    if start.version == 6 and end.version == 6:
+        return RangeEntry[IPv6Address](start, end, RangeData(country))
 
     raise ValueError("IP address versions do not match")
 
 
-def all_same_version(ip_ranges: list[RowType]) -> TypeGuard[DatabaseType]:
-    """Check if all IP ranges in the list have the same IP version.
+def all_same_version(entries: list[EntryType]) -> TypeGuard[DatabaseType]:
+    """Check if all entries have the same IP version.
 
     Args:
-        ip_ranges (list): A list of IPRange objects.
+        entries (list): A list of entries to check.
 
     Returns:
         bool: True if all IP ranges have the same IP version, False otherwise.
     """
-    first = ip_ranges[0]
-    return all(
-        first.start.version == ip.start.version for ip in ip_ranges
-    ) and (first.start.version == 4 or first.start.version == 6)
+    first = entries[0]
+    return (first.start.version == 4 or first.start.version == 6) and all(
+        first.start.version == entry.start.version for entry in entries
+    )
 
 
 def read_db(path: str) -> DatabaseType:
@@ -128,9 +128,7 @@ def read_db(path: str) -> DatabaseType:
         corresponding location.
     """
     with open(path, newline="") as file:
-        db = sorted(
-            [ip_range_from_csv(row) for row in csv.reader(file)],
-        )
+        db = sorted([read_entry(row) for row in csv.reader(file)])
         if not all_same_version(db):
             raise ValueError("IP address versions do not match")
         return db
@@ -156,7 +154,7 @@ def search_ip_range(database: DatabaseType, ip) -> RangeData | None:
     return None
 
 
-def country_code(databases: Databases, address) -> str | None:
+def country_code(databases: Databases, address) -> CountryCode | None:
     """Lookup the country of the given IP address in the given databases.
 
     Args:
