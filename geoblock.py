@@ -3,30 +3,11 @@
 __version__ = "0.1.0"
 
 import csv
-import os
 from bisect import bisect_right
 from dataclasses import dataclass
 from ipaddress import IPv4Address, IPv6Address, ip_address
 
 import requests
-
-COUNTRY_IPV4_DB_URL = (
-    "https://cdn.jsdelivr.net/npm/"
-    + "@ip-location-db/"
-    + "geolite2-country/"
-    + "geolite2-country-ipv4.csv"
-)
-
-COUNTRY_IPV6_DB_URL = (
-    "https://cdn.jsdelivr.net/npm/"
-    + "@ip-location-db/"
-    + "geolite2-country/"
-    + "geolite2-country-ipv6.csv"
-)
-
-COUNTRY_IPV4_DB_FILE = "geolite2-country-ipv4.csv"
-
-COUNTRY_IPV6_DB_FILE = "geolite2-country-ipv6.csv"
 
 
 def download_file(
@@ -148,23 +129,3 @@ def country_code(databases, address) -> str | None:
 
     match = search_ip_range(db, ip)
     return match.country_code if match else None
-
-
-if __name__ == "__main__":
-    if not os.path.exists(COUNTRY_IPV4_DB_FILE):
-        print("Downloading the IPv4 database...")
-        download_file(COUNTRY_IPV4_DB_URL, COUNTRY_IPV4_DB_FILE, 10)
-
-    if not os.path.exists(COUNTRY_IPV6_DB_FILE):
-        print("Downloading the IPv6 database...")
-        download_file(COUNTRY_IPV6_DB_URL, COUNTRY_IPV6_DB_FILE, 10)
-
-    databases = (
-        read_db(COUNTRY_IPV4_DB_FILE),
-        read_db(COUNTRY_IPV6_DB_FILE),
-    )
-
-    print(country_code(databases, "62.35.85.135"))
-    print(country_code(databases, "34.149.229.210"))
-    print(country_code(databases, "142.251.220.163"))
-    print(country_code(databases, "2a02:26f7:c9c8:4000:950e:981f:cef4:b0ed"))

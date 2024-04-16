@@ -9,6 +9,9 @@ dynamic = ["version", "description"]
 requires-python = ">=3.12"
 dependencies = [
     "requests",
+    "fastapi",
+    "pydantic-settings",
+    "uvicorn[standard]",
 ]
 
 [project.optional-dependencies]
@@ -26,6 +29,9 @@ check_untyped_defs = true
 no_implicit_reexport = true
 warn_redundant_casts = true
 warn_unused_ignores = true
+
+[tool.ruff]
+target-version = "py312"
 
 [tool.ruff.lint]
 extend-select = [
