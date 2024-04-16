@@ -44,10 +44,3 @@ class Service:
 
 
 service = Service()
-
-
-if __name__ == "__main__":
-    print(service.country_code("62.35.85.135"))
-    print(service.country_code("34.149.229.210"))
-    print(service.country_code("142.251.220.163"))
-    print(service.country_code("2a02:26f7:c9c8:4000:950e:981f:cef4:b0ed"))

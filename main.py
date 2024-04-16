@@ -7,14 +7,12 @@ app = FastAPI()
 
 @app.get("/")
 def check_source_ip(
-    user_agent: Annotated[str | None, Header()] = None,
     x_forwarded_method: Annotated[str | None, Header()] = None,
     x_forwarded_proto: Annotated[str | None, Header()] = None,
     x_forwarded_host: Annotated[str | None, Header()] = None,
     x_forwarded_uri: Annotated[str | None, Header()] = None,
     x_forwarded_for: Annotated[str | None, Header()] = None,
 ):
-    print(user_agent)
     print("method", x_forwarded_method)
     print("proto", x_forwarded_proto)
     print("host", x_forwarded_host)
