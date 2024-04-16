@@ -1,4 +1,3 @@
-from typing import Annotated
 from fastapi import FastAPI, Header
 from service import service
 
@@ -7,11 +6,11 @@ app = FastAPI()
 
 @app.get("/")
 def check_source_ip(
-    x_forwarded_method: Annotated[str | None, Header()] = None,
-    x_forwarded_proto: Annotated[str | None, Header()] = None,
-    x_forwarded_host: Annotated[str | None, Header()] = None,
-    x_forwarded_uri: Annotated[str | None, Header()] = None,
-    x_forwarded_for: Annotated[str | None, Header()] = None,
+    x_forwarded_method: str | None = Header(default=None),
+    x_forwarded_proto: str | None = Header(default=None),
+    x_forwarded_host: str | None = Header(default=None),
+    x_forwarded_uri: str | None = Header(default=None),
+    x_forwarded_for: str | None = Header(default=None),
 ):
     print("method", x_forwarded_method)
     print("proto", x_forwarded_proto)
