@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"slices"
 	"sort"
+
+	"github.com/danroc/geoblock/set"
 )
 
 // fetchCsv fetches a CSV file from the given URL and returns its records.
@@ -128,13 +130,17 @@ const (
 	HeaderXForwardedFor    = "X-Forwarded-For"
 )
 
-func getAuthorize(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusNoContent)
+func getAuthorize(
+	entries []RangeEntry,
+	allowed set.Set[string],
+	w http.ResponseWriter,
+	r *http.Request,
+) {
 	origins := r.Header[HeaderXForwardedFor]
 
 	// Block request: missing header
 	if origins == nil {
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusForbidden)
 		return
 	}
 
@@ -143,9 +149,18 @@ func getAuthorize(w http.ResponseWriter, r *http.Request) {
 
 	// Block request: IP not found
 	if match == nil {
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusForbidden)
 		return
 	}
+
+	// Allow request: country code is in the allowed set
+	if allowed.Contains(match.Data.CountryCode) {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	// Block request: default case
+	w.WriteHeader(http.StatusForbidden)
 }
 
 func main() {
@@ -164,8 +179,13 @@ func main() {
 	match := findEntry(entries, net.ParseIP("62.35.255.255"))
 	fmt.Println(match)
 
+	allowedCountryCodes := set.NewSet[string]()
+	allowedCountryCodes.Add("FR")
+
 	mux := http.NewServeMux()
-	mux.HandleFunc("/v1/authorize", getAuthorize)
+	mux.HandleFunc("/v1/authorize", func(w http.ResponseWriter, r *http.Request) {
+		getAuthorize(entries, allowedCountryCodes, w, r)
+	})
 
 	server := http.Server{
 		Addr:    ":8080",
