@@ -2,28 +2,33 @@ package set
 
 type Set[E comparable] map[E]bool
 
+// NewSet creates a new set.
 func NewSet[E comparable]() Set[E] {
 	return make(Set[E])
 }
 
+// Add adds an element to the set.
 func (s Set[E]) Add(value E) {
 	s[value] = true
 }
 
+// Contains returns true if the set contains the element.
 func (s Set[E]) Contains(value E) bool {
 	return s[value]
 }
 
+// Remove removes an element from the set.
 func (s Set[E]) Remove(value E) {
 	delete(s, value)
 }
 
+// Cardinality returns the number of elements in the set.
 func (s Set[E]) Cardinality() int {
 	return len(s)
 }
 
-// Values returns a slice of all elements in the set.
-func (s Set[E]) Values() []E {
+// Elements returns a slice containing all elements in the set.
+func (s Set[E]) Elements() []E {
 	values := make([]E, 0, len(s))
 	for k := range s {
 		values = append(values, k)
@@ -74,6 +79,8 @@ func (s Set[E]) Difference(other Set[E]) Set[E] {
 	return result
 }
 
+// SymmetricDifference returns a new set with elements that are in `s` or
+// `other` but not in both.
 func (s Set[E]) SymmetricDifference(other Set[E]) Set[E] {
 	result := NewSet[E]()
 	for k := range s {
@@ -89,6 +96,7 @@ func (s Set[E]) SymmetricDifference(other Set[E]) Set[E] {
 	return result
 }
 
+// IsSubsetOf returns true if all elements in `s` are also in `other`.
 func (s Set[E]) IsSubsetOf(other Set[E]) bool {
 	for k := range s {
 		if !other.Contains(k) {
@@ -98,6 +106,7 @@ func (s Set[E]) IsSubsetOf(other Set[E]) bool {
 	return true
 }
 
+// IsSupersetOf returns true if all elements in `other` are also in `s`.
 func (s Set[E]) IsSupersetOf(other Set[E]) bool {
 	return other.IsSubsetOf(s)
 }
