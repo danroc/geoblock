@@ -7,10 +7,14 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
 	"slices"
 	"sort"
 
-	"github.com/danroc/geoblock/set"
+	"github.com/danroc/geoblock/pkg/config"
+	"github.com/danroc/geoblock/pkg/set"
+	"github.com/go-playground/validator/v10"
+	"gopkg.in/yaml.v3"
 )
 
 // fetchCsv fetches a CSV file from the given URL and returns its records.
@@ -130,6 +134,44 @@ const (
 	HeaderXForwardedFor    = "X-Forwarded-For"
 )
 
+type Rule struct {
+	Policy    string
+	Networks  []net.IPNet
+	Domains   []string
+	Countries []string
+}
+
+type Service struct {
+	DefaultPolicy string
+	Rules         []Rule
+}
+
+func NewService(cfg config.Config) (*Service, error) {
+	service := Service{
+		DefaultPolicy: cfg.DefaultPolicy,
+	}
+
+	for _, rule := range cfg.Rules {
+		var networks []net.IPNet
+		for _, network := range rule.Networks {
+			_, ipNet, err := net.ParseCIDR(network)
+			if err != nil {
+				return nil, err
+			}
+			networks = append(networks, *ipNet)
+		}
+
+		service.Rules = append(service.Rules, Rule{
+			Policy:    rule.Policy,
+			Networks:  networks,
+			Domains:   rule.Domains,
+			Countries: rule.Countries,
+		})
+	}
+
+	return &service, nil
+}
+
 func getAuthorize(
 	entries []RangeEntry,
 	allowed set.Set[string],
@@ -164,6 +206,35 @@ func getAuthorize(
 }
 
 func main() {
+	configFile, err := os.ReadFile("examples/config.yaml")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	// Parse the configuration file
+	var ruleSet config.Config
+	err = yaml.Unmarshal(configFile, &ruleSet)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Printf("%+v\n", ruleSet)
+
+	validate := validator.New()
+
+	// Validate the configuration file
+	err = validate.Struct(ruleSet)
+	if err != nil {
+		fmt.Println("Validation failed:")
+		for _, e := range err.(validator.ValidationErrors) {
+			fmt.Printf("Field: %s, Tag: %s\n", e.Field(), e.Tag())
+		}
+	} else {
+		fmt.Println("Validation succeeded")
+	}
+
 	records, err := fetchCsv(countryIpV4Url)
 	if err != nil {
 		fmt.Println(err)
