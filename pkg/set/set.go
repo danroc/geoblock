@@ -110,3 +110,13 @@ func (s Set[E]) IsSubsetOf(other Set[E]) bool {
 func (s Set[E]) IsSupersetOf(other Set[E]) bool {
 	return other.IsSubsetOf(s)
 }
+
+// Equal returns true if `s` and `other` contain the same elements.
+func (s Set[E]) Equal(other Set[E]) bool {
+	return s.IsSubsetOf(other) && s.IsSupersetOf(other)
+}
+
+// IsEmpty returns true if the set is empty.
+func (s Set[E]) IsEmpty() bool {
+	return len(s) == 0
+}
