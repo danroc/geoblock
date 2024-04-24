@@ -13,8 +13,6 @@ import (
 
 	"github.com/danroc/geoblock/pkg/config"
 	"github.com/danroc/geoblock/pkg/set"
-	"github.com/go-playground/validator/v10"
-	"gopkg.in/yaml.v3"
 )
 
 // fetchCsv fetches a CSV file from the given URL and returns its records.
@@ -213,27 +211,13 @@ func main() {
 	}
 
 	// Parse the configuration file
-	var ruleSet config.Config
-	err = yaml.Unmarshal(configFile, &ruleSet)
+	cfg, err := config.ParseConfig(configFile)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	fmt.Printf("%+v\n", ruleSet)
-
-	validate := validator.New()
-
-	// Validate the configuration file
-	err = validate.Struct(ruleSet)
-	if err != nil {
-		fmt.Println("Validation failed:")
-		for _, e := range err.(validator.ValidationErrors) {
-			fmt.Printf("Field: %s, Tag: %s\n", e.Field(), e.Tag())
-		}
-	} else {
-		fmt.Println("Validation succeeded")
-	}
+	fmt.Printf("%+v\n", cfg)
 
 	records, err := fetchCsv(countryIpV4Url)
 	if err != nil {
