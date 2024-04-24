@@ -1,4 +1,4 @@
-package config
+package configuration
 
 import (
 	"github.com/go-playground/validator/v10"
@@ -10,21 +10,26 @@ const (
 	PolicyDeny  = "deny"
 )
 
-type Rule struct {
+type AccessControlRule struct {
 	Policy    string   `yaml:"policy"                  validate:"required,oneof=allow deny"`
 	Networks  []string `yaml:"networks,omitempty"      validate:"dive,cidr"`
 	Domains   []string `yaml:"domains,omitempty"       validate:"dive,fqdn"`
 	Countries []string `yaml:"country_codes,omitempty" validate:"dive,iso3166_1_alpha2"`
 }
 
-type Config struct {
-	DefaultPolicy string `yaml:"default_policy" validate:"required,oneof=allow deny"`
-	Rules         []Rule `yaml:"rules"          validate:"dive"`
+type AccessControl struct {
+	DefaultPolicy string              `yaml:"default_policy" validate:"required,oneof=allow deny"`
+	Rules         []AccessControlRule `yaml:"rules"          validate:"dive"`
 }
 
-// ParseConfig validates and parses the given YAML data into a Config struct.
-func ParseConfig(data []byte) (*Config, error) {
-	var config Config
+type Configuration struct {
+	AccessControl AccessControl `yaml:"access_control"`
+}
+
+// ParseConfiguration validates and parses the given YAML data into a
+// Configuration struct.
+func ParseConfiguration(data []byte) (*Configuration, error) {
+	var config Configuration
 	if err := yaml.Unmarshal(data, &config); err != nil {
 		return nil, err
 	}

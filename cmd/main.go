@@ -11,7 +11,7 @@ import (
 	"slices"
 	"sort"
 
-	"github.com/danroc/geoblock/pkg/config"
+	"github.com/danroc/geoblock/pkg/configuration"
 	"github.com/danroc/geoblock/pkg/set"
 )
 
@@ -144,12 +144,12 @@ type Service struct {
 	Rules         []Rule
 }
 
-func NewService(cfg config.Config) (*Service, error) {
+func NewService(cfg configuration.Configuration) (*Service, error) {
 	service := Service{
-		DefaultPolicy: cfg.DefaultPolicy,
+		DefaultPolicy: cfg.AccessControl.DefaultPolicy,
 	}
 
-	for _, rule := range cfg.Rules {
+	for _, rule := range cfg.AccessControl.Rules {
 		var networks []net.IPNet
 		for _, network := range rule.Networks {
 			_, ipNet, err := net.ParseCIDR(network)
@@ -211,7 +211,7 @@ func main() {
 	}
 
 	// Parse the configuration file
-	cfg, err := config.ParseConfig(configFile)
+	cfg, err := configuration.ParseConfiguration(configFile)
 	if err != nil {
 		fmt.Println(err)
 		return
