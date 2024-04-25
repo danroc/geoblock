@@ -7,7 +7,6 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"os"
 	"slices"
 	"sort"
 
@@ -204,14 +203,7 @@ func getAuthorize(
 }
 
 func main() {
-	configFile, err := os.ReadFile("examples/configuration.yaml")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	// Parse the configuration file
-	cfg, err := configuration.ParseConfiguration(configFile)
+	cfg, err := configuration.ReadFile("examples/configuration.yaml")
 	if err != nil {
 		fmt.Println(err)
 		return

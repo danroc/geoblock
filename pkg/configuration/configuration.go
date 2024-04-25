@@ -1,6 +1,9 @@
 package configuration
 
 import (
+	"io"
+	"os"
+
 	"github.com/go-playground/validator/v10"
 	"gopkg.in/yaml.v3"
 )
@@ -26,9 +29,8 @@ type Configuration struct {
 	AccessControl AccessControl `yaml:"access_control"`
 }
 
-// ParseConfiguration validates and parses the given YAML data into a
-// Configuration struct.
-func ParseConfiguration(data []byte) (*Configuration, error) {
+// Load reads the configuration from the giver bytes slice.
+func Load(data []byte) (*Configuration, error) {
 	var config Configuration
 	if err := yaml.Unmarshal(data, &config); err != nil {
 		return nil, err
@@ -40,4 +42,24 @@ func ParseConfiguration(data []byte) (*Configuration, error) {
 	}
 
 	return &config, nil
+}
+
+// Read reads then configuration from the given reader.
+func Read(reader io.Reader) (*Configuration, error) {
+	data, err := io.ReadAll(reader)
+	if err != nil {
+		return nil, err
+	}
+
+	return Load(data)
+}
+
+// ReadFile reads the configuration from the given file.
+func ReadFile(filename string) (*Configuration, error) {
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	return Load(data)
 }
