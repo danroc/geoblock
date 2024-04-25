@@ -204,7 +204,7 @@ func getAuthorize(
 }
 
 func main() {
-	configFile, err := os.ReadFile("examples/config.yaml")
+	configFile, err := os.ReadFile("examples/configuration.yaml")
 	if err != nil {
 		fmt.Println(err)
 		return
