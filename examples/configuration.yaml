@@ -1,4 +1,9 @@
 ---
+databases:
+  ipv4: /etc/geoblock/ipv4_ranges.json
+  ipv6: /etc/geoblock/ipv6_ranges.json
+  decisions: /etc/geoblock/decisions.json
+
 access_control:
   default_policy: deny
   rules:
