@@ -17,6 +17,19 @@ type AccessControl struct {
 	Rules         []AccessControlRule `yaml:"rules"          validate:"dive"`
 }
 
+type FileDatabase struct {
+	SourceURL       string `yaml:"source_url"       validate:"http_url"`
+	CacheFile       string `yaml:"cache_file"       validate:"filepath"`
+	RefreshInterval string `yaml:"refresh_interval" validate:"duration"`
+}
+
+type Databases struct {
+	IPv4 FileDatabase `yaml:"ipv4"`
+	IPv6 FileDatabase `yaml:"ipv6"`
+}
+
 type Configuration struct {
+	DecisionsFile string        `yaml:"decisions_file" validate:"filepath"`
 	AccessControl AccessControl `yaml:"access_control"`
+	Databases     Databases     `yaml:"databases"`
 }
