@@ -37,7 +37,12 @@ func TestParseDuration(t *testing.T) {
 			t.Errorf("Unexpected error for input '%s': %v", input, err)
 		}
 		if duration != expected {
-			t.Errorf("Incorrect duration for input '%s'. Expected: %v, Got: %v", input, expected, duration)
+			t.Errorf(
+				"Incorrect duration for input '%s'. Expected: %v, Got: %v",
+				input,
+				expected,
+				duration,
+			)
 		}
 	}
 
