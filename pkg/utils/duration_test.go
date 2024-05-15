@@ -66,3 +66,51 @@ func TestParseDuration(t *testing.T) {
 		}
 	}
 }
+
+func TestIsDuration(t *testing.T) {
+	validDurations := []string{
+		"0s",
+		"1ms 1us 1ns",
+		"1ns 1ms 1us",
+		"10s",
+		"1m30s",
+		"2m",
+		"03h",
+		"3h30m",
+		"0h30m",
+		" 1h 30m ",
+		"4d",
+		"1w",
+		"1M",
+		"1y",
+		"1 minute",
+		"2 hours",
+		"1 day",
+		"3 days",
+		"1 minute 30 seconds",
+	}
+
+	for _, duration := range validDurations {
+		if !utils.IsDuration(duration) {
+			t.Errorf("Expected duration '%s' to be valid, but it was invalid", duration)
+		}
+	}
+
+	invalidDurations := []string{
+		"-1s",
+		"1x",
+		"1.5h",
+		"1.5",
+		"1",
+		"x",
+		"1m 30",
+		"1m x",
+		"1m s",
+	}
+
+	for _, duration := range invalidDurations {
+		if utils.IsDuration(duration) {
+			t.Errorf("Expected duration '%s' to be invalid, but it was valid", duration)
+		}
+	}
+}

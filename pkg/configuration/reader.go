@@ -4,9 +4,14 @@ import (
 	"io"
 	"os"
 
+	"github.com/danroc/geoblock/pkg/utils"
 	"github.com/go-playground/validator/v10"
 	"gopkg.in/yaml.v3"
 )
+
+func isDurationField(field validator.FieldLevel) bool {
+	return utils.IsDuration(field.Field().String())
+}
 
 // ReadBytes reads the configuration from the giver bytes slice.
 func ReadBytes(data []byte) (*Configuration, error) {
@@ -16,6 +21,7 @@ func ReadBytes(data []byte) (*Configuration, error) {
 	}
 
 	validate := validator.New()
+	validate.RegisterValidation("duration", isDurationField)
 	if err := validate.Struct(config); err != nil {
 		return nil, err
 	}

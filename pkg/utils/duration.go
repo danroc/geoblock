@@ -82,3 +82,10 @@ func ParseDuration(s string) (time.Duration, error) {
 
 	return totalDuration, nil
 }
+
+// IsDuration checks if the given string represents a valid duration. It
+// returns true if the string matches the duration format, otherwise false.
+func IsDuration(s string) bool {
+	_, err := ParseDuration(s)
+	return err == nil
+}
