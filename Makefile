@@ -1,4 +1,4 @@
-.PHONY: lint tidy update run build
+.PHONY: lint tidy update run build test
 
 lint: tidy
 	golines -w -m 88 --base-formatter=gofumpt .
@@ -15,3 +15,6 @@ run:
 build:
 	mkdir -p dist
 	go build -ldflags="-s -w" -o ./dist/geoblock ./cmd/
+
+test:
+	go test ./...
