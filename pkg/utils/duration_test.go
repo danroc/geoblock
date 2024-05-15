@@ -12,6 +12,7 @@ func TestParseDuration(t *testing.T) {
 	validDurations := map[string]time.Duration{
 		"0s":                  0,
 		"1ms 1us 1ns":         1*time.Millisecond + 1*time.Microsecond + 1*time.Nanosecond,
+		"1ns 1ms 1us":         1*time.Millisecond + 1*time.Microsecond + 1*time.Nanosecond,
 		"10s":                 10 * time.Second,
 		"1m30s":               90 * time.Second,
 		"2m":                  2 * time.Minute,
