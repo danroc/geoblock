@@ -1,7 +1,7 @@
 ---
 decisions:
   cache_file: /etc/geoblock/decisions.json
-  retention: 2d
+  retention: 1d
 
 databases:
   ipv4:
