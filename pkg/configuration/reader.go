@@ -9,6 +9,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// isDurationField checks if the value of the given field is a valid duration.
 func isDurationField(field validator.FieldLevel) bool {
 	return utils.IsDuration(field.Field().String())
 }
