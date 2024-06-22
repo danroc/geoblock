@@ -35,3 +35,8 @@ access_control:
         - BR
         - FR
       policy: allow
+
+    - autonomous_systems:
+        - 1234
+        - 5678
+      policy: deny
