@@ -10,8 +10,6 @@ import (
 	"slices"
 	"sort"
 
-	"github.com/danroc/geoblock/pkg/configuration"
-	"github.com/danroc/geoblock/pkg/database"
 	"github.com/danroc/geoblock/pkg/set"
 )
 
@@ -61,19 +59,12 @@ func CompareIP(a net.IP, b net.IP) int {
 
 func parseRecords(records [][]string) ([]RangeEntry, error) {
 	var entries []RangeEntry
-	tmp := database.NewDatabase()
 	for _, record := range records {
 		var (
 			startIP     = net.ParseIP(record[0])
 			endIP       = net.ParseIP(record[1])
 			countryCode = record[2]
 		)
-
-		tmp.Ranges = append(tmp.Ranges, database.IPRange{
-			StartIP:     record[0],
-			EndIP:       record[1],
-			CountryCode: record[2],
-		})
 
 		if startIP == nil {
 			return nil, &InvalidIPError{Address: record[0]}
@@ -93,8 +84,6 @@ func parseRecords(records [][]string) ([]RangeEntry, error) {
 
 		entries = append(entries, entry)
 	}
-
-	tmp.WriteFile("examples/database_v4.json")
 
 	// Sort the entries by the start IP so that we can use binary search
 	slices.SortFunc(entries, func(a, b RangeEntry) int {
@@ -153,32 +142,6 @@ type Service struct {
 	Rules         []Rule
 }
 
-func NewService(cfg configuration.Configuration) (*Service, error) {
-	service := Service{
-		DefaultPolicy: cfg.AccessControl.DefaultPolicy,
-	}
-
-	for _, rule := range cfg.AccessControl.Rules {
-		var networks []net.IPNet
-		for _, network := range rule.Networks {
-			_, ipNet, err := net.ParseCIDR(network)
-			if err != nil {
-				return nil, err
-			}
-			networks = append(networks, *ipNet)
-		}
-
-		service.Rules = append(service.Rules, Rule{
-			Policy:    rule.Policy,
-			Networks:  networks,
-			Domains:   rule.Domains,
-			Countries: rule.Countries,
-		})
-	}
-
-	return &service, nil
-}
-
 func getAuthorize(
 	entries []RangeEntry,
 	allowed set.Set[string],
@@ -213,14 +176,6 @@ func getAuthorize(
 }
 
 func main() {
-	cfg, err := configuration.ReadFile("examples/configuration.yaml")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	fmt.Printf("%+v\n", cfg)
-
 	records, err := fetchCsv(countryIpV4Url)
 	if err != nil {
 		fmt.Println(err)
