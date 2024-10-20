@@ -10,6 +10,7 @@ import (
 	"slices"
 	"sort"
 
+	"github.com/danroc/geoblock/pkg/configuration"
 	"github.com/danroc/geoblock/pkg/set"
 )
 
@@ -49,8 +50,10 @@ type RangeEntry struct {
 }
 
 const (
-	countryIpV4Url = "https://cdn.jsdelivr.net/npm/@ip-location-db/geolite2-country/geolite2-country-ipv4.csv"
-	countryIpV6Url = "https://cdn.jsdelivr.net/npm/@ip-location-db/geolite2-country/geolite2-country-ipv6.csv"
+	countryIPv4URL = "https://cdn.jsdelivr.net/npm/@ip-location-db/geolite2-country/geolite2-country-ipv4.csv"
+	countryIPv6URL = "https://cdn.jsdelivr.net/npm/@ip-location-db/geolite2-country/geolite2-country-ipv6.csv"
+	asnIPv4URL     = "https://cdn.jsdelivr.net/npm/@ip-location-db/geolite2-asn/geolite2-asn-ipv4.csv"
+	asnIPv6URL     = "https://cdn.jsdelivr.net/npm/@ip-location-db/geolite2-asn/geolite2-asn-ipv6.csv"
 )
 
 func CompareIP(a net.IP, b net.IP) int {
@@ -176,7 +179,15 @@ func getAuthorize(
 }
 
 func main() {
-	records, err := fetchCsv(countryIpV4Url)
+	cfg, err := configuration.ReadFile("examples/configuration.yaml")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Printf("%+v\n", cfg)
+
+	records, err := fetchCsv(countryIPv4URL)
 	if err != nil {
 		fmt.Println(err)
 		return
