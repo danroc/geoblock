@@ -28,26 +28,26 @@ access_control:
       policy: allow
 
 location_databases:
-  - type: country
+  - database_type: country
+    database_url: https://cdn.jsdelivr.net/npm/@ip-location-db/geolite2-geo-whois-asn-country/geolite2-geo-whois-asn-country-ipv4.csv
     ip_version: 4
-    url: https://cdn.jsdelivr.net/npm/@ip-location-db/geolite2-geo-whois-asn-country/geolite2-geo-whois-asn-country-ipv4.csv
     cache_duration: 1d
     cache_location: /tmp/ip-db-country-ipv4.csv
 
-  - type: country
+  - database_type: country
+    database_url: https://cdn.jsdelivr.net/npm/@ip-location-db/geolite2-geo-whois-asn-country/geolite2-geo-whois-asn-country-ipv6.csv
     ip_version: 6
-    url: https://cdn.jsdelivr.net/npm/@ip-location-db/geolite2-geo-whois-asn-country/geolite2-geo-whois-asn-country-ipv6.csv
     cache_duration: 1d
     cache_location: /tmp/ip-db-country-ipv6.csv
 
-  - type: asn
+  - database_type: asn
+    database_url: https://cdn.jsdelivr.net/npm/@ip-location-db/asn/asn-ipv4.csv
     ip_version: 4
-    url: https://cdn.jsdelivr.net/npm/@ip-location-db/asn/asn-ipv4.csv
     cache_duration: 1d
     cache_location: /tmp/ip-db-asn-ipv4.csv
 
-  - type: asn
+  - database_type: asn
+    database_url: https://cdn.jsdelivr.net/npm/@ip-location-db/asn/asn-ipv6.csv
     ip_version: 6
-    url: https://cdn.jsdelivr.net/npm/@ip-location-db/asn/asn-ipv6.csv
     cache_duration: 1d
     cache_location: /tmp/ip-db-asn-ipv6.csv
