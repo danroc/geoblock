@@ -21,3 +21,7 @@ type InvalidIPError struct {
 func (e *InvalidIPError) Error() string {
 	return fmt.Sprintf("invalid IP address: %s", e.Address)
 }
+
+func IsIPv4(ip net.IP) bool {
+	return ip.To4() != nil
+}

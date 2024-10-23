@@ -106,13 +106,12 @@ func NewDatabase(url string) (*Database, error) {
 	return &Database{entries: entries}, nil
 }
 
-// Find returns the entry that contains the given IP address, or nil if not
-// found.
-func (db *Database) Find(ipAddress string) *Entry {
+// Find returns the data associated with the entry that contains the given IP.
+// If the IP is not found, nil is returned.
+func (db *Database) Find(ip net.IP) []string {
 	// If the given IP address is invalid, we return nil to indidate that the
 	// IP cannot be found in the database. It is up to the caller to validate
 	// the IP address before calling this method.
-	ip := net.ParseIP(ipAddress)
 	if ip == nil {
 		return nil
 	}
@@ -137,7 +136,7 @@ func (db *Database) Find(ipAddress string) *Entry {
 	// than or equal to the given IP. So, the IP only needs to be compared to
 	// the end-IP of the match.
 	if utils.CompareIP(ip, match.EndIP) <= 0 {
-		return &match
+		return match.Data
 	}
 
 	// Not found: the IP is NOT within the range

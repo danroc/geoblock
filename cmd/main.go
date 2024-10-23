@@ -9,13 +9,6 @@ import (
 )
 
 const (
-	countryIPv4URL = "https://cdn.jsdelivr.net/npm/@ip-location-db/geolite2-geo-whois-asn-country/geolite2-geo-whois-asn-country-ipv4.csv"
-	countryIPv6URL = "https://cdn.jsdelivr.net/npm/@ip-location-db/geolite2-geo-whois-asn-country/geolite2-geo-whois-asn-country-ipv6.csv"
-	asnIPv4URL     = "https://cdn.jsdelivr.net/npm/@ip-location-db/asn/asn-ipv4.csv"
-	asnIPv6URL     = "https://cdn.jsdelivr.net/npm/@ip-location-db/asn/asn-ipv6.csv"
-)
-
-const (
 	HeaderXForwardedMethod = "X-Forwarded-Method"
 	HeaderXForwardedProto  = "X-Forwarded-Proto"
 	HeaderXForwardedHost   = "X-Forwarded-Host"
@@ -77,13 +70,19 @@ func main() {
 
 	fmt.Printf("%+v\n", cfg)
 
-	db, err := database.NewDatabase(countryIPv4URL)
+	// db, err := database.NewDatabase(countryIPv4URL)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return
+	// }
+
+	resolver, err := database.NewResolver()
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	match := db.Find("62.35.255.255")
+	match := resolver.Resolve("62.35.255.250")
 	fmt.Println(match)
 
 	// allowedCountryCodes := set.NewSet[string]()
