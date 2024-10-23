@@ -18,15 +18,6 @@ type AccessControl struct {
 	Rules         []AccessControlRule `yaml:"rules"          validate:"dive"`
 }
 
-type LocationDatabase struct {
-	DatabaseType  string `yaml:"database_type"  validate:"required,oneof=country asn"`
-	DatabaseURL   string `yaml:"database_url"   validate:"required,url"`
-	IPVersion     int    `yaml:"ip_version"     validate:"required,oneof=4 6"`
-	CacheDuration string `yaml:"cache_duration" validate:"required,duration"`
-	CacheLocation string `yaml:"cache_location" validate:"required,dir"`
-}
-
 type Configuration struct {
-	AccessControl     AccessControl      `yaml:"access_control"`
-	LocationDatabases []LocationDatabase `yaml:"location_databases"`
+	AccessControl AccessControl `yaml:"access_control"`
 }
