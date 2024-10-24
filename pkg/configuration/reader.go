@@ -14,6 +14,7 @@ func isDurationField(field validator.FieldLevel) bool {
 	return utils.IsDuration(field.Field().String())
 }
 
+// isCIDRField checks if the value of the given field is a valid CIDR.
 func isCIDRField(field validator.FieldLevel) bool {
 	cidr, ok := field.Field().Interface().(CIDR)
 	if !ok || cidr.IPNet == nil {

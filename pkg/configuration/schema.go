@@ -7,10 +7,12 @@ const (
 	PolicyDeny  = "deny"
 )
 
+// CIDR represents a CIDR network. It's used to support unmarshaling from YAML.
 type CIDR struct {
 	*net.IPNet
 }
 
+// UnmarshalYAML unmarshals a CIDR network from YAML.
 func (n *CIDR) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var network string
 	if err := unmarshal(&network); err != nil {
@@ -26,6 +28,7 @@ func (n *CIDR) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return nil
 }
 
+// AccessControlRule represents an access control rule.
 type AccessControlRule struct {
 	Policy            string   `yaml:"policy"                       validate:"required,oneof=allow deny"`
 	Networks          []CIDR   `yaml:"networks,omitempty"           validate:"dive,cidr"`
@@ -34,11 +37,13 @@ type AccessControlRule struct {
 	AutonomousSystems []uint32 `yaml:"autonomous_systems,omitempty" validate:"dive,numeric"`
 }
 
+// AccessControl represents the access control configuration.
 type AccessControl struct {
 	DefaultPolicy string              `yaml:"default_policy" validate:"required,oneof=allow deny"`
 	Rules         []AccessControlRule `yaml:"rules"          validate:"dive"`
 }
 
+// Configuration represents the configuration of the application.
 type Configuration struct {
 	AccessControl AccessControl `yaml:"access_control"`
 }
