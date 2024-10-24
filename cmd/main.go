@@ -82,7 +82,7 @@ func main() {
 		return
 	}
 
-	match := resolver.Resolve("62.35.255.250")
+	match := resolver.Resolve(net.ParseIP("62.35.255.250"))
 	fmt.Println(match)
 
 	// allowedCountryCodes := set.NewSet[string]()

@@ -81,8 +81,9 @@ func resolve(ip net.IP, countryDB *Database, asnDB *Database) *Resolution {
 }
 
 // Resolve resolves the given IP address to a country code and an ASN.
-func (r *Resolver) Resolve(ipAddress string) *Resolution {
-	ip := net.ParseIP(ipAddress)
+func (r *Resolver) Resolve(ip net.IP) *Resolution {
+	// Nothing to do if the IP is nil, it is the caller's responsibility to
+	// check if the IP is valid.
 	if ip == nil {
 		return nil
 	}
