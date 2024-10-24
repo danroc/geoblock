@@ -130,6 +130,6 @@ func (db *Database) Find(ip net.IP) []string {
 		return match.Data
 	}
 
-	// Not found: the IP is NOT within the range
+	// Not found: the IP is NOT within the range.
 	return nil
 }
