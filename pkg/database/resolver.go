@@ -2,6 +2,7 @@ package database
 
 import (
 	"net"
+	"strconv"
 
 	"github.com/danroc/geoblock/pkg/utils"
 )
@@ -13,10 +14,12 @@ const (
 	asnIPv6URL     = "https://cdn.jsdelivr.net/npm/@ip-location-db/asn/asn-ipv6.csv"
 )
 
+const ReservedAS0 uint32 = 0
+
 type Resolution struct {
 	CountryCode  string
-	ASN          string
 	Organization string
+	ASN          uint32
 }
 
 type Resolver struct {
@@ -57,13 +60,18 @@ func NewResolver() (*Resolver, error) {
 }
 
 func getIndex(data []string, index int) string {
-	if data == nil {
-		return ""
-	}
-	if index >= len(data) {
+	if index < 0 || index >= len(data) {
 		return ""
 	}
 	return data[index]
+}
+
+func strToASN(s string) uint32 {
+	asn, err := strconv.ParseUint(s, 10, 32)
+	if err != nil {
+		return ReservedAS0
+	}
+	return uint32(asn)
 }
 
 func resolve(ip net.IP, countryDB *Database, asnDB *Database) *Resolution {
@@ -73,8 +81,8 @@ func resolve(ip net.IP, countryDB *Database, asnDB *Database) *Resolution {
 	)
 	return &Resolution{
 		CountryCode:  getIndex(countryMatch, 0),
-		ASN:          getIndex(asnMatch, 0),
 		Organization: getIndex(asnMatch, 1),
+		ASN:          strToASN(getIndex(asnMatch, 0)),
 	}
 }
 
