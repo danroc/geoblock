@@ -1,0 +1,39 @@
+# github.com/gabriel-vasile/mimetype v1.4.6
+## explicit; go 1.20
+github.com/gabriel-vasile/mimetype
+github.com/gabriel-vasile/mimetype/internal/charset
+github.com/gabriel-vasile/mimetype/internal/json
+github.com/gabriel-vasile/mimetype/internal/magic
+# github.com/go-playground/locales v0.14.1
+## explicit; go 1.17
+github.com/go-playground/locales
+github.com/go-playground/locales/currency
+# github.com/go-playground/universal-translator v0.18.1
+## explicit; go 1.18
+github.com/go-playground/universal-translator
+# github.com/go-playground/validator/v10 v10.22.1
+## explicit; go 1.18
+github.com/go-playground/validator/v10
+# github.com/leodido/go-urn v1.4.0
+## explicit; go 1.18
+github.com/leodido/go-urn
+github.com/leodido/go-urn/scim/schema
+# golang.org/x/crypto v0.28.0
+## explicit; go 1.20
+golang.org/x/crypto/sha3
+# golang.org/x/net v0.30.0
+## explicit; go 1.18
+golang.org/x/net/html
+golang.org/x/net/html/atom
+# golang.org/x/sys v0.26.0
+## explicit; go 1.18
+golang.org/x/sys/cpu
+# golang.org/x/text v0.19.0
+## explicit; go 1.18
+golang.org/x/text/internal/language
+golang.org/x/text/internal/language/compact
+golang.org/x/text/internal/tag
+golang.org/x/text/language
+# gopkg.in/yaml.v3 v3.0.1
+## explicit
+gopkg.in/yaml.v3
