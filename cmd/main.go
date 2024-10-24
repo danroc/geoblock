@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net"
+	"net/http"
 
 	"github.com/danroc/geoblock/pkg/configuration"
 	"github.com/danroc/geoblock/pkg/database"
@@ -28,38 +29,29 @@ type Service struct {
 	Rules         []Rule
 }
 
-// func getAuthorize(
-// 	entries []database.Entry,
-// 	allowed set.Set[string],
-// 	w http.ResponseWriter,
-// 	r *http.Request,
-// ) {
-// 	origins := r.Header[HeaderXForwardedFor]
+func getAuthorize(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	origins := r.Header[HeaderXForwardedFor]
 
-// 	// Block request: missing header
-// 	if origins == nil {
-// 		w.WriteHeader(http.StatusForbidden)
-// 		return
-// 	}
+	// Block request: missing header
+	if origins == nil {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
 
-// 	// Find the country code for the client IP (first IP in the list)
-// 	match := findEntry(entries, net.ParseIP(origins[0]))
+	// Find the country code for the client IP (first IP in the list)
 
-// 	// Block request: IP not found
-// 	if match == nil {
-// 		w.WriteHeader(http.StatusForbidden)
-// 		return
-// 	}
+	// Block request: IP not found in the database
 
-// 	// Allow request: country code is in the allowed set
-// 	if allowed.Contains(match.Data[0]) {
-// 		w.WriteHeader(http.StatusOK)
-// 		return
-// 	}
+	// Allow request: country code is in the allowed set
+	// w.WriteHeader(http.StatusOK)
+	// return
 
-// 	// Block request: default case
-// 	w.WriteHeader(http.StatusForbidden)
-// }
+	// Block request: default case
+	w.WriteHeader(http.StatusForbidden)
+}
 
 func main() {
 	cfg, err := configuration.ReadFile("examples/configuration.yaml")
