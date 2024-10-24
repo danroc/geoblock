@@ -14,7 +14,6 @@ const (
 )
 
 type Resolution struct {
-	IP           net.IP
 	CountryCode  string
 	ASN          string
 	Organization string
@@ -73,7 +72,6 @@ func resolve(ip net.IP, countryDB *Database, asnDB *Database) *Resolution {
 		asnMatch     = asnDB.Find(ip)
 	)
 	return &Resolution{
-		IP:           ip,
 		CountryCode:  getIndex(countryMatch, 0),
 		ASN:          getIndex(asnMatch, 0),
 		Organization: getIndex(asnMatch, 1),
