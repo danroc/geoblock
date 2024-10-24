@@ -25,21 +25,14 @@ func fetchCsv(url string) ([][]string, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-
-	reader := csv.NewReader(resp.Body)
-	records, err := reader.ReadAll()
-	if err != nil {
-		return nil, err
-	}
-
-	return records, nil
+	return csv.NewReader(resp.Body).ReadAll()
 }
 
 // sanatizeData trims the leading and trailing spaces from the given strings.
 func sanatizeData(data []string) []string {
-	var sanitized []string
-	for _, s := range data {
-		sanitized = append(sanitized, strings.TrimSpace(s))
+	sanitized := make([]string, len(data))
+	for i, d := range data {
+		sanitized[i] = strings.TrimSpace(d)
 	}
 	return sanitized
 }
