@@ -14,6 +14,14 @@ func isDurationField(field validator.FieldLevel) bool {
 	return utils.IsDuration(field.Field().String())
 }
 
+func isCIDRField(field validator.FieldLevel) bool {
+	cidr, ok := field.Field().Interface().(CIDR)
+	if !ok || cidr.IPNet == nil {
+		return false
+	}
+	return true
+}
+
 // ReadBytes reads the configuration from the giver bytes slice.
 func ReadBytes(data []byte) (*Configuration, error) {
 	var config Configuration
@@ -23,6 +31,8 @@ func ReadBytes(data []byte) (*Configuration, error) {
 
 	validate := validator.New()
 	validate.RegisterValidation("duration", isDurationField)
+	validate.RegisterValidation("cidr", isCIDRField)
+
 	if err := validate.Struct(config); err != nil {
 		return nil, err
 	}
