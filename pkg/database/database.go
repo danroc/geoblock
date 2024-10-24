@@ -62,13 +62,11 @@ func parseRecords(records [][]string) ([]Entry, error) {
 			return nil, &utils.InvalidIPError{Address: record[1]}
 		}
 
-		entry := Entry{
+		entries = append(entries, Entry{
 			StartIP: startIP,
 			EndIP:   endIP,
 			Data:    data,
-		}
-
-		entries = append(entries, entry)
+		})
 	}
 	return entries, nil
 }
