@@ -4,13 +4,11 @@ ARG CGO_ENABLED=0
 
 WORKDIR /app
 COPY . .
-
 RUN make build
 
 FROM alpine:3.20.3
 
-WORKDIR /geoblock
-COPY --from=builder /app/dist/geoblock /geoblock/geoblock
-COPY config/geoblock.yaml /geoblock/config/geoblock.yaml
+COPY --from=builder /app/dist/geoblock /app/geoblock
 
-ENTRYPOINT [ "/geoblock/server" ]
+WORKDIR /app
+ENTRYPOINT [ "/app/geoblock" ]

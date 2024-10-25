@@ -25,7 +25,7 @@ type appOptions struct {
 
 func getOptions() *appOptions {
 	return &appOptions{
-		configPath: getEnv("GEOBLOCK_CONFIG", "config/geoblock.yaml"),
+		configPath: getEnv("GEOBLOCK_CONFIG", "config.yaml"),
 		serverPort: getEnv("GEOBLOCK_PORT", "8080"),
 	}
 }
