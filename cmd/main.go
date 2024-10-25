@@ -86,9 +86,12 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/v1/forward-auth", func(writer http.ResponseWriter, request *http.Request) {
-		getForwardAuth(writer, request, resolver, engine)
-	})
+	mux.HandleFunc(
+		"/v1/forward-auth",
+		func(writer http.ResponseWriter, request *http.Request) {
+			getForwardAuth(writer, request, resolver, engine)
+		},
+	)
 
 	server := http.Server{
 		Addr:         ":8080",
