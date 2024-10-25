@@ -6,6 +6,8 @@
 
 ## Roadmap
 
+- [ ] Support command line arguments
+- [ ] Support environment variables
 - [ ] Docker image
 - [ ] Write documentation
 - [ ] Cache responses

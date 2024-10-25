@@ -85,7 +85,7 @@ func main() {
 	})
 
 	log.Info("Loading configuration file")
-	config, err := schema.ReadFile("examples/configuration.yaml")
+	config, err := schema.ReadFile("config/geoblock.yaml")
 	if err != nil {
 		log.Fatalf("Failed to read configuration file: %v", err)
 	}

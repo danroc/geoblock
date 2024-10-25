@@ -20,7 +20,7 @@ run: ## Run the main program
 
 build: ## Build the binary
 	mkdir -p dist
-	go build -ldflags="-s -w" -o ./dist/geoblock ./cmd/server/
+	go build -ldflags="-s -w" -o ./dist/server ./cmd/server/
 
 test:
 	go test ./...
