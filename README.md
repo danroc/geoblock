@@ -8,7 +8,7 @@
 
 - [x] Support environment variables
 - [x] Docker image
-- [ ] Publish Docker image
+- [x] Publish Docker image
 - [ ] Write documentation
 - [ ] Cache responses
 - [ ] Cache databases
