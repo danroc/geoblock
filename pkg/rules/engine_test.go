@@ -10,13 +10,13 @@ import (
 func TestEngine_Authorize(t *testing.T) {
 	tests := []struct {
 		name   string
-		config schema.AccessControl
+		config *schema.AccessControl
 		query  Query
 		want   bool
 	}{
 		{
 			name: "allow by default policy",
-			config: schema.AccessControl{
+			config: &schema.AccessControl{
 				Rules:         []schema.AccessControlRule{},
 				DefaultPolicy: schema.PolicyAllow,
 			},
@@ -27,7 +27,7 @@ func TestEngine_Authorize(t *testing.T) {
 		},
 		{
 			name: "deny by default policy",
-			config: schema.AccessControl{
+			config: &schema.AccessControl{
 				Rules:         []schema.AccessControlRule{},
 				DefaultPolicy: schema.PolicyDeny,
 			},
@@ -38,7 +38,7 @@ func TestEngine_Authorize(t *testing.T) {
 		},
 		{
 			name: "allow by domain",
-			config: schema.AccessControl{
+			config: &schema.AccessControl{
 				Rules: []schema.AccessControlRule{
 					{
 						Domains: []string{"example.org", "example.com"},
@@ -54,7 +54,7 @@ func TestEngine_Authorize(t *testing.T) {
 		},
 		{
 			name: "deny by domain",
-			config: schema.AccessControl{
+			config: &schema.AccessControl{
 				Rules: []schema.AccessControlRule{
 					{
 						Domains: []string{"example.org", "example.com"},
@@ -70,7 +70,7 @@ func TestEngine_Authorize(t *testing.T) {
 		},
 		{
 			name: "allow by network",
-			config: schema.AccessControl{
+			config: &schema.AccessControl{
 				Rules: []schema.AccessControlRule{
 					{
 						Networks: []schema.CIDR{
@@ -95,7 +95,7 @@ func TestEngine_Authorize(t *testing.T) {
 		},
 		{
 			name: "deny by network",
-			config: schema.AccessControl{
+			config: &schema.AccessControl{
 				Rules: []schema.AccessControlRule{
 					{
 						Networks: []schema.CIDR{
@@ -120,7 +120,7 @@ func TestEngine_Authorize(t *testing.T) {
 		},
 		{
 			name: "allow by country",
-			config: schema.AccessControl{
+			config: &schema.AccessControl{
 				Rules: []schema.AccessControlRule{
 					{
 						Countries: []string{"FR", "US"},
@@ -136,7 +136,7 @@ func TestEngine_Authorize(t *testing.T) {
 		},
 		{
 			name: "deny by country",
-			config: schema.AccessControl{
+			config: &schema.AccessControl{
 				Rules: []schema.AccessControlRule{
 					{
 						Countries: []string{"FR", "US"},
@@ -152,7 +152,7 @@ func TestEngine_Authorize(t *testing.T) {
 		},
 		{
 			name: "allow by ASN",
-			config: schema.AccessControl{
+			config: &schema.AccessControl{
 				Rules: []schema.AccessControlRule{
 					{
 						AutonomousSystems: []uint32{1111, 2222},
@@ -168,7 +168,7 @@ func TestEngine_Authorize(t *testing.T) {
 		},
 		{
 			name: "deny by ASN",
-			config: schema.AccessControl{
+			config: &schema.AccessControl{
 				Rules: []schema.AccessControlRule{
 					{
 						AutonomousSystems: []uint32{1111, 2222},
@@ -184,7 +184,7 @@ func TestEngine_Authorize(t *testing.T) {
 		},
 		{
 			name: "allow by domain, network, country, and ASN",
-			config: schema.AccessControl{
+			config: &schema.AccessControl{
 				Rules: []schema.AccessControlRule{
 					{
 						Domains: []string{"example.com"},
@@ -211,7 +211,7 @@ func TestEngine_Authorize(t *testing.T) {
 		},
 		{
 			name: "deny by default when query doesn't fully match rule",
-			config: schema.AccessControl{
+			config: &schema.AccessControl{
 				Rules: []schema.AccessControlRule{
 					{
 						Domains: []string{"example.com"},
