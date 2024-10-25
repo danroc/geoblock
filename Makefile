@@ -1,4 +1,4 @@
-.PHONY: help lint tidy update vendor run build test
+.PHONY: help lint tidy update vendor run build test docker
 
 help: ## Show this help
 	@egrep -h '\s##\s' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-12s\033[0m %s\n", $$1, $$2}'
@@ -24,3 +24,6 @@ build: ## Build the binary
 
 test:
 	go test ./...
+
+docker: ## Build docker image
+	docker build -t geoblock .
