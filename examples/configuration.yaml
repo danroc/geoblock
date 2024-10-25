@@ -2,6 +2,10 @@
 access_control:
   default_policy: deny
   rules:
+    - domains:
+        - bc.gas.ovh
+      policy: allow
+
     - networks:
         - 10.0.0.0/8
         - 127.0.0.0/8

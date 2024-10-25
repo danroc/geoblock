@@ -5,8 +5,8 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/danroc/geoblock/pkg/configuration"
-	"github.com/danroc/geoblock/pkg/database"
+	"github.com/danroc/geoblock/pkg/rules"
+	"github.com/danroc/geoblock/pkg/schema"
 )
 
 const (
@@ -54,7 +54,7 @@ func getAuthorize(
 }
 
 func main() {
-	cfg, err := configuration.ReadFile("examples/configuration.yaml")
+	cfg, err := schema.ReadFile("examples/configuration.yaml")
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -62,20 +62,34 @@ func main() {
 
 	fmt.Printf("%+v\n", cfg)
 
+	engine := rules.NewEngine(cfg.AccessControl)
+	query := rules.Query{
+		RequestedDomain: "bc.gas.ovh",
+		SourceIP:        net.ParseIP("62.35.255.120"),
+		SourceCountry:   "US",
+		SourceASN:       1235,
+	}
+
+	if engine.Authorize(query) {
+		fmt.Println("Request authorized")
+	} else {
+		fmt.Println("Request denied")
+	}
+
 	// db, err := database.NewDatabase(countryIPv4URL)
 	// if err != nil {
 	// 	fmt.Println(err)
 	// 	return
 	// }
 
-	resolver, err := database.NewResolver()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	// resolver, err := database.NewResolver()
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return
+	// }
 
-	match := resolver.Resolve(net.ParseIP("62.35.255.250"))
-	fmt.Println(match)
+	// match := resolver.Resolve(net.ParseIP("62.35.255.250"))
+	// fmt.Println(match)
 
 	// allowedCountryCodes := set.NewSet[string]()
 	// allowedCountryCodes.Add("FR")
