@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net"
 	"net/http"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/danroc/geoblock/pkg/database"
 	"github.com/danroc/geoblock/pkg/rules"
@@ -97,6 +98,6 @@ func main() {
 		IdleTimeout:  60 * time.Second,
 	}
 
-	log.Printf("Starting server at %s", server.Addr)
+	log.Infof("Starting server at %s", server.Addr)
 	log.Fatal(server.ListenAndServe())
 }
