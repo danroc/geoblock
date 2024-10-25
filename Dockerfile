@@ -14,6 +14,8 @@ RUN make build
 
 FROM alpine:3.20.3
 
+EXPOSE 8080
+
 COPY --from=builder /app/dist/geoblock /app/geoblock
 
 WORKDIR /app
