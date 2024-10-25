@@ -16,11 +16,11 @@ vendor: ## Vendor dependencies
 	go mod vendor
 
 run: ## Run the main program
-	go run ./cmd/
+	go run ./cmd/server/
 
 build: ## Build the binary
 	mkdir -p dist
-	go build -ldflags="-s -w" -o ./dist/geoblock ./cmd/
+	go build -ldflags="-s -w" -o ./dist/geoblock ./cmd/server/
 
 test:
 	go test ./...
