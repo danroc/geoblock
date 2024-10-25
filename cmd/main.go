@@ -31,19 +31,22 @@ type Service struct {
 	Rules         []Rule
 }
 
-func getAuthorize(
-	w http.ResponseWriter,
-	r *http.Request,
+// getForwardAuth checks if the request is authorized to access the requested
+// resource. It uses the reverse proxy headers to determine the source IP and
+// requested domain.
+func getForwardAuth(
+	writer http.ResponseWriter,
+	request *http.Request,
 	resolver *database.Resolver,
 	engine *rules.Engine,
 ) {
-	origin := r.Header.Get(HeaderXForwardedFor)
-	domain := r.Header.Get(HeaderXForwardedHost)
+	origin := request.Header.Get(HeaderXForwardedFor)
+	domain := request.Header.Get(HeaderXForwardedHost)
 
 	// Block the request if one or more of the required headers are missing. It
 	// probably means that the request didn't come from the reverse proxy.
 	if origin == "" || domain == "" {
-		w.WriteHeader(http.StatusForbidden)
+		writer.WriteHeader(http.StatusForbidden)
 		return
 	}
 
@@ -60,9 +63,9 @@ func getAuthorize(
 	fmt.Printf("Query: %+v\n", query)
 
 	if engine.Authorize(query) {
-		w.WriteHeader(http.StatusNoContent)
+		writer.WriteHeader(http.StatusNoContent)
 	} else {
-		w.WriteHeader(http.StatusForbidden)
+		writer.WriteHeader(http.StatusForbidden)
 	}
 }
 
@@ -82,7 +85,7 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/v1/forward-auth", func(writer http.ResponseWriter, request *http.Request) {
-		getAuthorize(writer, request, resolver, engine)
+		getForwardAuth(writer, request, resolver, engine)
 	})
 
 	server := http.Server{
