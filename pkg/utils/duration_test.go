@@ -62,7 +62,10 @@ func TestParseDuration(t *testing.T) {
 	for _, input := range invalidDurations {
 		_, err := utils.ParseDuration(input)
 		if err == nil {
-			t.Errorf("Expected error for invalid input '%s', but got no error", input)
+			t.Errorf(
+				"Expected error for invalid input '%s', but got no error",
+				input,
+			)
 		}
 	}
 }
@@ -92,7 +95,10 @@ func TestIsDuration(t *testing.T) {
 
 	for _, duration := range validDurations {
 		if !utils.IsDuration(duration) {
-			t.Errorf("Expected duration '%s' to be valid, but it was invalid", duration)
+			t.Errorf(
+				"Expected duration '%s' to be valid, but it was invalid",
+				duration,
+			)
 		}
 	}
 
@@ -110,7 +116,10 @@ func TestIsDuration(t *testing.T) {
 
 	for _, duration := range invalidDurations {
 		if utils.IsDuration(duration) {
-			t.Errorf("Expected duration '%s' to be invalid, but it was valid", duration)
+			t.Errorf(
+				"Expected duration '%s' to be invalid, but it was valid",
+				duration,
+			)
 		}
 	}
 }

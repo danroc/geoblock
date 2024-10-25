@@ -1,8 +1,10 @@
 package main
 
 import (
+	"flag"
 	"net"
 	"net/http"
+	"os"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -78,14 +80,60 @@ func getForwardAuth(
 	}
 }
 
+func getEnv(key, fallback string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return fallback
+}
+
+type commandFlags struct {
+	configPath string
+	serverPort string
+}
+
+const (
+	DefaultConfigPath = "config/geoblock.yaml"
+	DefaultServerPort = "8080"
+)
+
+const usage = `Usage: geoblock [options]
+
+Options:
+  -c, --config CONFIG  Path to the configuration file (default "config/geoblock.yaml")
+  -p, --port   PORT    Port to run the server on (default "8080")`
+
+func parseFlags() *commandFlags {
+	flags := &commandFlags{}
+
+	flag.StringVar(&flags.configPath, "c", DefaultConfigPath, "")
+	flag.StringVar(&flags.configPath, "config", DefaultConfigPath, "")
+
+	flag.StringVar(&flags.serverPort, "p", DefaultServerPort, "")
+	flag.StringVar(&flags.serverPort, "port", DefaultServerPort, "")
+
+	flag.Usage = func() {
+		println(usage)
+	}
+
+	flag.Parse()
+	return flags
+}
+
 func main() {
 	log.SetFormatter(&log.TextFormatter{
-		DisableColors: false,
 		FullTimestamp: true,
 	})
 
+	flags := parseFlags()
+
+	// var (
+	// 	configPath = getEnv("GEOBLOCK_CONFIG", "config/geoblock.yaml")
+	// 	serverPort = getEnv("GEOBLOCK_PORT", "8080")
+	// )
+
 	log.Info("Loading configuration file")
-	config, err := schema.ReadFile("config/geoblock.yaml")
+	config, err := schema.ReadFile(flags.configPath)
 	if err != nil {
 		log.Fatalf("Failed to read configuration file: %v", err)
 	}
@@ -106,7 +154,7 @@ func main() {
 	)
 
 	server := http.Server{
-		Addr:         ":8080",
+		Addr:         ":" + flags.serverPort,
 		Handler:      mux,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 60 * time.Second,

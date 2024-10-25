@@ -10,7 +10,7 @@ RUN make build
 FROM alpine:3.20.3
 
 WORKDIR /geoblock
-COPY --from=builder /app/dist/server /geoblock/server
+COPY --from=builder /app/dist/geoblock /geoblock/geoblock
 COPY config/geoblock.yaml /geoblock/config/geoblock.yaml
 
 ENTRYPOINT [ "/geoblock/server" ]
