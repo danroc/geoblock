@@ -41,17 +41,14 @@ func TestEngine_Authorize(t *testing.T) {
 			config: schema.AccessControl{
 				Rules: []schema.AccessControlRule{
 					{
-						Domains: []string{
-							"example.org",
-							"example.com",
-						},
-						Policy: schema.PolicyAllow,
+						Domains: []string{"example.org", "example.com"},
+						Policy:  schema.PolicyAllow,
 					},
 				},
 				DefaultPolicy: schema.PolicyDeny,
 			},
 			query: Query{
-				RequestedDomain: "example.com",
+				RequestedDomain: "example.org",
 			},
 			want: true,
 		},
@@ -60,11 +57,8 @@ func TestEngine_Authorize(t *testing.T) {
 			config: schema.AccessControl{
 				Rules: []schema.AccessControlRule{
 					{
-						Domains: []string{
-							"example.org",
-							"example.com",
-						},
-						Policy: schema.PolicyDeny,
+						Domains: []string{"example.org", "example.com"},
+						Policy:  schema.PolicyDeny,
 					},
 				},
 				DefaultPolicy: schema.PolicyAllow,
@@ -95,7 +89,7 @@ func TestEngine_Authorize(t *testing.T) {
 				DefaultPolicy: schema.PolicyDeny,
 			},
 			query: Query{
-				SourceIP: net.IPv4(192, 168, 1, 1),
+				SourceIP: net.IPv4(10, 1, 1, 1),
 			},
 			want: true,
 		},
@@ -136,7 +130,7 @@ func TestEngine_Authorize(t *testing.T) {
 				DefaultPolicy: schema.PolicyDeny,
 			},
 			query: Query{
-				SourceCountry: "US",
+				SourceCountry: "FR",
 			},
 			want: true,
 		},
@@ -168,7 +162,7 @@ func TestEngine_Authorize(t *testing.T) {
 				DefaultPolicy: schema.PolicyDeny,
 			},
 			query: Query{
-				SourceASN: 2222,
+				SourceASN: 1111,
 			},
 			want: true,
 		},
@@ -185,6 +179,56 @@ func TestEngine_Authorize(t *testing.T) {
 			},
 			query: Query{
 				SourceASN: 2222,
+			},
+			want: false,
+		},
+		{
+			name: "allow by domain, network, country, and ASN",
+			config: schema.AccessControl{
+				Rules: []schema.AccessControlRule{
+					{
+						Domains: []string{"example.com"},
+						Networks: []schema.CIDR{
+							{IPNet: &net.IPNet{
+								IP:   net.IPv4(10, 0, 0, 0),
+								Mask: net.CIDRMask(8, 32),
+							}},
+						},
+						Countries:         []string{"FR"},
+						AutonomousSystems: []uint32{1111},
+						Policy:            schema.PolicyAllow,
+					},
+				},
+				DefaultPolicy: schema.PolicyDeny,
+			},
+			query: Query{
+				RequestedDomain: "example.com",
+				SourceIP:        net.IPv4(10, 1, 1, 1),
+				SourceCountry:   "FR",
+				SourceASN:       1111,
+			},
+			want: true,
+		},
+		{
+			name: "deny by default when query doesn't fully match rule",
+			config: schema.AccessControl{
+				Rules: []schema.AccessControlRule{
+					{
+						Domains: []string{"example.com"},
+						Networks: []schema.CIDR{
+							{IPNet: &net.IPNet{
+								IP:   net.IPv4(10, 0, 0, 0),
+								Mask: net.CIDRMask(8, 32),
+							}},
+						},
+						Policy: schema.PolicyAllow,
+					},
+				},
+				DefaultPolicy: schema.PolicyDeny,
+			},
+			query: Query{
+				RequestedDomain: "example.com",
+				SourceIP:        net.IPv4(192, 168, 1, 1),
 			},
 			want: false,
 		},
