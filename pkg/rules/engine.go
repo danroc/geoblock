@@ -9,10 +9,10 @@ import (
 )
 
 type Engine struct {
-	config schema.AccessControl
+	config *schema.AccessControl
 }
 
-func NewEngine(config schema.AccessControl) *Engine {
+func NewEngine(config *schema.AccessControl) *Engine {
 	return &Engine{
 		config: config,
 	}
@@ -33,7 +33,7 @@ type Query struct {
 // no domains, it will match all domains.
 //
 // Domains and countries are case-insensitive.
-func ruleApplies(query Query, rule schema.AccessControlRule) bool {
+func ruleApplies(rule schema.AccessControlRule, query Query) bool {
 	if len(rule.Domains) > 0 {
 		if utils.None(rule.Domains, func(domain string) bool {
 			return strings.EqualFold(domain, query.RequestedDomain)
@@ -71,9 +71,9 @@ func ruleApplies(query Query, rule schema.AccessControlRule) bool {
 
 // Authorize checks if the given query is allowed by the engine's rules. The
 // engine will return true if the query is allowed, false otherwise.
-func (e *Engine) Authorize(q Query) bool {
+func (e *Engine) Authorize(query Query) bool {
 	for _, rule := range e.config.Rules {
-		if ruleApplies(q, rule) {
+		if ruleApplies(rule, query) {
 			return rule.Policy == schema.PolicyAllow
 		}
 	}

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net"
 	"net/http"
 	"time"
@@ -62,29 +61,42 @@ func getForwardAuth(
 		SourceASN:       resolution.ASN,
 	}
 
-	fmt.Printf("Query: %+v\n", query)
+	logFields := log.Fields{
+		"requested_domain": domain,
+		"source_ip":        sourceIP,
+		"source_country":   resolution.CountryCode,
+		"source_asn":       resolution.ASN,
+		"source_org":       resolution.Organization,
+	}
 
 	if engine.Authorize(query) {
+		log.WithFields(logFields).Info("Request authorized")
 		writer.WriteHeader(http.StatusNoContent)
 	} else {
+		log.WithFields(logFields).Warn("Request denied")
 		writer.WriteHeader(http.StatusForbidden)
 	}
 }
 
 func main() {
+	log.SetFormatter(&log.TextFormatter{
+		DisableColors: false,
+		FullTimestamp: true,
+	})
+
+	log.Info("Loading configuration file")
 	config, err := schema.ReadFile("examples/configuration.yaml")
 	if err != nil {
-		fmt.Println(err)
-		return
+		log.Fatalf("Failed to read configuration file: %v", err)
 	}
-	engine := rules.NewEngine(config.AccessControl)
 
+	log.Info("Initializing database resolver")
 	resolver, err := database.NewResolver()
 	if err != nil {
-		fmt.Println(err)
-		return
+		log.Fatalf("Cannot initialize database resolver: %v", err)
 	}
 
+	engine := rules.NewEngine(&config.AccessControl)
 	mux := http.NewServeMux()
 	mux.HandleFunc(
 		"/v1/forward-auth",
