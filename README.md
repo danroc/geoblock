@@ -6,10 +6,10 @@
 
 ## Roadmap
 
-- [ ] Support command line arguments
-- [ ] Support environment variables
+- [x] Support environment variables
 - [ ] Docker image
 - [ ] Write documentation
 - [ ] Cache responses
 - [ ] Cache databases
 - [ ] Add more tests
+- [ ] Support command line arguments
