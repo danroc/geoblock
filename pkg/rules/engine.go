@@ -2,8 +2,10 @@ package rules
 
 import (
 	"net"
+	"strings"
 
 	"github.com/danroc/geoblock/pkg/configuration"
+	"github.com/danroc/geoblock/pkg/utils"
 )
 
 type Engine struct {
@@ -27,47 +29,34 @@ type Query struct {
 // rule. For a rule to be applicable, the query must match all of the rule's
 // conditions.
 func ruleApplies(query Query, rule configuration.AccessControlRule) bool {
-	// Check country rules
-	if len(rule.Countries) > 0 {
-		found := false
-		for _, country := range rule.Countries {
-			if country == query.SourceCountry {
-				found = true
-				break
-			}
-		}
-
-		if !found {
+	if len(rule.Networks) > 0 {
+		if utils.None(rule.Networks, func(network configuration.CIDR) bool {
+			return network.Contains(query.SourceIP)
+		}) {
 			return false
 		}
 	}
 
-	// Check domain rules
 	if len(rule.Domains) > 0 {
-		found := false
-		for _, domain := range rule.Domains {
-			if domain == query.RequestedDomain {
-				found = true
-				break
-			}
-		}
-
-		if !found {
+		if utils.None(rule.Domains, func(domain string) bool {
+			return strings.EqualFold(domain, query.RequestedDomain)
+		}) {
 			return false
 		}
 	}
 
-	// Check ASN rules
-	if len(rule.AutonomousSystems) > 0 {
-		found := false
-		for _, asn := range rule.AutonomousSystems {
-			if asn == query.SourceASN {
-				found = true
-				break
-			}
+	if len(rule.Countries) > 0 {
+		if utils.None(rule.Countries, func(country string) bool {
+			return strings.EqualFold(country, query.SourceCountry)
+		}) {
+			return false
 		}
+	}
 
-		if !found {
+	if len(rule.AutonomousSystems) > 0 {
+		if utils.None(rule.AutonomousSystems, func(asn uint32) bool {
+			return asn == query.SourceASN
+		}) {
 			return false
 		}
 	}
