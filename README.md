@@ -11,5 +11,6 @@
 - [ ] Write documentation
 - [ ] Cache responses
 - [ ] Cache databases
+- [ ] Auto-update databases
 - [ ] Add more tests
 - [ ] Support command line arguments
