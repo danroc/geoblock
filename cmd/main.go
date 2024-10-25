@@ -41,7 +41,7 @@ func getAuthorize(
 	domain := r.Header.Get(HeaderXForwardedHost)
 
 	// Block the request if one or more of the required headers are missing. It
-	// probably means that the request didn't come from a reverse proxy.
+	// probably means that the request didn't come from the reverse proxy.
 	if origin == "" || domain == "" {
 		w.WriteHeader(http.StatusForbidden)
 		return
