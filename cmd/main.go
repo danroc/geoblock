@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"time"
 
 	"github.com/danroc/geoblock/pkg/database"
 	"github.com/danroc/geoblock/pkg/rules"
@@ -89,8 +90,11 @@ func main() {
 	})
 
 	server := http.Server{
-		Addr:    ":8080",
-		Handler: mux,
+		Addr:         ":8080",
+		Handler:      mux,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 60 * time.Second,
+		IdleTimeout:  60 * time.Second,
 	}
 
 	log.Printf("Starting server at %s", server.Addr)
