@@ -11,7 +11,7 @@ func TestEngine_Authorize(t *testing.T) {
 	tests := []struct {
 		name   string
 		config *schema.AccessControl
-		query  Query
+		query  *Query
 		want   bool
 	}{
 		{
@@ -20,7 +20,7 @@ func TestEngine_Authorize(t *testing.T) {
 				Rules:         []schema.AccessControlRule{},
 				DefaultPolicy: schema.PolicyAllow,
 			},
-			query: Query{
+			query: &Query{
 				RequestedDomain: "example.com",
 			},
 			want: true,
@@ -31,7 +31,7 @@ func TestEngine_Authorize(t *testing.T) {
 				Rules:         []schema.AccessControlRule{},
 				DefaultPolicy: schema.PolicyDeny,
 			},
-			query: Query{
+			query: &Query{
 				RequestedDomain: "example.com",
 			},
 			want: false,
@@ -47,7 +47,7 @@ func TestEngine_Authorize(t *testing.T) {
 				},
 				DefaultPolicy: schema.PolicyDeny,
 			},
-			query: Query{
+			query: &Query{
 				RequestedDomain: "example.org",
 			},
 			want: true,
@@ -63,7 +63,7 @@ func TestEngine_Authorize(t *testing.T) {
 				},
 				DefaultPolicy: schema.PolicyAllow,
 			},
-			query: Query{
+			query: &Query{
 				RequestedDomain: "example.com",
 			},
 			want: false,
@@ -88,7 +88,7 @@ func TestEngine_Authorize(t *testing.T) {
 				},
 				DefaultPolicy: schema.PolicyDeny,
 			},
-			query: Query{
+			query: &Query{
 				SourceIP: net.IPv4(10, 1, 1, 1),
 			},
 			want: true,
@@ -113,7 +113,7 @@ func TestEngine_Authorize(t *testing.T) {
 				},
 				DefaultPolicy: schema.PolicyAllow,
 			},
-			query: Query{
+			query: &Query{
 				SourceIP: net.IPv4(192, 168, 1, 1),
 			},
 			want: false,
@@ -129,7 +129,7 @@ func TestEngine_Authorize(t *testing.T) {
 				},
 				DefaultPolicy: schema.PolicyDeny,
 			},
-			query: Query{
+			query: &Query{
 				SourceCountry: "FR",
 			},
 			want: true,
@@ -145,7 +145,7 @@ func TestEngine_Authorize(t *testing.T) {
 				},
 				DefaultPolicy: schema.PolicyAllow,
 			},
-			query: Query{
+			query: &Query{
 				SourceCountry: "US",
 			},
 			want: false,
@@ -161,7 +161,7 @@ func TestEngine_Authorize(t *testing.T) {
 				},
 				DefaultPolicy: schema.PolicyDeny,
 			},
-			query: Query{
+			query: &Query{
 				SourceASN: 1111,
 			},
 			want: true,
@@ -177,7 +177,7 @@ func TestEngine_Authorize(t *testing.T) {
 				},
 				DefaultPolicy: schema.PolicyAllow,
 			},
-			query: Query{
+			query: &Query{
 				SourceASN: 2222,
 			},
 			want: false,
@@ -201,7 +201,7 @@ func TestEngine_Authorize(t *testing.T) {
 				},
 				DefaultPolicy: schema.PolicyDeny,
 			},
-			query: Query{
+			query: &Query{
 				RequestedDomain: "example.com",
 				SourceIP:        net.IPv4(10, 1, 1, 1),
 				SourceCountry:   "FR",
@@ -226,7 +226,7 @@ func TestEngine_Authorize(t *testing.T) {
 				},
 				DefaultPolicy: schema.PolicyDeny,
 			},
-			query: Query{
+			query: &Query{
 				RequestedDomain: "example.com",
 				SourceIP:        net.IPv4(192, 168, 1, 1),
 			},

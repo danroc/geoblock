@@ -69,7 +69,7 @@ func getForwardAuth(
 		"source_org":       resolution.Organization,
 	}
 
-	if engine.Authorize(query) {
+	if engine.Authorize(&query) {
 		log.WithFields(logFields).Info("Request authorized")
 		writer.WriteHeader(http.StatusNoContent)
 	} else {

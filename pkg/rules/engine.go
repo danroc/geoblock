@@ -33,7 +33,7 @@ type Query struct {
 // no domains, it will match all domains.
 //
 // Domains and countries are case-insensitive.
-func ruleApplies(rule schema.AccessControlRule, query Query) bool {
+func ruleApplies(rule *schema.AccessControlRule, query *Query) bool {
 	if len(rule.Domains) > 0 {
 		if utils.None(rule.Domains, func(domain string) bool {
 			return strings.EqualFold(domain, query.RequestedDomain)
@@ -71,9 +71,9 @@ func ruleApplies(rule schema.AccessControlRule, query Query) bool {
 
 // Authorize checks if the given query is allowed by the engine's rules. The
 // engine will return true if the query is allowed, false otherwise.
-func (e *Engine) Authorize(query Query) bool {
+func (e *Engine) Authorize(query *Query) bool {
 	for _, rule := range e.config.Rules {
-		if ruleApplies(rule, query) {
+		if ruleApplies(&rule, query) {
 			return rule.Policy == schema.PolicyAllow
 		}
 	}
