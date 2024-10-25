@@ -14,4 +14,5 @@
 - [ ] Cache databases
 - [ ] Auto-update databases
 - [ ] Add more tests
+- [ ] Add metrics
 - [ ] Support command line arguments
