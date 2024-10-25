@@ -7,7 +7,8 @@
 ## Roadmap
 
 - [x] Support environment variables
-- [ ] Docker image
+- [x] Docker image
+- [ ] Publish Docker image
 - [ ] Write documentation
 - [ ] Cache responses
 - [ ] Cache databases
