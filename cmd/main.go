@@ -60,7 +60,7 @@ func getAuthorize(
 	fmt.Printf("Query: %+v\n", query)
 
 	if engine.Authorize(query) {
-		w.WriteHeader(http.StatusOK)
+		w.WriteHeader(http.StatusNoContent)
 	} else {
 		w.WriteHeader(http.StatusForbidden)
 	}
