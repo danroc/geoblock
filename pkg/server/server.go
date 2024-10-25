@@ -34,6 +34,10 @@ func getForwardAuth(
 	// Block the request if one or more of the required headers are missing. It
 	// probably means that the request didn't come from the reverse proxy.
 	if origin == "" || domain == "" {
+		log.WithFields(log.Fields{
+			"requested_domain": domain,
+			"source_ip":        origin,
+		}).Warn("Missing required headers")
 		writer.WriteHeader(http.StatusForbidden)
 		return
 	}
