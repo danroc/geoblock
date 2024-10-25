@@ -29,7 +29,7 @@ type Resolver struct {
 	asnDBv6     *Database
 }
 
-// NewResolver creates a new resolver.
+// NewResolver creates a new IP resolver.
 func NewResolver() (*Resolver, error) {
 	countryDBv4, err := NewDatabase(countryIPv4URL)
 	if err != nil {
@@ -59,6 +59,8 @@ func NewResolver() (*Resolver, error) {
 	}, nil
 }
 
+// getIndex returns the element at the given index of the data slice. If the
+// index is out of bounds, the function returns an empty string.
 func getIndex(data []string, index int) string {
 	if index < 0 || index >= len(data) {
 		return ""
@@ -66,6 +68,8 @@ func getIndex(data []string, index int) string {
 	return data[index]
 }
 
+// strToASN converts a string to an ASN. If the string is not a valid ASN, the
+// function returns ReservedAS0.
 func strToASN(s string) uint32 {
 	asn, err := strconv.ParseUint(s, 10, 32)
 	if err != nil {
@@ -74,6 +78,7 @@ func strToASN(s string) uint32 {
 	return uint32(asn)
 }
 
+// resolve checks the given IP address against the country and ASN databases.
 func resolve(ip net.IP, countryDB *Database, asnDB *Database) *Resolution {
 	var (
 		countryMatch = countryDB.Find(ip)
@@ -87,9 +92,18 @@ func resolve(ip net.IP, countryDB *Database, asnDB *Database) *Resolution {
 }
 
 // Resolve resolves the given IP address to a country code and an ASN.
+//
+// If the IP is nil, the function returns nil. It is the caller's
+// responsibility to check if the IP is valid.
+//
+// If the country of the IP is not found, the CountryCode field of the result
+// will be an empty string.
+//
+// If the ASN of the IP is not found, the ASN field of the result will be zero.
+//
+// The Organization field is present for informational purposes only. It is not
+// used by the rules engine.
 func (r *Resolver) Resolve(ip net.IP) *Resolution {
-	// Nothing to do if the IP is nil, it is the caller's responsibility to
-	// check if the IP is valid.
 	if ip == nil {
 		return nil
 	}

@@ -69,6 +69,8 @@ func ruleApplies(query Query, rule schema.AccessControlRule) bool {
 	return true
 }
 
+// Authorize checks if the given query is allowed by the engine's rules. The
+// engine will return true if the query is allowed, false otherwise.
 func (e *Engine) Authorize(q Query) bool {
 	for _, rule := range e.config.Rules {
 		if ruleApplies(q, rule) {
