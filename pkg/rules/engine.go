@@ -28,6 +28,11 @@ type Query struct {
 // ruleApplies checks if the given query is allowed or denied by the given
 // rule. For a rule to be applicable, the query must match all of the rule's
 // conditions.
+//
+// Empty conditions are considered as "match all". For example, if a rule has
+// no domains, it will match all domains.
+//
+// Domains and countries are case-insensitive.
 func ruleApplies(query Query, rule schema.AccessControlRule) bool {
 	if len(rule.Domains) > 0 {
 		if utils.None(rule.Domains, func(domain string) bool {
