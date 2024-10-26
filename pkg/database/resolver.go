@@ -8,10 +8,10 @@ import (
 )
 
 const (
-	countryIPv4URL = "https://cdn.jsdelivr.net/npm/@ip-location-db/geolite2-geo-whois-asn-country/geolite2-geo-whois-asn-country-ipv4.csv"
-	countryIPv6URL = "https://cdn.jsdelivr.net/npm/@ip-location-db/geolite2-geo-whois-asn-country/geolite2-geo-whois-asn-country-ipv6.csv"
-	asnIPv4URL     = "https://cdn.jsdelivr.net/npm/@ip-location-db/asn/asn-ipv4.csv"
-	asnIPv6URL     = "https://cdn.jsdelivr.net/npm/@ip-location-db/asn/asn-ipv6.csv"
+	countryIPv4URL = "https://cdn.jsdelivr.net/npm/@ip-location-db/geolite2-country/geolite2-country-ipv4.csv"
+	countryIPv6URL = "https://cdn.jsdelivr.net/npm/@ip-location-db/geolite2-country/geolite2-country-ipv6.csv"
+	asnIPv4URL     = "https://cdn.jsdelivr.net/npm/@ip-location-db/geolite2-asn/geolite2-asn-ipv4.csv"
+	asnIPv6URL     = "https://cdn.jsdelivr.net/npm/@ip-location-db/geolite2-asn/geolite2-asn-ipv6.csv"
 )
 
 const ReservedAS0 uint32 = 0
