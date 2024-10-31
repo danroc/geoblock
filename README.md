@@ -151,6 +151,50 @@ The following environment variables can be used to configure Geoblock:
 - `GEOBLOCK_CONFIG`: Path to the configuration file (default: `config.yaml`).
 - `GEOBLOCK_PORT`: Port to listen on (default: `8080`).
 
+## Manual testing
+
+Start geoblock with the provided example configuration:
+
+```bash
+GEOBLOCK_CONFIG=examples/config.yaml GEOBLOCK_PORT=8080 make run
+```
+
+### Missing X-Forwarded-For and X-Forwarded-Host headers
+
+```http
+GET http://localhost:8080/v1/forward-auth
+```
+
+### Missing X-Forwarded-Host header
+
+```http
+GET http://localhost:8080/v1/forward-auth
+X-Forwarded-For: 127.0.0.1
+```
+
+### Missing X-Forwarded-For header
+
+```http
+GET http://localhost:8080/v1/forward-auth
+X-Forwarded-Host: example.com
+```
+
+### Blocked country
+
+```http
+GET http://localhost:8080/v1/forward-auth
+X-Forwarded-For: 8.8.8.8
+X-Forwarded-Host: example.com
+```
+
+### Request authorized
+
+```http
+GET http://localhost:8080/v1/forward-auth
+X-Forwarded-For: 127.0.0.1
+X-Forwarded-Host: example.com
+```
+
 ## Roadmap
 
 - [x] Support environment variables
