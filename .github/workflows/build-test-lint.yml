@@ -24,6 +24,7 @@ jobs:
       - name: Install tools
         run: |-
           go install github.com/segmentio/golines@v0.12.2
+          go install mvdan.cc/gofumpt@v0.7.0
 
       - name: Build
         run: make build
