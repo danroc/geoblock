@@ -1,3 +1,4 @@
+// Package schema contains configiguration schema used by geoblock.
 package schema
 
 import (

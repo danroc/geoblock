@@ -1,3 +1,4 @@
+// Package main contains the main geoblock application.
 package main
 
 import (

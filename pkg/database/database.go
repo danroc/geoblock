@@ -1,3 +1,4 @@
+// Package database provides a database of IP ranges and their associated data.
 package database
 
 import (

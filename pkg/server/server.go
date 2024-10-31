@@ -1,3 +1,4 @@
+// Package server contains the HTTP authorization server.
 package server
 
 import (
@@ -38,6 +39,8 @@ func getForwardAuth(
 	resolver *database.Resolver,
 	engine *rules.Engine,
 ) {
+	log.Info(request.Method)
+
 	origin := request.Header.Get(HeaderXForwardedFor)
 	domain := request.Header.Get(HeaderXForwardedHost)
 

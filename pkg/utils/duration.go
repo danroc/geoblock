@@ -1,3 +1,4 @@
+// Package utils contains utility functions used by geoblock.
 package utils
 
 import (

@@ -1,3 +1,4 @@
+// Package rules contains all rules related logic.
 package rules
 
 import (
