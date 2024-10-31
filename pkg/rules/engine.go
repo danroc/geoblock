@@ -8,16 +8,21 @@ import (
 	"github.com/danroc/geoblock/pkg/utils"
 )
 
+// Engine is the access control egine that checks if a given query is allowed
+// by the rules.
 type Engine struct {
 	config *schema.AccessControl
 }
 
+// NewEngine creates a new access control engine for the given access control
+// configuration.
 func NewEngine(config *schema.AccessControl) *Engine {
 	return &Engine{
 		config: config,
 	}
 }
 
+// Query represents a query to be checked by the access control engine.
 type Query struct {
 	RequestedDomain string
 	SourceIP        net.IP

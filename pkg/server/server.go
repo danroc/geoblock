@@ -11,6 +11,7 @@ import (
 	"github.com/danroc/geoblock/pkg/rules"
 )
 
+// HTTP headers used by reverse proxies to identify the original request.
 const (
 	HeaderXForwardedMethod = "X-Forwarded-Method"
 	HeaderXForwardedProto  = "X-Forwarded-Proto"
@@ -19,6 +20,7 @@ const (
 	HeaderXForwardedFor    = "X-Forwarded-For"
 )
 
+// Fields used in the log messages.
 const (
 	FieldRequestedDomain = "requested_domain"
 	FieldSourceIP        = "source_ip"

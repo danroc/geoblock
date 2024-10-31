@@ -2,6 +2,7 @@ package schema
 
 import "net"
 
+// Accepted policy values.
 const (
 	PolicyAllow = "allow"
 	PolicyDeny  = "deny"

@@ -8,6 +8,9 @@ import (
 	"time"
 )
 
+// Some common time durations. Note that the durations for months and years are
+// approximate and do not take into account leap years or months with different
+// numbers of days.
 const (
 	TimeDay   time.Duration = 24 * time.Hour
 	TimeWeek                = 7 * TimeDay
