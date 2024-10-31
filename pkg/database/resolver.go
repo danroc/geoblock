@@ -14,14 +14,17 @@ const (
 	asnIPv6URL     = "https://cdn.jsdelivr.net/npm/@ip-location-db/geolite2-asn/geolite2-asn-ipv6.csv"
 )
 
+// ReservedAS0 is the ASN used when the ASN is unknown. Its value is 0.
 const ReservedAS0 uint32 = 0
 
+// Resolution contains the result of resolving an IP address.
 type Resolution struct {
 	CountryCode  string
 	Organization string
 	ASN          uint32
 }
 
+// Resolver is an IP resolver that returns information about an IP address.
 type Resolver struct {
 	countryDBv4 *Database
 	countryDBv6 *Database

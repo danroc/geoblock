@@ -22,6 +22,8 @@ func (e *InvalidIPError) Error() string {
 	return fmt.Sprintf("invalid IP address: %s", e.Address)
 }
 
+// IsIPv4 returns true if the given IP address is an IPv4 address. Otherwise,
+// it returns false.
 func IsIPv4(ip net.IP) bool {
 	return ip.To4() != nil
 }
