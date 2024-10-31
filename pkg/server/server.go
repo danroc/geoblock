@@ -19,6 +19,14 @@ const (
 	HeaderXForwardedFor    = "X-Forwarded-For"
 )
 
+const (
+	FieldRequestedDomain = "requested_domain"
+	FieldSourceIP        = "source_ip"
+	FieldSourceCountry   = "source_country"
+	FieldSourceASN       = "source_asn"
+	FieldSourceOrg       = "source_org"
+)
+
 // getForwardAuth checks if the request is authorized to access the requested
 // resource. It uses the reverse proxy headers to determine the source IP and
 // requested domain.
@@ -35,8 +43,8 @@ func getForwardAuth(
 	// probably means that the request didn't come from the reverse proxy.
 	if origin == "" || domain == "" {
 		log.WithFields(log.Fields{
-			"requested_domain": domain,
-			"source_ip":        origin,
+			FieldRequestedDomain: domain,
+			FieldSourceIP:        origin,
 		}).Warn("Missing required headers")
 		writer.WriteHeader(http.StatusForbidden)
 		return
@@ -53,11 +61,11 @@ func getForwardAuth(
 	}
 
 	logFields := log.Fields{
-		"requested_domain": domain,
-		"source_ip":        sourceIP,
-		"source_country":   resolution.CountryCode,
-		"source_asn":       resolution.ASN,
-		"source_org":       resolution.Organization,
+		FieldRequestedDomain: domain,
+		FieldSourceIP:        sourceIP,
+		FieldSourceCountry:   resolution.CountryCode,
+		FieldSourceASN:       resolution.ASN,
+		FieldSourceOrg:       resolution.Organization,
 	}
 
 	if engine.Authorize(&query) {
