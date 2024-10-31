@@ -62,9 +62,9 @@ func NewResolver() (*Resolver, error) {
 	}, nil
 }
 
-// getIndex returns the element at the given index of the data slice. If the
+// strIndex returns the element at the given index of the data slice. If the
 // index is out of bounds, the function returns an empty string.
-func getIndex(data []string, index int) string {
+func strIndex(data []string, index int) string {
 	if index < 0 || index >= len(data) {
 		return ""
 	}
@@ -88,9 +88,9 @@ func resolve(ip net.IP, countryDB *Database, asnDB *Database) *Resolution {
 		asnMatch     = asnDB.Find(ip)
 	)
 	return &Resolution{
-		CountryCode:  getIndex(countryMatch, 0),
-		Organization: getIndex(asnMatch, 1),
-		ASN:          strToASN(getIndex(asnMatch, 0)),
+		CountryCode:  strIndex(countryMatch, 0),
+		Organization: strIndex(asnMatch, 1),
+		ASN:          strToASN(strIndex(asnMatch, 0)),
 	}
 }
 
