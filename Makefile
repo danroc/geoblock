@@ -5,6 +5,7 @@ help: ## Show this help
 
 lint: tidy ## Run linter
 	golines -w -m 79 --base-formatter=gofumpt .
+	gosec ./...
 
 tidy: ## Tidy up dependencies
 	go mod tidy

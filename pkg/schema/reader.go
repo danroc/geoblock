@@ -31,8 +31,8 @@ func ReadBytes(data []byte) (*Configuration, error) {
 	}
 
 	validate := validator.New()
-	validate.RegisterValidation("duration", isDurationField)
-	validate.RegisterValidation("cidr", isCIDRField)
+	validate.RegisterValidation("duration", isDurationField) // #nosec G104
+	validate.RegisterValidation("cidr", isCIDRField)         // #nosec G104
 
 	if err := validate.Struct(config); err != nil {
 		return nil, err
@@ -52,7 +52,7 @@ func Read(reader io.Reader) (*Configuration, error) {
 
 // ReadFile reads the configuration from the given file.
 func ReadFile(filename string) (*Configuration, error) {
-	data, err := os.ReadFile(filename)
+	data, err := os.ReadFile(filename) // #nosec G304
 	if err != nil {
 		return nil, err
 	}

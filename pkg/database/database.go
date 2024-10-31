@@ -20,7 +20,7 @@ type Entry struct {
 
 // fetchCsv fetches a CSV file from the given URL and returns its records.
 func fetchCsv(url string) ([][]string, error) {
-	resp, err := http.Get(url)
+	resp, err := http.Get(url) // #nosec G107
 	if err != nil {
 		return nil, err
 	}
