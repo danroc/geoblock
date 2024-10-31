@@ -80,6 +80,11 @@ func getForwardAuth(
 	}
 }
 
+// getHealth returns a 204 status code to indicate that the server is running.
+func getHealth(writer http.ResponseWriter, _ *http.Request) {
+	writer.WriteHeader(http.StatusNoContent)
+}
+
 // NewServer creates a new HTTP server that listens on the given address.
 func NewServer(
 	address string,
@@ -88,9 +93,15 @@ func NewServer(
 ) *http.Server {
 	mux := http.NewServeMux()
 	mux.HandleFunc(
-		"/v1/forward-auth",
+		"GET /v1/forward-auth",
 		func(writer http.ResponseWriter, request *http.Request) {
 			getForwardAuth(writer, request, resolver, engine)
+		},
+	)
+	mux.HandleFunc(
+		"GET /v1/health",
+		func(writer http.ResponseWriter, request *http.Request) {
+			getHealth(writer, request)
 		},
 	)
 
