@@ -48,7 +48,7 @@ func getForwardAuth(
 		log.WithFields(log.Fields{
 			FieldRequestedDomain: domain,
 			FieldSourceIP:        origin,
-		}).Warn("Missing required headers")
+		}).Error("Missing required headers")
 		writer.WriteHeader(http.StatusForbidden)
 		return
 	}
@@ -60,7 +60,7 @@ func getForwardAuth(
 		log.WithFields(log.Fields{
 			FieldRequestedDomain: domain,
 			FieldSourceIP:        origin,
-		}).Warn("Invalid source IP")
+		}).Error("Invalid source IP")
 		writer.WriteHeader(http.StatusForbidden)
 		return
 	}
