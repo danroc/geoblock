@@ -65,24 +65,24 @@ func getForwardAuth(
 		return
 	}
 
-	resolution := resolver.Resolve(sourceIP)
+	resolved := resolver.Resolve(sourceIP)
 
-	query := rules.Query{
+	query := &rules.Query{
 		RequestedDomain: domain,
 		SourceIP:        sourceIP,
-		SourceCountry:   resolution.CountryCode,
-		SourceASN:       resolution.ASN,
+		SourceCountry:   resolved.CountryCode,
+		SourceASN:       resolved.ASN,
 	}
 
 	logFields := log.Fields{
 		FieldRequestedDomain: domain,
 		FieldSourceIP:        sourceIP,
-		FieldSourceCountry:   resolution.CountryCode,
-		FieldSourceASN:       resolution.ASN,
-		FieldSourceOrg:       resolution.Organization,
+		FieldSourceCountry:   resolved.CountryCode,
+		FieldSourceASN:       resolved.ASN,
+		FieldSourceOrg:       resolved.Organization,
 	}
 
-	if engine.Authorize(&query) {
+	if engine.Authorize(query) {
 		log.WithFields(logFields).Info("Request authorized")
 		writer.WriteHeader(http.StatusNoContent)
 	} else {
