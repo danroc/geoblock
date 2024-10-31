@@ -4,7 +4,7 @@ help: ## Show this help
 	@egrep -h '\s##\s' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-12s\033[0m %s\n", $$1, $$2}'
 
 lint: tidy ## Run linter
-	golines -w -m 79 --base-formatter=gofumpt .
+	golines -m 79 --base-formatter=gofumpt .
 	gosec ./...
 	go vet ./...
 
