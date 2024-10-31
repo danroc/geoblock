@@ -113,7 +113,6 @@ func (r *Resolver) Resolve(ip net.IP) *Resolution {
 
 	if utils.IsIPv4(ip) {
 		return resolve(ip, r.countryDBv4, r.asnDBv4)
-	} else {
-		return resolve(ip, r.countryDBv6, r.asnDBv6)
 	}
+	return resolve(ip, r.countryDBv6, r.asnDBv6)
 }
