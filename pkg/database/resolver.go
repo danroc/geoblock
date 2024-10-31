@@ -96,21 +96,15 @@ func resolve(ip net.IP, countryDB *Database, asnDB *Database) *Resolution {
 
 // Resolve resolves the given IP address to a country code and an ASN.
 //
-// If the IP is nil, the function returns nil. It is the caller's
-// responsibility to check if the IP is valid.
+// It is the caller's responsibility to check if the IP is valid.
 //
 // If the country of the IP is not found, the CountryCode field of the result
-// will be an empty string.
-//
-// If the ASN of the IP is not found, the ASN field of the result will be zero.
+// will be an empty string. If the ASN of the IP is not found, the ASN field of
+// the result will be zero.
 //
 // The Organization field is present for informational purposes only. It is not
 // used by the rules engine.
 func (r *Resolver) Resolve(ip net.IP) *Resolution {
-	if ip == nil {
-		return nil
-	}
-
 	if utils.IsIPv4(ip) {
 		return resolve(ip, r.countryDBv4, r.asnDBv4)
 	}

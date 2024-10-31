@@ -53,7 +53,18 @@ func getForwardAuth(
 		return
 	}
 
+	// For sanity, we check if the source IP is a valid IP address. If the IP
+	// is invalid, we deny the request regardless of the default policy.
 	sourceIP := net.ParseIP(origin)
+	if sourceIP == nil {
+		log.WithFields(log.Fields{
+			FieldRequestedDomain: domain,
+			FieldSourceIP:        origin,
+		}).Warn("Invalid source IP")
+		writer.WriteHeader(http.StatusForbidden)
+		return
+	}
+
 	resolution := resolver.Resolve(sourceIP)
 
 	query := rules.Query{
