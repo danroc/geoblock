@@ -34,22 +34,22 @@ type Resolver struct {
 
 // NewResolver creates a new IP resolver.
 func NewResolver() (*Resolver, error) {
-	countryDBv4, err := NewDatabase(countryIPv4URL)
+	countryDBv4, err := NewDatabaseURL(countryIPv4URL)
 	if err != nil {
 		return nil, err
 	}
 
-	countryDBv6, err := NewDatabase(countryIPv6URL)
+	countryDBv6, err := NewDatabaseURL(countryIPv6URL)
 	if err != nil {
 		return nil, err
 	}
 
-	asnDBv4, err := NewDatabase(asnIPv4URL)
+	asnDBv4, err := NewDatabaseURL(asnIPv4URL)
 	if err != nil {
 		return nil, err
 	}
 
-	asnDBv6, err := NewDatabase(asnIPv6URL)
+	asnDBv6, err := NewDatabaseURL(asnIPv6URL)
 	if err != nil {
 		return nil, err
 	}

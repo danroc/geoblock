@@ -3,6 +3,7 @@ package database
 
 import (
 	"encoding/csv"
+	"io"
 	"net"
 	"net/http"
 	"slices"
@@ -17,16 +18,6 @@ type Entry struct {
 	StartIP net.IP
 	EndIP   net.IP
 	Data    []string
-}
-
-// fetchCsv fetches a CSV file from the given URL and returns its records.
-func fetchCsv(url string) ([][]string, error) {
-	resp, err := http.Get(url) // #nosec G107
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	return csv.NewReader(resp.Body).ReadAll()
 }
 
 // sanatizeData trims the leading and trailing spaces from the given strings.
@@ -78,9 +69,9 @@ type Database struct {
 }
 
 // NewDatabase creates a new database from the given URL.
-func NewDatabase(url string) (*Database, error) {
+func NewDatabase(reader io.Reader) (*Database, error) {
 	// Records are the raw data from the CSV file.
-	records, err := fetchCsv(url)
+	records, err := csv.NewReader(reader).ReadAll()
 	if err != nil {
 		return nil, err
 	}
@@ -96,6 +87,16 @@ func NewDatabase(url string) (*Database, error) {
 	// sort is done in-place.
 	sortEntries(entries)
 	return &Database{entries: entries}, nil
+}
+
+// NewDatabaseURL creates a new database from the given URL.
+func NewDatabaseURL(url string) (*Database, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	return NewDatabase(resp.Body)
 }
 
 // Find returns the data associated with the entry that contains the given IP.
