@@ -91,7 +91,7 @@ func NewDatabase(reader io.Reader) (*Database, error) {
 
 // NewDatabaseURL creates a new database from the given URL.
 func NewDatabaseURL(url string) (*Database, error) {
-	resp, err := http.Get(url)
+	resp, err := http.Get(url) // #nosec G107
 	if err != nil {
 		return nil, err
 	}
