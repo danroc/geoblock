@@ -3,22 +3,22 @@
 Geoblock is a lightweight authorization service designed to control access to
 services based on the following criteria:
 
-- Client country
-- Client IP address
-- Client ASN (Autonomous System Number)
+- Client's country
+- Client's IP address
+- Client's ASN (Autonomous System Number)
 - Requested domain
 
-Various criteria can be combined in a single **rule**, allowing for
-fine-grained access control.
-
-Rules are tested in order, and the first rule that matches the request is
-applied. If no rule matches, the default policy is applied.
+These criteria can be combined in a single **rule** to enable fine-grained
+access control.
 
 ## Configuration
 
-Geoblock has a single configuration file that defines the access control rules
-to apply. Its default location is `./config.yaml`, relative to the `geoblock`
-binary file.
+Geoblock uses a single configuration file to define access control rules. Rules
+are evaluated in order, with the first matching rule applied to each request.
+If no rule matches, the default policy is used.
+
+By default, the configuration file is located at `./config.yaml`, relative to
+the `geoblock` binary.
 
 Here is an example configuration file:
 
