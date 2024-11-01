@@ -15,7 +15,12 @@ func TestAny(t *testing.T) {
 	}{
 		{"empty slice", []int{}, func(v int) bool { return v > 0 }, false},
 		{"no match", []int{1, 2, 3}, func(v int) bool { return v > 3 }, false},
-		{"one match", []int{1, 2, 3}, func(v int) bool { return v == 2 }, true},
+		{
+			"one match",
+			[]int{1, 2, 3},
+			func(v int) bool { return v == 2 },
+			true,
+		},
 		{"all match", []int{1, 2, 3}, func(v int) bool { return v > 0 }, true},
 	}
 
@@ -35,10 +40,30 @@ func TestAll(t *testing.T) {
 		f      func(int) bool
 		want   bool
 	}{
-		{"empty slice", []int{}, func(v int) bool { return v > 0 }, true},
-		{"no match", []int{1, 2, 3}, func(v int) bool { return v > 3 }, false},
-		{"one match", []int{1, 2, 3}, func(v int) bool { return v == 2 }, false},
-		{"all match", []int{1, 2, 3}, func(v int) bool { return v > 0 }, true},
+		{
+			"empty slice",
+			[]int{},
+			func(v int) bool { return v > 0 },
+			true,
+		},
+		{
+			"no match",
+			[]int{1, 2, 3},
+			func(v int) bool { return v > 3 },
+			false,
+		},
+		{
+			"one match",
+			[]int{1, 2, 3},
+			func(v int) bool { return v == 2 },
+			false,
+		},
+		{
+			"all match",
+			[]int{1, 2, 3},
+			func(v int) bool { return v > 0 },
+			true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -57,10 +82,30 @@ func TestNone(t *testing.T) {
 		f      func(int) bool
 		want   bool
 	}{
-		{"empty slice", []int{}, func(v int) bool { return v > 0 }, true},
-		{"no match", []int{1, 2, 3}, func(v int) bool { return v > 3 }, true},
-		{"one match", []int{1, 2, 3}, func(v int) bool { return v == 2 }, false},
-		{"all match", []int{1, 2, 3}, func(v int) bool { return v > 0 }, false},
+		{
+			"empty slice",
+			[]int{},
+			func(v int) bool { return v > 0 },
+			true,
+		},
+		{
+			"no match",
+			[]int{1, 2, 3},
+			func(v int) bool { return v > 3 },
+			true,
+		},
+		{
+			"one match",
+			[]int{1, 2, 3},
+			func(v int) bool { return v == 2 },
+			false,
+		},
+		{
+			"all match",
+			[]int{1, 2, 3},
+			func(v int) bool { return v > 0 },
+			false,
+		},
 	}
 
 	for _, tt := range tests {
