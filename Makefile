@@ -26,7 +26,8 @@ build: ## Build the binary
 	go build -ldflags="-s -w" -o ./dist/geoblock ./cmd/geoblock/
 
 test:
-	go test ./...
+	go test -coverprofile=coverage.out ./...
+	gocover-cobertura < coverage.out > coverage.xml
 
 docker: ## Build docker image
 	docker build -t geoblock .

@@ -12,13 +12,13 @@ func CompareIP(a net.IP, b net.IP) int {
 	return bytes.Compare(a, b)
 }
 
-// InvalidIPError is used when a give IP address is invalid.
-type InvalidIPError struct {
+// ErrInvalidIP is used when a give IP address is invalid.
+type ErrInvalidIP struct {
 	Address string
 }
 
 // Error returns the error message.
-func (e *InvalidIPError) Error() string {
+func (e *ErrInvalidIP) Error() string {
 	return fmt.Sprintf("invalid IP address: %s", e.Address)
 }
 

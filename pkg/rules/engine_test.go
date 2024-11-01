@@ -69,6 +69,22 @@ func TestEngine_Authorize(t *testing.T) {
 			want: false,
 		},
 		{
+			name: "deny unknown domain",
+			config: &schema.AccessControl{
+				Rules: []schema.AccessControlRule{
+					{
+						Domains: []string{"example.org"},
+						Policy:  schema.PolicyAllow,
+					},
+				},
+				DefaultPolicy: schema.PolicyDeny,
+			},
+			query: &Query{
+				RequestedDomain: "example.com",
+			},
+			want: false,
+		},
+		{
 			name: "allow by network",
 			config: &schema.AccessControl{
 				Rules: []schema.AccessControlRule{
@@ -151,6 +167,22 @@ func TestEngine_Authorize(t *testing.T) {
 			want: false,
 		},
 		{
+			name: "deny unknown country",
+			config: &schema.AccessControl{
+				Rules: []schema.AccessControlRule{
+					{
+						Countries: []string{"FR", "US"},
+						Policy:    schema.PolicyAllow,
+					},
+				},
+				DefaultPolicy: schema.PolicyDeny,
+			},
+			query: &Query{
+				SourceCountry: "DE",
+			},
+			want: false,
+		},
+		{
 			name: "allow by ASN",
 			config: &schema.AccessControl{
 				Rules: []schema.AccessControlRule{
@@ -179,6 +211,22 @@ func TestEngine_Authorize(t *testing.T) {
 			},
 			query: &Query{
 				SourceASN: 2222,
+			},
+			want: false,
+		},
+		{
+			name: "deny unknown ASN",
+			config: &schema.AccessControl{
+				Rules: []schema.AccessControlRule{
+					{
+						AutonomousSystems: []uint32{1111, 2222},
+						Policy:            schema.PolicyAllow,
+					},
+				},
+				DefaultPolicy: schema.PolicyDeny,
+			},
+			query: &Query{
+				SourceASN: 3333,
 			},
 			want: false,
 		},

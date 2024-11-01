@@ -57,6 +57,7 @@ func TestParseDuration(t *testing.T) {
 		"1m 30",
 		"1m x",
 		"1m s",
+		"",
 	}
 
 	for _, input := range invalidDurations {

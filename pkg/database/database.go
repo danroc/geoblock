@@ -40,11 +40,11 @@ func parseRecords(records [][]string) ([]Entry, error) {
 		)
 
 		if startIP == nil {
-			return nil, &utils.InvalidIPError{Address: record[0]}
+			return nil, &utils.ErrInvalidIP{Address: record[0]}
 		}
 
 		if endIP == nil {
-			return nil, &utils.InvalidIPError{Address: record[1]}
+			return nil, &utils.ErrInvalidIP{Address: record[1]}
 		}
 
 		entries = append(entries, Entry{
