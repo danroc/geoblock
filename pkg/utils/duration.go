@@ -54,7 +54,7 @@ func ParseDuration(s string) (time.Duration, error) {
 	for _, match := range matches {
 		duration, err := strconv.ParseInt(match[1], 10, 64)
 		if err != nil {
-			return 0, err
+			return 0, fmt.Errorf("invalid duration: %w", err)
 		}
 
 		unit := match[2]
