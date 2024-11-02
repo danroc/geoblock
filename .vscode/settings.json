@@ -1,8 +1,5 @@
 {
     "cSpell.words": [
         "geoblock"
-    ],
-    "files.associations": {
-        "*.yaml": "home-assistant"
-    }
+    ]
 }
