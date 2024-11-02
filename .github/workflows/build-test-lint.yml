@@ -22,7 +22,7 @@ jobs:
           go-version: '^1.23.2'
 
       - name: Install tools
-        run: |-
+        run: |
           go install github.com/segmentio/golines@v0.12.2
           go install mvdan.cc/gofumpt@v0.7.0
           go install github.com/securego/gosec/v2/cmd/gosec@v2.21.4
