@@ -47,6 +47,8 @@ func ParseDuration(s string) (time.Duration, error) {
 		strings.ReplaceAll(s, " ", ""), -1,
 	)
 	if matches == nil {
+		// The `reDurationString` regex should ensure that there is at least
+		// one match, so this should never happen.
 		return 0, fmt.Errorf("invalid duration: %s", s)
 	}
 
@@ -54,6 +56,8 @@ func ParseDuration(s string) (time.Duration, error) {
 	for _, match := range matches {
 		duration, err := strconv.ParseInt(match[1], 10, 64)
 		if err != nil {
+			// The duration string was already validated above, and `match[1]`
+			// should always be a valid number.
 			return 0, fmt.Errorf("invalid duration: %w", err)
 		}
 
