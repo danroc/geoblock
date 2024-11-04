@@ -35,8 +35,8 @@ access_control:
   # Default action when no rules match ("allow" or "deny").
   default_policy: deny
 
-  # List of access rules, evaluated in order. The first matching rule’s policy
-  # is applied. If no rule matches, the default policy is used.
+  # List of access rules, evaluated in order. The first matching rule’s
+  # policy is applied. If no rule matches, the default policy is used.
   #
   # IMPORTANT: Replace these example rules with your own rules.
   rules:
@@ -54,8 +54,8 @@ access_control:
         - 5678
       policy: deny
 
-    # Allow access to example.com and example.org from clients in France (FR)
-    # and the United States (US).
+    # Allow access to example.com and example.org from clients in
+    # France (FR) and the United States (US).
     - domains:
         - example.com
         - example.org
