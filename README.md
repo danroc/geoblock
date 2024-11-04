@@ -65,6 +65,38 @@ access_control:
       policy: allow
 ```
 
+## HTTP API
+
+The following HTTP endpoints are exposed by Geoblock.
+
+### `GET /v1/forward-auth`
+
+Check if a client is authorized to access a domain.
+
+#### Request
+
+| Header             | Required | Description         |
+| :----------------- | :------: | :------------------ |
+| `X-Forwarded-For`  |   Yes    | Client's IP address |
+| `X-Forwarded-Host` |   Yes    | Requested domain    |
+
+#### Response
+
+| Status | Description |
+| :----- | :---------- |
+| `204`  | Authorized  |
+| `403`  | Forbidden   |
+
+### `GET /v1/health`
+
+Check if the service is healthy.
+
+#### Response
+
+| Status | Description |
+| :----- | :---------- |
+| `204`  | Healthy     |
+
 ## Deployment
 
 ### Traefik
