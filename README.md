@@ -32,15 +32,15 @@ Example configuration file:
 ```yaml
 ---
 access_control:
-  # Default policy to apply when no rules match. Possible values: "allow" or
-  # "deny".
+  # Default action when no rules match ("allow" or "deny").
   default_policy: deny
 
-  # List of rules to apply, in order, to determine access control. If a rule
-  # matches, the policy defined in the rule is applied. If no rule matches, the
-  # default policy is applied.
+  # List of access rules, evaluated in order. The first matching rule’s policy
+  # is applied. If no rule matches, the default policy is used.
+  #
+  # IMPORTANT: Replace these example rules with your own rules.
   rules:
-    # Allow access from private networks
+    # Allow access from internal/private networks.
     - networks:
         - 10.0.0.0/8
         - 127.0.0.0/8
@@ -48,13 +48,14 @@ access_control:
         - 192.168.0.0/16
       policy: allow
 
-    # Deny access for clients from ASNs 1234 and 5678
+    # Deny access for clients from ASNs 1234 and 5678.
     - autonomous_systems:
         - 1234
         - 5678
       policy: deny
 
-    # Allow access from France and the US to example.com and example.org
+    # Allow access to example.com and example.org from clients in France (FR)
+    # and the United States (US).
     - domains:
         - example.com
         - example.org
