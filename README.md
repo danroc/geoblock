@@ -143,20 +143,20 @@ Start geoblock with the provided example configuration:
 GEOBLOCK_CONFIG=examples/config.yaml GEOBLOCK_PORT=8080 make run
 ```
 
-### Missing X-Forwarded-For and X-Forwarded-Host headers
+### Missing `X-Forwarded-For` and `X-Forwarded-Host` headers
 
 ```http
 GET http://localhost:8080/v1/forward-auth
 ```
 
-### Missing X-Forwarded-Host header
+### Missing `X-Forwarded-Host` header
 
 ```http
 GET http://localhost:8080/v1/forward-auth
 X-Forwarded-For: 127.0.0.1
 ```
 
-### Missing X-Forwarded-For header
+### Missing `X-Forwarded-For` header
 
 ```http
 GET http://localhost:8080/v1/forward-auth
