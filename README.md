@@ -1,6 +1,6 @@
 <h1 align="center">Geoblock</h1>
 <p align="center">
-  <i>Block clients based on their country or network.</i>
+  <i>Block clients based on their country, ASN or network.</i>
 </p>
 
 ## Introduction
