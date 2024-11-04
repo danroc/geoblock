@@ -24,8 +24,8 @@ func isCIDRField(field validator.FieldLevel) bool {
 	return true
 }
 
-// ReadBytes reads the configuration from the giver bytes slice.
-func ReadBytes(data []byte) (*Configuration, error) {
+// read reads the configuration from the giver bytes slice.
+func read(data []byte) (*Configuration, error) {
 	var config Configuration
 	if err := yaml.Unmarshal(data, &config); err != nil {
 		return nil, err
@@ -48,7 +48,7 @@ func Read(reader io.Reader) (*Configuration, error) {
 	if err != nil {
 		return nil, err
 	}
-	return ReadBytes(data)
+	return read(data)
 }
 
 // ReadFile reads the configuration from the given file.
@@ -57,5 +57,5 @@ func ReadFile(filename string) (*Configuration, error) {
 	if err != nil {
 		return nil, err
 	}
-	return ReadBytes(data)
+	return read(data)
 }
