@@ -1,4 +1,9 @@
-# Geoblock
+<h1 align="center">Geoblock</h1>
+<p align="center">
+  <i>Block clients based on their country or network.</i>
+</p>
+
+## Introduction
 
 Geoblock is a lightweight authorization service designed to control access to
 services based on the following criteria:
