@@ -18,32 +18,30 @@ access control.
 
 ## Configuration
 
-Geoblock uses a single configuration file to define access control rules. Rules
-are evaluated in order, with the first matching rule applied to each request.
-If no rule matches, the default policy is used.
+Geoblock uses a single configuration file (`config.yaml` by default) to set
+access control rules. Rules are evaluated sequentially, applying the first
+match per request. If no rules match, the default policy applies.
 
-By default, the configuration file is located at `./config.yaml`, relative to
-the `geoblock` binary.
+A rule matches if all specified conditions are met, which can include:
 
-Here is an example configuration file:
+- `countries`: List of ISO 3166-1 alpha-2 country codes.
+- `domains`: List of domains.
+- `networks`: List of CIDR blocks.
+- `autonomous_systems`: List of ASNs.
+
+Example configuration file:
 
 ```yaml
 ---
 access_control:
-  # Default policy to apply when no rules match, possible values are "allow"
-  # and "deny"
+  # Default policy to apply when no rules match. Possible values: "allow" or
+  # "deny".
   default_policy: deny
 
   # List of rules to apply, in order, to determine access control. If a rule
   # matches, the policy defined in the rule is applied. If no rule matches, the
   # default policy is applied.
   rules:
-    # Allow access to example.com and example.org
-    - domains:
-        - example.com
-        - example.org
-      policy: allow
-
     # Allow access from private networks
     - networks:
         - 10.0.0.0/8
@@ -58,14 +56,10 @@ access_control:
         - 5678
       policy: deny
 
-    # Allow access from France
-    - countries:
-        - FR
-      policy: allow
-
-    # Allow access from France and the US to example.com
+    # Allow access from France and the US to example.com and example.org
     - domains:
         - example.com
+        - example.org
       countries:
         - FR
         - US
