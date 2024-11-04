@@ -105,10 +105,10 @@ networks:
 
 The following environment variables can be used to configure Geoblock:
 
-| Variable          | Description                    | Default       |
-| :---------------- | :----------------------------- | :------------ |
-| `GEOBLOCK_CONFIG` | Path to the configuration file | `config.yaml` |
-| `GEOBLOCK_PORT`   | Port to listen on              | `8080`        |
+| Variable          | Description                    | Default         |
+| :---------------- | :----------------------------- | :-------------- |
+| `GEOBLOCK_CONFIG` | Path to the configuration file | `./config.yaml` |
+| `GEOBLOCK_PORT`   | Port to listen on              | `8080`          |
 
 ## Manual testing
 
