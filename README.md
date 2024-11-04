@@ -5,16 +5,13 @@
 
 ## Introduction
 
-Geoblock is a lightweight authorization service designed to control access to
-services based on the following criteria:
+Geoblock is a lightweight authorization service that restricts client access
+based on:
 
 - Client's country
 - Client's IP address
 - Client's ASN (Autonomous System Number)
 - Requested domain
-
-These criteria can be combined in a single **rule** to enable fine-grained
-access control.
 
 ## Configuration
 
@@ -22,12 +19,13 @@ Geoblock uses a single configuration file (`config.yaml` by default) to set
 access control rules. Rules are evaluated sequentially, applying the first
 match per request. If no rules match, the default policy applies.
 
-A rule matches if all specified conditions are met, which can include:
+A rule matches if all specified conditions are met. Rules can include one or
+more of the following criteria:
 
-- `countries`: List of ISO 3166-1 alpha-2 country codes.
-- `domains`: List of domains.
-- `networks`: List of CIDR blocks.
-- `autonomous_systems`: List of ASNs.
+- `countries`: List of country codes (ISO 3166-1 alpha-2)
+- `domains`: List of domain names
+- `networks`: List of IP ranges in CIDR notation
+- `autonomous_systems`: List of ASNs
 
 Example configuration file:
 
