@@ -1,6 +1,7 @@
 package database_test
 
 import (
+	"errors"
 	"net"
 	"strings"
 	"testing"
@@ -23,6 +24,12 @@ const (
 
 	// No CSV data
 	csvData5 = "\n"
+
+	// Invalid start IP
+	csvData6 = "invalid-ip,192.168.1.2,data1,data2\n"
+
+	// Invalid end IP
+	csvData7 = "192.168.1.1,invalid-ip,data1,data2\n"
 )
 
 func TestNewDatabase(t *testing.T) {
@@ -36,6 +43,8 @@ func TestNewDatabase(t *testing.T) {
 		{"Missing end IP", csvData3, true},
 		{"Missing data", csvData4, false},
 		{"No CSV data", csvData5, false},
+		{"Invalid start IP", csvData6, true},
+		{"Invalid end IP", csvData7, true},
 	}
 
 	for _, test := range tests {
@@ -47,6 +56,20 @@ func TestNewDatabase(t *testing.T) {
 		if !test.err && err != nil {
 			t.Errorf("%s: expected no error but got %v", test.name, err)
 		}
+	}
+}
+
+type errorReader struct{}
+
+func (r *errorReader) Read(p []byte) (n int, err error) {
+	return 0, errors.New("read error")
+}
+
+func TestNewDatabaseReadErr(t *testing.T) {
+	reader := &errorReader{}
+	_, err := database.NewDatabase(reader)
+	if err == nil {
+		t.Fatalf("Expected an error but got nil")
 	}
 }
 
