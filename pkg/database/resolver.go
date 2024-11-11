@@ -1,7 +1,9 @@
 package database
 
 import (
+	"errors"
 	"net"
+	"net/http"
 	"strconv"
 
 	"github.com/danroc/geoblock/pkg/utils"
@@ -32,34 +34,56 @@ type Resolver struct {
 	asnDBv6     *Database
 }
 
+// updateDB updates the given database with the data from the given URL.
+func updateDB(db *Database, url string) error {
+	resp, err := http.Get(url) // #nosec G107
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	return db.Update(resp.Body)
+}
+
+// Update updates the databases used by the resolver.
+//
+// If an error occurs while updating a database, the function proceeds to
+// update the next database and returns all the errors at the end.
+func (r *Resolver) Update() error {
+	items := []struct {
+		db  *Database
+		url string
+	}{
+		{r.countryDBv4, countryIPv4URL},
+		{r.countryDBv6, countryIPv6URL},
+		{r.asnDBv4, asnIPv4URL},
+		{r.asnDBv6, asnIPv6URL},
+	}
+
+	var errs []error
+
+	for _, item := range items {
+		if err := updateDB(item.db, item.url); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
+	return errors.Join(errs...)
+}
+
 // NewResolver creates a new IP resolver.
 func NewResolver() (*Resolver, error) {
-	countryDBv4, err := NewDatabaseURL(countryIPv4URL)
-	if err != nil {
+	resolver := &Resolver{
+		countryDBv4: NewDatabase(),
+		countryDBv6: NewDatabase(),
+		asnDBv4:     NewDatabase(),
+		asnDBv6:     NewDatabase(),
+	}
+
+	if err := resolver.Update(); err != nil {
 		return nil, err
 	}
 
-	countryDBv6, err := NewDatabaseURL(countryIPv6URL)
-	if err != nil {
-		return nil, err
-	}
-
-	asnDBv4, err := NewDatabaseURL(asnIPv4URL)
-	if err != nil {
-		return nil, err
-	}
-
-	asnDBv6, err := NewDatabaseURL(asnIPv6URL)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Resolver{
-		countryDBv4: countryDBv4,
-		countryDBv6: countryDBv6,
-		asnDBv4:     asnDBv4,
-		asnDBv6:     asnDBv6,
-	}, nil
+	return resolver, nil
 }
 
 // strIndex returns the element at the given index of the data slice. If the
