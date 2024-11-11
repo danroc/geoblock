@@ -65,6 +65,35 @@ access_control:
       policy: allow
 ```
 
+## Installation
+
+### With Traefik
+
+```yaml
+# compose.yaml
+---
+services:
+  traefik:
+    # Traefik configuration...
+
+  geoblock:
+    image: ghcr.io/danroc/geoblock:latest
+    container_name: geoblock
+    networks:
+      - proxy
+    volumes:
+      - ./config.yaml:/app/config.yaml
+    labels:
+      - traefik.enable=true
+      - traefik.http.middlewares.geoblock.forwardauth.address=http://geoblock:8080/v1/forward-auth
+      - traefik.http.middlewares.geoblock.forwardauth.trustForwardHeader=true
+    restart: unless-stopped
+
+networks:
+  proxy:
+    external: true
+```
+
 ## HTTP API
 
 The following HTTP endpoints are exposed by Geoblock.
@@ -96,35 +125,6 @@ Check if the service is healthy.
 | Status | Description |
 | :----- | :---------- |
 | `204`  | Healthy     |
-
-## Deployment
-
-### Traefik
-
-```yaml
-# compose.yaml
----
-services:
-  traefik:
-    # Traefik configuration...
-
-  geoblock:
-    image: ghcr.io/danroc/geoblock:latest
-    container_name: geoblock
-    networks:
-      - proxy
-    volumes:
-      - ./config.yaml:/app/config.yaml
-    labels:
-      - traefik.enable=true
-      - traefik.http.middlewares.geoblock.forwardauth.address=http://geoblock:8080/v1/forward-auth
-      - traefik.http.middlewares.geoblock.forwardauth.trustForwardHeader=true
-    restart: unless-stopped
-
-networks:
-  proxy:
-    external: true
-```
 
 ## Environment variables
 
