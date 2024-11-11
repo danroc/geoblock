@@ -5,10 +5,10 @@ import (
 	"encoding/csv"
 	"io"
 	"net"
-	"net/http"
 	"slices"
 	"sort"
 	"strings"
+	"sync"
 
 	"github.com/danroc/geoblock/pkg/utils"
 )
@@ -66,42 +66,47 @@ func sortEntries(entries []Entry) {
 // Database represents a database of IP ranges.
 type Database struct {
 	entries []Entry
+	mu      sync.RWMutex
 }
 
 // NewDatabase creates a new database from the given URL.
-func NewDatabase(reader io.Reader) (*Database, error) {
+func NewDatabase() *Database {
+	return &Database{}
+}
+
+// Update updates the database with the data from the given reader.
+func (db *Database) Update(reader io.Reader) error {
 	// Records are the raw data from the CSV file.
 	records, err := csv.NewReader(reader).ReadAll()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// Entries are the parsed data from the records, it is composed by a start
 	// IP, an end IP, and the string data associated with the range.
 	entries, err := parseRecords(records)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// The entries must be sorted by their start IP to allow binary search. The
 	// sort is done in-place.
 	sortEntries(entries)
-	return &Database{entries: entries}, nil
-}
 
-// NewDatabaseURL creates a new database from the given URL.
-func NewDatabaseURL(url string) (*Database, error) {
-	resp, err := http.Get(url) // #nosec G107
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	return NewDatabase(resp.Body)
+	// Update the database with the new entries.
+	db.mu.Lock()
+	db.entries = entries
+	db.mu.Unlock()
+
+	return nil
 }
 
 // Find returns the data associated with the entry that contains the given IP.
 // If the IP is not found, nil is returned.
 func (db *Database) Find(ip net.IP) []string {
+	db.mu.RLock()
+	defer db.mu.RUnlock()
+
 	// If the given IP address is invalid, we return nil to indidate that the
 	// IP cannot be found in the database. It is up to the caller to validate
 	// the IP address before calling this method.
