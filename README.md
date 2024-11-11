@@ -128,6 +128,11 @@ networks:
 
 ## Environment variables
 
+> [!NOTE]
+> Environment variables are intended primarily to be used when running Geoblock
+> locally during development. It is discouraged to set or modify their values
+> when running the Docker image. Instead, use mounts or remap ports as needed.
+
 The following environment variables can be used to configure Geoblock:
 
 | Variable          | Description                    | Default         |
