@@ -209,9 +209,9 @@ X-Forwarded-Host: example.com
 - [x] Docker image
 - [x] Publish Docker image
 - [ ] Write documentation
-- [ ] Cache responses
-- [ ] Cache databases
 - [ ] Auto-update databases
-- [ ] Add more tests
+- [ ] Cache responses
 - [ ] Add metrics
+- [ ] Add more tests
+- [ ] ~~Cache databases~~
 - [ ] Support command line arguments
