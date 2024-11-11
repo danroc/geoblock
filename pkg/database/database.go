@@ -20,8 +20,8 @@ type Entry struct {
 	Data    []string
 }
 
-// sanatizeData trims the leading and trailing spaces from the given strings.
-func sanatizeData(data []string) []string {
+// sanitizeData trims the leading and trailing spaces from the given strings.
+func sanitizeData(data []string) []string {
 	sanitized := make([]string, len(data))
 	for i, d := range data {
 		sanitized[i] = strings.TrimSpace(d)
@@ -36,7 +36,7 @@ func parseRecords(records [][]string) ([]Entry, error) {
 		var (
 			startIP = net.ParseIP(record[0])
 			endIP   = net.ParseIP(record[1])
-			data    = sanatizeData(record[2:])
+			data    = sanitizeData(record[2:])
 		)
 
 		if startIP == nil {
