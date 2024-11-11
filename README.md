@@ -3,6 +3,25 @@
   <i>Block clients based on their country, ASN or network.</i>
 </p>
 
+- [Introduction](#introduction)
+- [Configuration](#configuration)
+- [Installation](#installation)
+  - [With Traefik](#with-traefik)
+- [HTTP API](#http-api)
+  - [`GET /v1/forward-auth`](#get-v1forward-auth)
+    - [Request](#request)
+    - [Response](#response)
+  - [`GET /v1/health`](#get-v1health)
+    - [Response](#response-1)
+- [Environment variables](#environment-variables)
+- [Manual testing](#manual-testing)
+  - [Missing `X-Forwarded-For` and `X-Forwarded-Host` headers](#missing-x-forwarded-for-and-x-forwarded-host-headers)
+  - [Missing `X-Forwarded-Host` header](#missing-x-forwarded-host-header)
+  - [Missing `X-Forwarded-For` header](#missing-x-forwarded-for-header)
+  - [Blocked country](#blocked-country)
+  - [Request authorized](#request-authorized)
+- [Roadmap](#roadmap)
+
 ## Introduction
 
 Geoblock is a lightweight authorization service that restricts client access
