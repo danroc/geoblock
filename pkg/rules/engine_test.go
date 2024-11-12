@@ -85,6 +85,54 @@ func TestEngine_Authorize(t *testing.T) {
 			want: false,
 		},
 		{
+			name: "allow by method",
+			config: &schema.AccessControl{
+				Rules: []schema.AccessControlRule{
+					{
+						Methods: []string{"GET", "POST"},
+						Policy:  schema.PolicyAllow,
+					},
+				},
+				DefaultPolicy: schema.PolicyDeny,
+			},
+			query: &Query{
+				RequestedMethod: "POST",
+			},
+			want: true,
+		},
+		{
+			name: "deny by method",
+			config: &schema.AccessControl{
+				Rules: []schema.AccessControlRule{
+					{
+						Methods: []string{"GET", "POST"},
+						Policy:  schema.PolicyDeny,
+					},
+				},
+				DefaultPolicy: schema.PolicyAllow,
+			},
+			query: &Query{
+				RequestedMethod: "POST",
+			},
+			want: false,
+		},
+		{
+			name: "deny unknown method",
+			config: &schema.AccessControl{
+				Rules: []schema.AccessControlRule{
+					{
+						Methods: []string{"GET"},
+						Policy:  schema.PolicyAllow,
+					},
+				},
+				DefaultPolicy: schema.PolicyDeny,
+			},
+			query: &Query{
+				RequestedMethod: "POST",
+			},
+			want: false,
+		},
+		{
 			name: "allow by network",
 			config: &schema.AccessControl{
 				Rules: []schema.AccessControlRule{
