@@ -130,10 +130,11 @@ Check if a client is authorized to access a domain.
 
 #### Request
 
-| Header             | Required | Description         |
-| :----------------- | :------: | :------------------ |
-| `X-Forwarded-For`  |   Yes    | Client's IP address |
-| `X-Forwarded-Host` |   Yes    | Requested domain    |
+| Header               | Required | Description           |
+| :------------------- | :------: | :-------------------- |
+| `X-Forwarded-For`    |   Yes    | Client's IP address   |
+| `X-Forwarded-Host`   |   Yes    | Requested domain      |
+| `X-Forwarded-Method` |   Yes    | Requested HTTP method |
 
 #### Response
 
