@@ -39,7 +39,7 @@ type Query struct {
 // Empty conditions are considered as "match all". For example, if a rule has
 // no domains, it will match all domains.
 //
-// Domains and countries are case-insensitive.
+// Domains, methods and countries are case-insensitive.
 func ruleApplies(rule *schema.AccessControlRule, query *Query) bool {
 	if len(rule.Domains) > 0 {
 		if utils.None(rule.Domains, func(domain string) bool {
