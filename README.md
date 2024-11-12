@@ -32,6 +32,7 @@ based on:
 - Client's IP address
 - Client's ASN (Autonomous System Number)
 - Requested domain
+- Requested method
 
 ## Configuration
 
@@ -44,6 +45,7 @@ more of the following criteria:
 
 - `countries`: List of country codes (ISO 3166-1 alpha-2)
 - `domains`: List of domain names
+- `methods`: List of HTTP methods
 - `networks`: List of IP ranges in CIDR notation
 - `autonomous_systems`: List of ASNs
 
@@ -75,13 +77,17 @@ access_control:
       policy: deny
 
     # Allow access to example.com and example.org from clients in
-    # France (FR) and the United States (US).
+    # France (FR) and the United States (US) using the GET or POST HTTP
+    # methods.
     - domains:
         - example.com
         - example.org
       countries:
         - FR
         - US
+      methods:
+        - GET
+        - POST
       policy: allow
 ```
 
