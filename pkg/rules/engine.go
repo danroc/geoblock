@@ -26,6 +26,7 @@ func NewEngine(config *schema.AccessControl) *Engine {
 // Query represents a query to be checked by the access control engine.
 type Query struct {
 	RequestedDomain string
+	RequestedMethod string
 	SourceIP        net.IP
 	SourceCountry   string
 	SourceASN       uint32
@@ -43,6 +44,14 @@ func ruleApplies(rule *schema.AccessControlRule, query *Query) bool {
 	if len(rule.Domains) > 0 {
 		if utils.None(rule.Domains, func(domain string) bool {
 			return strings.EqualFold(domain, query.RequestedDomain)
+		}) {
+			return false
+		}
+	}
+
+	if len(rule.Methods) > 0 {
+		if utils.None(rule.Methods, func(method string) bool {
+			return strings.EqualFold(method, query.RequestedMethod)
 		}) {
 			return false
 		}

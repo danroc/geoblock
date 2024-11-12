@@ -15,9 +15,10 @@
     - [Response](#response-1)
 - [Environment variables](#environment-variables)
 - [Manual testing](#manual-testing)
-  - [Missing `X-Forwarded-For` and `X-Forwarded-Host` headers](#missing-x-forwarded-for-and-x-forwarded-host-headers)
+  - [Missing `X-Forwarded-For` and `X-Forwarded-Host` and `X-Forwarded-Method` headers](#missing-x-forwarded-for-and-x-forwarded-host-and-x-forwarded-method-headers)
   - [Missing `X-Forwarded-Host` header](#missing-x-forwarded-host-header)
   - [Missing `X-Forwarded-For` header](#missing-x-forwarded-for-header)
+  - [Missing `X-Forwarded-Method` header](#missing-x-forwarded-method-header)
   - [Blocked country](#blocked-country)
   - [Request authorized](#request-authorized)
 - [Roadmap](#roadmap)
@@ -31,6 +32,7 @@ based on:
 - Client's IP address
 - Client's ASN (Autonomous System Number)
 - Requested domain
+- Requested method
 
 ## Configuration
 
@@ -43,6 +45,7 @@ more of the following criteria:
 
 - `countries`: List of country codes (ISO 3166-1 alpha-2)
 - `domains`: List of domain names
+- `methods`: List of HTTP methods
 - `networks`: List of IP ranges in CIDR notation
 - `autonomous_systems`: List of ASNs
 
@@ -74,13 +77,17 @@ access_control:
       policy: deny
 
     # Allow access to example.com and example.org from clients in
-    # France (FR) and the United States (US).
+    # France (FR) and the United States (US) using the GET or POST HTTP
+    # methods.
     - domains:
         - example.com
         - example.org
       countries:
         - FR
         - US
+      methods:
+        - GET
+        - POST
       policy: allow
 ```
 
@@ -167,7 +174,7 @@ Start geoblock with the provided example configuration:
 GEOBLOCK_CONFIG=examples/config.yaml GEOBLOCK_PORT=8080 make run
 ```
 
-### Missing `X-Forwarded-For` and `X-Forwarded-Host` headers
+### Missing `X-Forwarded-For` and `X-Forwarded-Host` and `X-Forwarded-Method` headers
 
 ```http
 GET http://localhost:8080/v1/forward-auth
@@ -178,12 +185,22 @@ GET http://localhost:8080/v1/forward-auth
 ```http
 GET http://localhost:8080/v1/forward-auth
 X-Forwarded-For: 127.0.0.1
+X-Forwarded-Method: GET
 ```
 
 ### Missing `X-Forwarded-For` header
 
 ```http
 GET http://localhost:8080/v1/forward-auth
+X-Forwarded-Host: example.com
+X-Forwarded-Method: GET
+```
+
+### Missing `X-Forwarded-Method` header
+
+```http
+GET http://localhost:8080/v1/forward-auth
+X-Forwarded-For: 8.8.8.8
 X-Forwarded-Host: example.com
 ```
 
@@ -193,6 +210,7 @@ X-Forwarded-Host: example.com
 GET http://localhost:8080/v1/forward-auth
 X-Forwarded-For: 8.8.8.8
 X-Forwarded-Host: example.com
+X-Forwarded-Method: GET
 ```
 
 ### Request authorized
@@ -201,6 +219,7 @@ X-Forwarded-Host: example.com
 GET http://localhost:8080/v1/forward-auth
 X-Forwarded-For: 127.0.0.1
 X-Forwarded-Host: example.com
+X-Forwarded-Method: GET
 ```
 
 ## Roadmap

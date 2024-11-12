@@ -24,6 +24,7 @@ const (
 // Fields used in the log messages.
 const (
 	FieldRequestedDomain = "requested_domain"
+	FieldRequestedMethod = "requested_method"
 	FieldSourceIP        = "source_ip"
 	FieldSourceCountry   = "source_country"
 	FieldSourceASN       = "source_asn"
@@ -39,14 +40,18 @@ func getForwardAuth(
 	resolver *database.Resolver,
 	engine *rules.Engine,
 ) {
-	origin := request.Header.Get(HeaderXForwardedFor)
-	domain := request.Header.Get(HeaderXForwardedHost)
+	var (
+		origin = request.Header.Get(HeaderXForwardedFor)
+		domain = request.Header.Get(HeaderXForwardedHost)
+		method = request.Header.Get(HeaderXForwardedMethod)
+	)
 
 	// Block the request if one or more of the required headers are missing. It
 	// probably means that the request didn't come from the reverse proxy.
-	if origin == "" || domain == "" {
+	if origin == "" || domain == "" || method == "" {
 		log.WithFields(log.Fields{
 			FieldRequestedDomain: domain,
+			FieldRequestedMethod: method,
 			FieldSourceIP:        origin,
 		}).Error("Missing required headers")
 		writer.WriteHeader(http.StatusForbidden)
@@ -59,6 +64,7 @@ func getForwardAuth(
 	if sourceIP == nil {
 		log.WithFields(log.Fields{
 			FieldRequestedDomain: domain,
+			FieldRequestedMethod: method,
 			FieldSourceIP:        origin,
 		}).Error("Invalid source IP")
 		writer.WriteHeader(http.StatusForbidden)
@@ -69,6 +75,7 @@ func getForwardAuth(
 
 	query := &rules.Query{
 		RequestedDomain: domain,
+		RequestedMethod: method,
 		SourceIP:        sourceIP,
 		SourceCountry:   resolved.CountryCode,
 		SourceASN:       resolved.ASN,
@@ -76,6 +83,7 @@ func getForwardAuth(
 
 	logFields := log.Fields{
 		FieldRequestedDomain: domain,
+		FieldRequestedMethod: method,
 		FieldSourceIP:        sourceIP,
 		FieldSourceCountry:   resolved.CountryCode,
 		FieldSourceASN:       resolved.ASN,
