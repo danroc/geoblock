@@ -56,13 +56,6 @@ func parseRecords(records [][]string) ([]Entry, error) {
 	return entries, nil
 }
 
-// sortEntries sorts the entries by their start IP.
-func sortEntries(entries []Entry) {
-	slices.SortFunc(entries, func(a, b Entry) int {
-		return utils.CompareIP(a.StartIP, b.StartIP)
-	})
-}
-
 // Database represents a database of IP ranges.
 type Database struct {
 	entries atomic.Value // []Entry
@@ -92,7 +85,9 @@ func (db *Database) Update(reader io.Reader) error {
 
 	// The entries must be sorted by their start IP to allow binary search. The
 	// sort is done in-place.
-	sortEntries(entries)
+	slices.SortFunc(entries, func(a, b Entry) int {
+		return utils.CompareIP(a.StartIP, b.StartIP)
+	})
 
 	// This atomically updates the database entries.
 	db.entries.Store(entries)
