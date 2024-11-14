@@ -4,6 +4,7 @@ package rules
 import (
 	"net"
 	"strings"
+	"sync/atomic"
 
 	"github.com/danroc/geoblock/pkg/schema"
 	"github.com/danroc/geoblock/pkg/utils"
@@ -12,15 +13,15 @@ import (
 // Engine is the access control egine that checks if a given query is allowed
 // by the rules.
 type Engine struct {
-	config *schema.AccessControl
+	config atomic.Pointer[schema.AccessControl]
 }
 
 // NewEngine creates a new access control engine for the given access control
 // configuration.
 func NewEngine(config *schema.AccessControl) *Engine {
-	return &Engine{
-		config: config,
-	}
+	e := &Engine{}
+	e.config.Store(config)
+	return e
 }
 
 // Query represents a query to be checked by the access control engine.
@@ -84,14 +85,21 @@ func ruleApplies(rule *schema.AccessControlRule, query *Query) bool {
 	return true
 }
 
+// UpdateConfig updates the engine's configuration with the given access
+// control configuration.
+func (e *Engine) UpdateConfig(config *schema.AccessControl) {
+	e.config.Store(config)
+}
+
 // Authorize checks if the given query is allowed by the engine's rules. The
 // engine will return true if the query is allowed, false otherwise.
 func (e *Engine) Authorize(query *Query) bool {
-	for _, rule := range e.config.Rules {
+	config := e.config.Load()
+	for _, rule := range config.Rules {
 		if ruleApplies(&rule, query) {
 			return rule.Policy == schema.PolicyAllow
 		}
 	}
 
-	return e.config.DefaultPolicy == schema.PolicyAllow
+	return config.DefaultPolicy == schema.PolicyAllow
 }
