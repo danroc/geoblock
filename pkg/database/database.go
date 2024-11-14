@@ -98,7 +98,7 @@ func (db *Database) Update(reader io.Reader) error {
 // Find returns the data associated with the entry that contains the given IP.
 // If the IP is not found, nil is returned.
 func (db *Database) Find(ip net.IP) []string {
-	// If the given IP address is invalid, we return nil to indidate that the
+	// If the given IP address is invalid, we return nil to indicate that the
 	// IP cannot be found in the database. It is up to the caller to validate
 	// the IP address before calling this method.
 	if ip == nil {

@@ -1,17 +1,18 @@
-package rules
+package rules_test
 
 import (
 	"net"
 	"testing"
 
+	"github.com/danroc/geoblock/pkg/rules"
 	"github.com/danroc/geoblock/pkg/schema"
 )
 
-func TestEngine_Authorize(t *testing.T) {
+func TestEngineAuthorize(t *testing.T) {
 	tests := []struct {
 		name   string
 		config *schema.AccessControl
-		query  *Query
+		query  *rules.Query
 		want   bool
 	}{
 		{
@@ -20,7 +21,7 @@ func TestEngine_Authorize(t *testing.T) {
 				Rules:         []schema.AccessControlRule{},
 				DefaultPolicy: schema.PolicyAllow,
 			},
-			query: &Query{
+			query: &rules.Query{
 				RequestedDomain: "example.com",
 			},
 			want: true,
@@ -31,7 +32,7 @@ func TestEngine_Authorize(t *testing.T) {
 				Rules:         []schema.AccessControlRule{},
 				DefaultPolicy: schema.PolicyDeny,
 			},
-			query: &Query{
+			query: &rules.Query{
 				RequestedDomain: "example.com",
 			},
 			want: false,
@@ -47,7 +48,7 @@ func TestEngine_Authorize(t *testing.T) {
 				},
 				DefaultPolicy: schema.PolicyDeny,
 			},
-			query: &Query{
+			query: &rules.Query{
 				RequestedDomain: "example.org",
 			},
 			want: true,
@@ -63,7 +64,7 @@ func TestEngine_Authorize(t *testing.T) {
 				},
 				DefaultPolicy: schema.PolicyAllow,
 			},
-			query: &Query{
+			query: &rules.Query{
 				RequestedDomain: "example.com",
 			},
 			want: false,
@@ -79,7 +80,7 @@ func TestEngine_Authorize(t *testing.T) {
 				},
 				DefaultPolicy: schema.PolicyDeny,
 			},
-			query: &Query{
+			query: &rules.Query{
 				RequestedDomain: "example.com",
 			},
 			want: false,
@@ -95,7 +96,7 @@ func TestEngine_Authorize(t *testing.T) {
 				},
 				DefaultPolicy: schema.PolicyDeny,
 			},
-			query: &Query{
+			query: &rules.Query{
 				RequestedMethod: "POST",
 			},
 			want: true,
@@ -111,7 +112,7 @@ func TestEngine_Authorize(t *testing.T) {
 				},
 				DefaultPolicy: schema.PolicyAllow,
 			},
-			query: &Query{
+			query: &rules.Query{
 				RequestedMethod: "POST",
 			},
 			want: false,
@@ -127,7 +128,7 @@ func TestEngine_Authorize(t *testing.T) {
 				},
 				DefaultPolicy: schema.PolicyDeny,
 			},
-			query: &Query{
+			query: &rules.Query{
 				RequestedMethod: "POST",
 			},
 			want: false,
@@ -152,7 +153,7 @@ func TestEngine_Authorize(t *testing.T) {
 				},
 				DefaultPolicy: schema.PolicyDeny,
 			},
-			query: &Query{
+			query: &rules.Query{
 				SourceIP: net.IPv4(10, 1, 1, 1),
 			},
 			want: true,
@@ -177,7 +178,7 @@ func TestEngine_Authorize(t *testing.T) {
 				},
 				DefaultPolicy: schema.PolicyAllow,
 			},
-			query: &Query{
+			query: &rules.Query{
 				SourceIP: net.IPv4(192, 168, 1, 1),
 			},
 			want: false,
@@ -193,7 +194,7 @@ func TestEngine_Authorize(t *testing.T) {
 				},
 				DefaultPolicy: schema.PolicyDeny,
 			},
-			query: &Query{
+			query: &rules.Query{
 				SourceCountry: "FR",
 			},
 			want: true,
@@ -209,7 +210,7 @@ func TestEngine_Authorize(t *testing.T) {
 				},
 				DefaultPolicy: schema.PolicyAllow,
 			},
-			query: &Query{
+			query: &rules.Query{
 				SourceCountry: "US",
 			},
 			want: false,
@@ -225,7 +226,7 @@ func TestEngine_Authorize(t *testing.T) {
 				},
 				DefaultPolicy: schema.PolicyDeny,
 			},
-			query: &Query{
+			query: &rules.Query{
 				SourceCountry: "DE",
 			},
 			want: false,
@@ -241,7 +242,7 @@ func TestEngine_Authorize(t *testing.T) {
 				},
 				DefaultPolicy: schema.PolicyDeny,
 			},
-			query: &Query{
+			query: &rules.Query{
 				SourceASN: 1111,
 			},
 			want: true,
@@ -257,7 +258,7 @@ func TestEngine_Authorize(t *testing.T) {
 				},
 				DefaultPolicy: schema.PolicyAllow,
 			},
-			query: &Query{
+			query: &rules.Query{
 				SourceASN: 2222,
 			},
 			want: false,
@@ -273,7 +274,7 @@ func TestEngine_Authorize(t *testing.T) {
 				},
 				DefaultPolicy: schema.PolicyDeny,
 			},
-			query: &Query{
+			query: &rules.Query{
 				SourceASN: 3333,
 			},
 			want: false,
@@ -297,7 +298,7 @@ func TestEngine_Authorize(t *testing.T) {
 				},
 				DefaultPolicy: schema.PolicyDeny,
 			},
-			query: &Query{
+			query: &rules.Query{
 				RequestedDomain: "example.com",
 				SourceIP:        net.IPv4(10, 1, 1, 1),
 				SourceCountry:   "FR",
@@ -322,7 +323,7 @@ func TestEngine_Authorize(t *testing.T) {
 				},
 				DefaultPolicy: schema.PolicyDeny,
 			},
-			query: &Query{
+			query: &rules.Query{
 				RequestedDomain: "example.com",
 				SourceIP:        net.IPv4(192, 168, 1, 1),
 			},
@@ -332,10 +333,28 @@ func TestEngine_Authorize(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			e := NewEngine(tt.config)
+			e := rules.NewEngine(tt.config)
 			if got := e.Authorize(tt.query); got != tt.want {
 				t.Errorf("Engine.Authorize() = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestEngineUpdateConfig(t *testing.T) {
+	e := rules.NewEngine(&schema.AccessControl{
+		DefaultPolicy: schema.PolicyAllow,
+	})
+
+	if got := e.Authorize(&rules.Query{}); got != true {
+		t.Errorf("Engine.Authorize() = %v, want %v", got, true)
+	}
+
+	e.UpdateConfig(&schema.AccessControl{
+		DefaultPolicy: schema.PolicyDeny,
+	})
+
+	if got := e.Authorize(&rules.Query{}); got != false {
+		t.Errorf("Engine.Authorize() = %v, want %v", got, false)
 	}
 }
