@@ -168,6 +168,9 @@ The following environment variables can be used to configure Geoblock:
 | `GEOBLOCK_PORT`      | Port to listen on              | `8080`          |
 | `GEOBLOCK_LOG_LEVEL` | Log level                      | `info`          |
 
+Supported log levels are: `trace`, `debug`, `info`, `warn`, `error`, `fatal` or
+`panic`.
+
 ## Manual testing
 
 Start geoblock with the provided example configuration:
