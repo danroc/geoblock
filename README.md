@@ -20,7 +20,7 @@
   - [Missing `X-Forwarded-For` header](#missing-x-forwarded-for-header)
   - [Missing `X-Forwarded-Method` header](#missing-x-forwarded-method-header)
   - [Blocked country](#blocked-country)
-  - [Request authorized](#request-authorized)
+  - [Authorized by country](#authorized-by-country)
 - [Roadmap](#roadmap)
 
 ## Introduction
@@ -162,17 +162,18 @@ Check if the service is healthy.
 
 The following environment variables can be used to configure Geoblock:
 
-| Variable          | Description                    | Default         |
-| :---------------- | :----------------------------- | :-------------- |
-| `GEOBLOCK_CONFIG` | Path to the configuration file | `./config.yaml` |
-| `GEOBLOCK_PORT`   | Port to listen on              | `8080`          |
+| Variable             | Description                    | Default         |
+| :------------------- | :----------------------------- | :-------------- |
+| `GEOBLOCK_CONFIG`    | Path to the configuration file | `./config.yaml` |
+| `GEOBLOCK_PORT`      | Port to listen on              | `8080`          |
+| `GEOBLOCK_LOG_LEVEL` | Log level                      | `info`          |
 
 ## Manual testing
 
 Start geoblock with the provided example configuration:
 
 ```bash
-GEOBLOCK_CONFIG=examples/config.yaml GEOBLOCK_PORT=8080 make run
+GEOBLOCK_CONFIG=examples/config.yaml GEOBLOCK_PORT=8080 GEOBLOCK_LOG_LEVEL=debug make run
 ```
 
 ### Missing `X-Forwarded-For` and `X-Forwarded-Host` and `X-Forwarded-Method` headers
@@ -210,15 +211,15 @@ X-Forwarded-Host: example.com
 ```http
 GET http://localhost:8080/v1/forward-auth
 X-Forwarded-For: 8.8.8.8
-X-Forwarded-Host: example.com
+X-Forwarded-Host: example.org
 X-Forwarded-Method: GET
 ```
 
-### Request authorized
+### Authorized by country
 
 ```http
 GET http://localhost:8080/v1/forward-auth
-X-Forwarded-For: 127.0.0.1
+X-Forwarded-For: 8.8.8.8
 X-Forwarded-Host: example.com
 X-Forwarded-Method: GET
 ```
@@ -228,10 +229,11 @@ X-Forwarded-Method: GET
 - [x] Support environment variables
 - [x] Docker image
 - [x] Publish Docker image
-- [ ] Write documentation
-- [ ] Auto-update databases
-- [ ] Cache responses
+- [x] Auto-update databases
+- [x] Auto-reload configuration
 - [ ] Add metrics
-- [ ] Add more tests
+- [ ] Write documentation
+- [ ] Cache responses
+- [ ] Add e2e tests
 - [ ] ~~Cache databases~~
 - [ ] Support command line arguments

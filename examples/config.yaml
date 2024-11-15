@@ -2,10 +2,6 @@
 access_control:
   default_policy: deny
   rules:
-    - domains:
-        - bc.gas.ovh
-      policy: allow
-
     - networks:
         - 10.0.0.0/8
         - 127.0.0.0/8
@@ -13,20 +9,14 @@ access_control:
         - 192.168.0.0/16
       policy: allow
 
-    - autonomous_systems:
-        - 1234
-        - 5678
+    - domains:
+        - example.org
+      countries:
+        - US
       policy: deny
 
-    - countries:
-        - FR
-      policy: allow
-
     - domains:
-        - jellyfin.rocha.io
-        - jellyseerr.rocha.io
-        - wizarr.rocha.io
+        - example.com
       countries:
-        - BR
-        - FR
+        - US
       policy: allow
