@@ -25,5 +25,8 @@ HEALTHCHECK \
 
 COPY --from=builder /app/dist/geoblock /app/geoblock
 
+RUN groupadd -r app && useradd -r -g app app
+USER app
+
 WORKDIR /app
 ENTRYPOINT [ "/app/geoblock" ]

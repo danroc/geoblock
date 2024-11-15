@@ -236,7 +236,7 @@ X-Forwarded-Method: GET
 - [x] Auto-reload configuration
 - [ ] Add metrics
 - [ ] Write documentation
-- [ ] Cache responses
 - [ ] Add e2e tests
+- [ ] Cache responses
 - [ ] ~~Cache databases~~
-- [ ] Support command line arguments
+- [ ] ~~Support command line arguments~~
