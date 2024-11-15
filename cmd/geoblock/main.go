@@ -28,12 +28,15 @@ func getEnv(key, fallback string) string {
 type appOptions struct {
 	configPath string
 	serverPort string
+	logLevel   string
 }
 
+// getOptions returns the application options from the environment variables.
 func getOptions() *appOptions {
 	return &appOptions{
 		configPath: getEnv("GEOBLOCK_CONFIG", "config.yaml"),
 		serverPort: getEnv("GEOBLOCK_PORT", "8080"),
+		logLevel:   getEnv("GEOBLOCK_LOG_LEVEL", "info"),
 	}
 }
 
@@ -86,12 +89,25 @@ func autoReload(engine *rules.Engine, config string) {
 	}
 }
 
-func main() {
+// configureLogger configures the logger with the given log level and sets the
+// formatter.
+func configureLogger(level string) {
+	// This should be done first, before any log message is emitted to avoid
+	// inconsistent log messages.
 	log.SetFormatter(&log.TextFormatter{
 		FullTimestamp: true,
 	})
 
+	if lvl, err := log.ParseLevel(level); err != nil {
+		log.Warnf("Invalid log level: %s", level)
+	} else {
+		log.SetLevel(lvl)
+	}
+}
+
+func main() {
 	options := getOptions()
+	configureLogger(options.logLevel)
 
 	log.Info("Loading configuration file")
 	config, err := schema.ReadFile(options.configPath)
