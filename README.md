@@ -228,10 +228,11 @@ X-Forwarded-Method: GET
 - [x] Support environment variables
 - [x] Docker image
 - [x] Publish Docker image
-- [ ] Write documentation
-- [ ] Auto-update databases
-- [ ] Cache responses
+- [x] Auto-update databases
+- [x] Auto-reload configuration
 - [ ] Add metrics
-- [ ] Add more tests
+- [ ] Write documentation
+- [ ] Cache responses
+- [ ] Add e2e tests
 - [ ] ~~Cache databases~~
 - [ ] Support command line arguments
