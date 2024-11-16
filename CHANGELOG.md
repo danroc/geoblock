@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Run container as a non-root user ([#11](https://github.com/danroc/geoblock/pull/11))
+- Run container as a non-root user ([#11](https://github.com/danroc/geoblock/pull/11), [#15](https://github.com/danroc/geoblock/pull/15))
 
 ## [v0.1.8] - 2024-11-14
 
