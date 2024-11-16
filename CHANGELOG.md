@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v0.1.9] - 2024-11-16
 
 ### Added
 
@@ -71,7 +71,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add autonomous systems to configuration
 - Add duration parsing
 
-[Unreleased]: https://github.com/danroc/geoblock/compare/v0.1.8...HEAD
+[Unreleased]: https://github.com/danroc/geoblock/compare/v0.1.9...HEAD
+[v0.1.9]: https://github.com/danroc/geoblock/compare/v0.1.8...v0.1.9
 [v0.1.8]: https://github.com/danroc/geoblock/compare/v0.1.7...v0.1.8
 [v0.1.7]: https://github.com/danroc/geoblock/compare/v0.1.6...v0.1.7
 [v0.1.6]: https://github.com/danroc/geoblock/compare/v0.1.5...v0.1.6
