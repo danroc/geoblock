@@ -2,8 +2,10 @@
 package server
 
 import (
+	"fmt"
 	"net"
 	"net/http"
+	"sync/atomic"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -31,6 +33,20 @@ const (
 	FieldSourceOrg       = "source_org"
 )
 
+// Metrics contains the metric values of the server.
+type Metrics struct {
+	Denied  atomic.Uint64
+	Allowed atomic.Uint64
+	Invalid atomic.Uint64
+}
+
+// Total returns the total number of requests.
+func (m *Metrics) Total() uint64 {
+	return m.Denied.Load() + m.Allowed.Load() + m.Invalid.Load()
+}
+
+var metrics = Metrics{}
+
 // getForwardAuth checks if the request is authorized to access the requested
 // resource. It uses the reverse proxy headers to determine the source IP and
 // requested domain.
@@ -54,7 +70,8 @@ func getForwardAuth(
 			FieldRequestedMethod: method,
 			FieldSourceIP:        origin,
 		}).Error("Missing required headers")
-		writer.WriteHeader(http.StatusForbidden)
+		writer.WriteHeader(http.StatusBadRequest)
+		metrics.Invalid.Add(1)
 		return
 	}
 
@@ -67,7 +84,8 @@ func getForwardAuth(
 			FieldRequestedMethod: method,
 			FieldSourceIP:        origin,
 		}).Error("Invalid source IP")
-		writer.WriteHeader(http.StatusForbidden)
+		writer.WriteHeader(http.StatusBadRequest)
+		metrics.Invalid.Add(1)
 		return
 	}
 
@@ -93,15 +111,36 @@ func getForwardAuth(
 	if engine.Authorize(query) {
 		log.WithFields(logFields).Info("Request authorized")
 		writer.WriteHeader(http.StatusNoContent)
+		metrics.Allowed.Add(1)
 	} else {
 		log.WithFields(logFields).Warn("Request denied")
 		writer.WriteHeader(http.StatusForbidden)
+		metrics.Denied.Add(1)
 	}
 }
 
 // getHealth returns a 204 status code to indicate that the server is running.
 func getHealth(writer http.ResponseWriter, _ *http.Request) {
 	writer.WriteHeader(http.StatusNoContent)
+}
+
+// getMetrics returns the metrics in JSON format.
+func getMetrics(writer http.ResponseWriter, _ *http.Request) {
+	writer.Header().Set("Content-Type", "application/json")
+	writer.WriteHeader(http.StatusOK)
+	if _, err := writer.Write(
+		[]byte(
+			fmt.Sprintf(
+				`{"denied": %d, "allowed": %d, "invalid": %d, "total": %d}`,
+				metrics.Denied.Load(),
+				metrics.Allowed.Load(),
+				metrics.Invalid.Load(),
+				metrics.Total(),
+			),
+		),
+	); err != nil {
+		log.WithError(err).Error("Cannot write metrics response")
+	}
 }
 
 // NewServer creates a new HTTP server that listens on the given address.
@@ -121,6 +160,12 @@ func NewServer(
 		"GET /v1/health",
 		func(writer http.ResponseWriter, request *http.Request) {
 			getHealth(writer, request)
+		},
+	)
+	mux.HandleFunc(
+		"GET /v1/metrics",
+		func(writer http.ResponseWriter, request *http.Request) {
+			getMetrics(writer, request)
 		},
 	)
 

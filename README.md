@@ -13,6 +13,8 @@
     - [Response](#response)
   - [`GET /v1/health`](#get-v1health)
     - [Response](#response-1)
+  - [`GET /v1/metrics`](#get-v1metrics)
+    - [Response](#response-2)
 - [Environment variables](#environment-variables)
 - [Manual testing](#manual-testing)
   - [Missing `X-Forwarded-For` and `X-Forwarded-Host` and `X-Forwarded-Method` headers](#missing-x-forwarded-for-and-x-forwarded-host-and-x-forwarded-method-headers)
@@ -21,6 +23,7 @@
   - [Missing `X-Forwarded-Method` header](#missing-x-forwarded-method-header)
   - [Blocked country](#blocked-country)
   - [Authorized by country](#authorized-by-country)
+  - [Metrics](#metrics)
 - [Roadmap](#roadmap)
 
 ## Introduction
@@ -153,6 +156,27 @@ Check if the service is healthy.
 | :----- | :---------- |
 | `204`  | Healthy     |
 
+### `GET /v1/metrics`
+
+Returns metrics in JSON format.
+
+#### Response
+
+- MIME type: `application/json`
+
+- Properties:
+
+  - `denied`: Number of denied requests
+  - `allowed`: Number of allowed requests
+  - `invalid`: Number of invalid requests
+  - `total`: Total number of requests
+
+- Example:
+
+  ```json
+  { "denied": 0, "allowed": 0, "invalid": 0, "total": 0 }
+  ```
+
 ## Environment variables
 
 > [!NOTE]
@@ -227,6 +251,12 @@ X-Forwarded-Host: example.com
 X-Forwarded-Method: GET
 ```
 
+### Metrics
+
+```http
+GET http://localhost:8080/v1/metrics
+```
+
 ## Roadmap
 
 - [x] Support environment variables
@@ -234,7 +264,7 @@ X-Forwarded-Method: GET
 - [x] Publish Docker image
 - [x] Auto-update databases
 - [x] Auto-reload configuration
-- [ ] Add metrics
+- [x] Add metrics
 - [ ] Write documentation
 - [ ] Add e2e tests
 - [ ] Cache responses
