@@ -9,11 +9,12 @@ import (
 	"github.com/danroc/geoblock/pkg/utils"
 )
 
+// URLs of the CSV IP location databases.
 const (
-	countryIPv4URL = "https://cdn.jsdelivr.net/npm/@ip-location-db/geolite2-country/geolite2-country-ipv4.csv"
-	countryIPv6URL = "https://cdn.jsdelivr.net/npm/@ip-location-db/geolite2-country/geolite2-country-ipv6.csv"
-	asnIPv4URL     = "https://cdn.jsdelivr.net/npm/@ip-location-db/geolite2-asn/geolite2-asn-ipv4.csv"
-	asnIPv6URL     = "https://cdn.jsdelivr.net/npm/@ip-location-db/geolite2-asn/geolite2-asn-ipv6.csv"
+	CountryIPv4URL = "https://cdn.jsdelivr.net/npm/@ip-location-db/geolite2-country/geolite2-country-ipv4.csv"
+	CountryIPv6URL = "https://cdn.jsdelivr.net/npm/@ip-location-db/geolite2-country/geolite2-country-ipv6.csv"
+	ASNIPv4URL     = "https://cdn.jsdelivr.net/npm/@ip-location-db/geolite2-asn/geolite2-asn-ipv4.csv"
+	ASNIPv6URL     = "https://cdn.jsdelivr.net/npm/@ip-location-db/geolite2-asn/geolite2-asn-ipv6.csv"
 )
 
 // ReservedAS0 is the ASN used when the ASN is unknown. Its value is 0.
@@ -53,10 +54,10 @@ func (r *Resolver) Update() error {
 		db  *Database
 		url string
 	}{
-		{r.countryDBv4, countryIPv4URL},
-		{r.countryDBv6, countryIPv6URL},
-		{r.asnDBv4, asnIPv4URL},
-		{r.asnDBv6, asnIPv6URL},
+		{r.countryDBv4, CountryIPv4URL},
+		{r.countryDBv6, CountryIPv6URL},
+		{r.asnDBv4, ASNIPv4URL},
+		{r.asnDBv6, ASNIPv6URL},
 	}
 
 	var errs []error
