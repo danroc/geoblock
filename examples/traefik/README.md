@@ -7,9 +7,11 @@ Run `docker compose up` to start the following services:
 - `whoami-1`: Example service (allowed)
 - `whoami-2`: Example service (blocked)
 
-Use HTTPie to test the services:
+In a different console, use HTTPie to test the services:
 
-✅ Allowed:
+**✅ Allowed:**
+
+HTTP request and response:
 
 ```bash
 $ http localhost:8080 Host:whoami-1.local
@@ -35,11 +37,25 @@ X-Forwarded-Server: 5c8a21a19bdd
 X-Real-Ip: 172.18.0.1
 ```
 
-❌ Blocked:
+Geoblock logs:
+
+```log
+geoblock-1  | time="2024-11-19T19:00:45Z" level=info msg="Request authorized" requested_domain=whoami-1.local requested_method=GET source_asn=0 source_country= source_ip=172.18.0.1 source_org=
+```
+
+**❌ Blocked:**
+
+HTTP request and response:
 
 ```bash
-http localhost:8080 Host:whoami-2.local
+$ http localhost:8080 Host:whoami-2.local
 HTTP/1.1 403 Forbidden
 Content-Length: 0
 Date: Tue, 19 Nov 2024 18:00:48 GMT
+```
+
+Geoblock logs:
+
+```log
+geoblock-1  | time="2024-11-19T19:01:35Z" level=warning msg="Request denied" requested_domain=whoami-2.local requested_method=GET source_asn=0 source_country= source_ip=172.18.0.1 source_org=
 ```
