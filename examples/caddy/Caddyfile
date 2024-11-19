@@ -1,0 +1,13 @@
+http://whoami-1.local {
+	forward_auth geoblock:8080 {
+		uri /v1/forward-auth
+	}
+	reverse_proxy whoami-1:80
+}
+
+http://whoami-2.local {
+	forward_auth geoblock:8080 {
+		uri /v1/forward-auth
+	}
+	reverse_proxy whoami-2:80
+}
