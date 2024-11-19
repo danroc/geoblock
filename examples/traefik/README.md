@@ -3,10 +3,10 @@
 Run `docker compose up` to start the following services defined in the
 [`compose.yaml`](./compose.yaml) file:
 
-- `traefik`: Reverse proxy and load balancer
-- `geoblock`: Geoblock service
 - `whoami-1`: Example service (allowed)
 - `whoami-2`: Example service (blocked)
+- `geoblock`: Geoblock service
+- `traefik`: Reverse proxy and load balancer
 
 In a different console, use `curl` to test the services:
 
