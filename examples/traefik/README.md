@@ -1,5 +1,7 @@
 # Traefik Example
 
+## Deploying
+
 Run `docker compose up` to start the following services defined in the
 [`compose.yaml`](./compose.yaml) file:
 
@@ -7,6 +9,11 @@ Run `docker compose up` to start the following services defined in the
 - `whoami-2`: Example service (blocked)
 - `geoblock`: Geoblock service
 - `traefik`: Reverse proxy and load balancer
+
+This example will use the configuration defined in the
+[`config.yaml`](./config.yaml) file.
+
+## Testing
 
 In a different console, use `curl` to test the services:
 
