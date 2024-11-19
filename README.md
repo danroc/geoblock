@@ -13,7 +13,6 @@
   - [`GET /v1/metrics`](#get-v1metrics)
 - [Environment variables](#environment-variables)
 - [Manual testing](#manual-testing)
-  - [Metrics](#metrics)
 - [Roadmap](#roadmap)
 
 ## Introduction
@@ -251,6 +250,7 @@ X-Forwarded-Host: example.com
 X-Forwarded-Method: GET
 ```
 
+<!-- omit in toc -->
 ### Metrics
 
 ```http
