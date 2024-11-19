@@ -26,6 +26,9 @@ based on:
 - Requested domain
 - Requested method
 
+It works as a forward-authentication service that can be used with reverse
+proxies such as Traefik, NGINX, and Caddy.
+
 ## Configuration
 
 Geoblock uses a single configuration file (`config.yaml` by default) to set
