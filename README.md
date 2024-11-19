@@ -9,20 +9,10 @@
   - [With Traefik](#with-traefik)
 - [HTTP API](#http-api)
   - [`GET /v1/forward-auth`](#get-v1forward-auth)
-    - [Request](#request)
-    - [Response](#response)
   - [`GET /v1/health`](#get-v1health)
-    - [Response](#response-1)
   - [`GET /v1/metrics`](#get-v1metrics)
-    - [Response](#response-2)
 - [Environment variables](#environment-variables)
 - [Manual testing](#manual-testing)
-  - [Missing `X-Forwarded-For` and `X-Forwarded-Host` and `X-Forwarded-Method` headers](#missing-x-forwarded-for-and-x-forwarded-host-and-x-forwarded-method-headers)
-  - [Missing `X-Forwarded-Host` header](#missing-x-forwarded-host-header)
-  - [Missing `X-Forwarded-For` header](#missing-x-forwarded-for-header)
-  - [Missing `X-Forwarded-Method` header](#missing-x-forwarded-method-header)
-  - [Blocked country](#blocked-country)
-  - [Authorized by country](#authorized-by-country)
   - [Metrics](#metrics)
 - [Roadmap](#roadmap)
 
@@ -131,6 +121,7 @@ The following HTTP endpoints are exposed by Geoblock.
 
 Check if a client is authorized to access a domain.
 
+<!-- omit in toc -->
 #### Request
 
 | Header               | Required | Description           |
@@ -139,6 +130,7 @@ Check if a client is authorized to access a domain.
 | `X-Forwarded-Host`   |   Yes    | Requested domain      |
 | `X-Forwarded-Method` |   Yes    | Requested HTTP method |
 
+<!-- omit in toc -->
 #### Response
 
 | Status | Description |
@@ -150,6 +142,7 @@ Check if a client is authorized to access a domain.
 
 Check if the service is healthy.
 
+<!-- omit in toc -->
 #### Response
 
 | Status | Description |
@@ -160,6 +153,7 @@ Check if the service is healthy.
 
 Returns metrics in JSON format.
 
+<!-- omit in toc -->
 #### Response
 
 - MIME type: `application/json`
@@ -203,12 +197,14 @@ Start geoblock with the provided example configuration:
 GEOBLOCK_CONFIG=examples/config.yaml GEOBLOCK_PORT=8080 GEOBLOCK_LOG_LEVEL=debug make run
 ```
 
+<!-- omit in toc -->
 ### Missing `X-Forwarded-For` and `X-Forwarded-Host` and `X-Forwarded-Method` headers
 
 ```http
 GET http://localhost:8080/v1/forward-auth
 ```
 
+<!-- omit in toc -->
 ### Missing `X-Forwarded-Host` header
 
 ```http
@@ -217,6 +213,7 @@ X-Forwarded-For: 127.0.0.1
 X-Forwarded-Method: GET
 ```
 
+<!-- omit in toc -->
 ### Missing `X-Forwarded-For` header
 
 ```http
@@ -225,6 +222,7 @@ X-Forwarded-Host: example.com
 X-Forwarded-Method: GET
 ```
 
+<!-- omit in toc -->
 ### Missing `X-Forwarded-Method` header
 
 ```http
@@ -233,6 +231,7 @@ X-Forwarded-For: 8.8.8.8
 X-Forwarded-Host: example.com
 ```
 
+<!-- omit in toc -->
 ### Blocked country
 
 ```http
@@ -242,6 +241,7 @@ X-Forwarded-Host: example.org
 X-Forwarded-Method: GET
 ```
 
+<!-- omit in toc -->
 ### Authorized by country
 
 ```http
