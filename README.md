@@ -5,8 +5,7 @@
 
 - [Introduction](#introduction)
 - [Configuration](#configuration)
-- [Installation](#installation)
-  - [With Traefik](#with-traefik)
+- [Deployment](#deployment)
 - [HTTP API](#http-api)
   - [`GET /v1/forward-auth`](#get-v1forward-auth)
   - [`GET /v1/health`](#get-v1health)
@@ -86,34 +85,9 @@ access_control:
       policy: allow
 ```
 
-## Installation
+## Deployment
 
-### With Traefik
-
-```yaml
-# compose.yaml
----
-services:
-  traefik:
-    # Traefik configuration...
-
-  geoblock:
-    image: ghcr.io/danroc/geoblock:latest
-    container_name: geoblock
-    networks:
-      - proxy
-    volumes:
-      - ./config.yaml:/app/config.yaml
-    labels:
-      - traefik.enable=true
-      - traefik.http.middlewares.geoblock.forwardauth.address=http://geoblock:8080/v1/forward-auth
-      - traefik.http.middlewares.geoblock.forwardauth.trustForwardHeader=true
-    restart: unless-stopped
-
-networks:
-  proxy:
-    external: true
-```
+- [Example using Traefik](./examples/traefik/README.md)
 
 ## HTTP API
 
