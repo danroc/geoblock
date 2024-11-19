@@ -167,7 +167,7 @@ Returns metrics in JSON format.
 - Example:
 
   ```json
-  { "denied": 0, "allowed": 0, "invalid": 0, "total": 0 }
+  {"denied": 0, "allowed": 0, "invalid": 0, "total": 0}
   ```
 
 ## Environment variables
