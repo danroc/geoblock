@@ -5,7 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.1.11]
+
+### Changed
+
+- Increase `HEALTHCHECK` timeouts ([#25](https://github.com/danroc/geoblock/pull/25))
+- Change default configuration path ([#29](https://github.com/danroc/geoblock/pull/29))
 
 ## [0.1.10] - 2024-11-17
 
@@ -78,7 +83,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add CIDR unmarshalling and validation
 - Add autonomous systems to configuration
 
-[Unreleased]: https://github.com/danroc/geoblock/compare/v0.1.10...HEAD
+[0.1.11]: https://github.com/danroc/geoblock/compare/v0.1.10...v0.1.11
 [0.1.10]: https://github.com/danroc/geoblock/compare/v0.1.9...v0.1.10
 [0.1.9]: https://github.com/danroc/geoblock/compare/v0.1.8...v0.1.9
 [0.1.8]: https://github.com/danroc/geoblock/compare/v0.1.7...v0.1.8
