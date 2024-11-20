@@ -12,6 +12,7 @@
   - [`GET /v1/metrics`](#get-v1metrics)
 - [Environment variables](#environment-variables)
 - [Manual testing](#manual-testing)
+- [Attribution](#attribution)
 - [Roadmap](#roadmap)
 
 ## Introduction
@@ -219,6 +220,14 @@ X-Forwarded-Method: GET
 GET http://localhost:8080/v1/metrics
 ```
 
+## Attribution
+
+- This project uses the [GeoLite2][geolite2] databases provided by
+  [MaxMind][maxmind].
+
+- This project uses the database files provided by the
+  [ip-location-db][ip-location-db] project.
+
 ## Roadmap
 
 - [x] Support environment variables
@@ -227,8 +236,12 @@ GET http://localhost:8080/v1/metrics
 - [x] Auto-update databases
 - [x] Auto-reload configuration
 - [x] Add metrics
-- [ ] Write documentation
+- [x] Write documentation
 - [ ] Add e2e tests
 - [ ] Cache responses
 - [ ] ~~Cache databases~~
 - [ ] ~~Support command line arguments~~
+
+[geolite2]: https://dev.maxmind.com/geoip/geolite2-free-geolocation-data/
+[maxmind]: https://www.maxmind.com/
+[ip-location-db]: https://github.com/sapics/ip-location-db
