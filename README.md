@@ -88,6 +88,7 @@ access_control:
 ## Deployment
 
 - [Example using Traefik](./examples/traefik/README.md)
+- [Example using Caddy](./examples/caddy/README.md)
 
 ## HTTP API
 
