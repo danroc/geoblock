@@ -13,7 +13,7 @@ services:
   geoblock:
     image: ghcr.io/danroc/geoblock:latest
     volumes:
-      - ./config.yaml:/app/config.yaml
+      - ./config.yaml:/etc/geoblock/config.yaml
 
   traefik:
     image: traefik:v3

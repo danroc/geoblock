@@ -30,9 +30,10 @@ proxies such as Traefik, NGINX, and Caddy.
 
 ## Configuration
 
-Geoblock uses a single configuration file (`config.yaml` by default) to set
-access control rules. Rules are evaluated sequentially, applying the first
-match per request. If no rules match, the default policy applies.
+Geoblock uses a single configuration file (`/etc/geoblock/config.yaml` by
+default) to set access control rules. Rules are evaluated sequentially,
+applying the first match per request. If no rules match, the default policy
+applies.
 
 A rule matches if all specified conditions are met. Rules can include one or
 more of the following criteria:
@@ -98,8 +99,7 @@ The following HTTP endpoints are exposed by Geoblock.
 
 Check if a client is authorized to access a domain.
 
-<!-- omit in toc -->
-#### Request
+**Request:**
 
 | Header               | Required | Description           |
 | :------------------- | :------: | :-------------------- |
@@ -107,8 +107,7 @@ Check if a client is authorized to access a domain.
 | `X-Forwarded-Host`   |   Yes    | Requested domain      |
 | `X-Forwarded-Method` |   Yes    | Requested HTTP method |
 
-<!-- omit in toc -->
-#### Response
+**Response:**
 
 | Status | Description |
 | :----- | :---------- |
@@ -119,8 +118,7 @@ Check if a client is authorized to access a domain.
 
 Check if the service is healthy.
 
-<!-- omit in toc -->
-#### Response
+**Response:**
 
 | Status | Description |
 | :----- | :---------- |
@@ -130,8 +128,7 @@ Check if the service is healthy.
 
 Returns metrics in JSON format.
 
-<!-- omit in toc -->
-#### Response
+**Response:**
 
 - MIME type: `application/json`
 
@@ -145,7 +142,7 @@ Returns metrics in JSON format.
 - Example:
 
   ```json
-  {"denied": 0, "allowed": 0, "invalid": 0, "total": 0}
+  { "denied": 0, "allowed": 0, "invalid": 0, "total": 0 }
   ```
 
 ## Environment variables
@@ -157,11 +154,11 @@ Returns metrics in JSON format.
 
 The following environment variables can be used to configure Geoblock:
 
-| Variable             | Description                    | Default         |
-| :------------------- | :----------------------------- | :-------------- |
-| `GEOBLOCK_CONFIG`    | Path to the configuration file | `./config.yaml` |
-| `GEOBLOCK_PORT`      | Port to listen on              | `8080`          |
-| `GEOBLOCK_LOG_LEVEL` | Log level                      | `info`          |
+| Variable             | Description                    | Default                     |
+| :------------------- | :----------------------------- | :-------------------------- |
+| `GEOBLOCK_CONFIG`    | Path to the configuration file | `/etc/geoblock/config.yaml` |
+| `GEOBLOCK_PORT`      | Port to listen on              | `8080`                      |
+| `GEOBLOCK_LOG_LEVEL` | Log level                      | `info`                      |
 
 Supported log levels are: `trace`, `debug`, `info`, `warn`, `error`, `fatal` or
 `panic`.
@@ -174,15 +171,7 @@ Start geoblock with the provided example configuration:
 GEOBLOCK_CONFIG=examples/config.yaml GEOBLOCK_PORT=8080 GEOBLOCK_LOG_LEVEL=debug make run
 ```
 
-<!-- omit in toc -->
-### Missing `X-Forwarded-For` and `X-Forwarded-Host` and `X-Forwarded-Method` headers
-
-```http
-GET http://localhost:8080/v1/forward-auth
-```
-
-<!-- omit in toc -->
-### Missing `X-Forwarded-Host` header
+**Missing `X-Forwarded-Host` header:**
 
 ```http
 GET http://localhost:8080/v1/forward-auth
@@ -190,8 +179,7 @@ X-Forwarded-For: 127.0.0.1
 X-Forwarded-Method: GET
 ```
 
-<!-- omit in toc -->
-### Missing `X-Forwarded-For` header
+**Missing `X-Forwarded-For` header:**
 
 ```http
 GET http://localhost:8080/v1/forward-auth
@@ -199,8 +187,7 @@ X-Forwarded-Host: example.com
 X-Forwarded-Method: GET
 ```
 
-<!-- omit in toc -->
-### Missing `X-Forwarded-Method` header
+**Missing `X-Forwarded-Method` header:**
 
 ```http
 GET http://localhost:8080/v1/forward-auth
@@ -208,8 +195,7 @@ X-Forwarded-For: 8.8.8.8
 X-Forwarded-Host: example.com
 ```
 
-<!-- omit in toc -->
-### Blocked country
+**Blocked country:**
 
 ```http
 GET http://localhost:8080/v1/forward-auth
@@ -218,8 +204,7 @@ X-Forwarded-Host: example.org
 X-Forwarded-Method: GET
 ```
 
-<!-- omit in toc -->
-### Authorized by country
+**Authorized by country:**
 
 ```http
 GET http://localhost:8080/v1/forward-auth
@@ -228,8 +213,7 @@ X-Forwarded-Host: example.com
 X-Forwarded-Method: GET
 ```
 
-<!-- omit in toc -->
-### Metrics
+**Metrics:**
 
 ```http
 GET http://localhost:8080/v1/metrics
