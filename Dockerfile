@@ -24,10 +24,9 @@ HEALTHCHECK \
     --retries=3 \
   CMD wget -qO- http://localhost:8080/v1/health || exit 1
 
-COPY --from=builder /app/dist/geoblock /app/geoblock
+COPY --from=builder /app/dist/geoblock /usr/bin/geoblock
 
 RUN addgroup -S app && adduser -S app -G app
 USER app
 
-WORKDIR /app
-ENTRYPOINT [ "/app/geoblock" ]
+ENTRYPOINT [ "/usr/bin/geoblock" ]
