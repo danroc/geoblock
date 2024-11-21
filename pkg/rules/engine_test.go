@@ -118,6 +118,22 @@ func TestEngineAuthorize(t *testing.T) {
 			want: false,
 		},
 		{
+			name: "domains are case-insensitive",
+			config: &schema.AccessControl{
+				Rules: []schema.AccessControlRule{
+					{
+						Domains: []string{"example.org", "example.com"},
+						Policy:  schema.PolicyAllow,
+					},
+				},
+				DefaultPolicy: schema.PolicyDeny,
+			},
+			query: &rules.Query{
+				RequestedDomain: "EXAMPLE.ORG",
+			},
+			want: true,
+		},
+		{
 			name: "allow by method",
 			config: &schema.AccessControl{
 				Rules: []schema.AccessControlRule{
@@ -164,6 +180,22 @@ func TestEngineAuthorize(t *testing.T) {
 				RequestedMethod: "POST",
 			},
 			want: false,
+		},
+		{
+			name: "methods are case-insensitive",
+			config: &schema.AccessControl{
+				Rules: []schema.AccessControlRule{
+					{
+						Methods: []string{"GET", "POST"},
+						Policy:  schema.PolicyAllow,
+					},
+				},
+				DefaultPolicy: schema.PolicyDeny,
+			},
+			query: &rules.Query{
+				RequestedMethod: "get",
+			},
+			want: true,
 		},
 		{
 			name: "allow by network",
@@ -262,6 +294,22 @@ func TestEngineAuthorize(t *testing.T) {
 				SourceCountry: "DE",
 			},
 			want: false,
+		},
+		{
+			name: "countries are case-insensitive",
+			config: &schema.AccessControl{
+				Rules: []schema.AccessControlRule{
+					{
+						Countries: []string{"FR", "US"},
+						Policy:    schema.PolicyAllow,
+					},
+				},
+				DefaultPolicy: schema.PolicyDeny,
+			},
+			query: &rules.Query{
+				SourceCountry: "fr",
+			},
+			want: true,
 		},
 		{
 			name: "allow by ASN",

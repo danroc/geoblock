@@ -14,6 +14,7 @@ func TestStar(t *testing.T) {
 	}{
 		{"", "", true},
 		{"*", "", true},
+		{"a", "", false},
 		{"", "abc", false},
 		{"*", "abc", true},
 		{"a*", "abc", true},
