@@ -38,6 +38,38 @@ func TestEngineAuthorize(t *testing.T) {
 			want: false,
 		},
 		{
+			name: "allow by wildcard domain",
+			config: &schema.AccessControl{
+				Rules: []schema.AccessControlRule{
+					{
+						Domains: []string{"*.example.com"},
+						Policy:  schema.PolicyAllow,
+					},
+				},
+				DefaultPolicy: schema.PolicyDeny,
+			},
+			query: &rules.Query{
+				RequestedDomain: "sub.example.com",
+			},
+			want: true,
+		},
+		{
+			name: "deny by wildcard domain",
+			config: &schema.AccessControl{
+				Rules: []schema.AccessControlRule{
+					{
+						Domains: []string{"*.example.com"},
+						Policy:  schema.PolicyDeny,
+					},
+				},
+				DefaultPolicy: schema.PolicyAllow,
+			},
+			query: &rules.Query{
+				RequestedDomain: "sub.example.com",
+			},
+			want: false,
+		},
+		{
 			name: "allow by domain",
 			config: &schema.AccessControl{
 				Rules: []schema.AccessControlRule{

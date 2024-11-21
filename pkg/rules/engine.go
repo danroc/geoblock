@@ -8,6 +8,7 @@ import (
 
 	"github.com/danroc/geoblock/pkg/schema"
 	"github.com/danroc/geoblock/pkg/utils"
+	"github.com/danroc/geoblock/pkg/utils/glob"
 )
 
 // Engine is the access control egine that checks if a given query is allowed
@@ -44,7 +45,7 @@ type Query struct {
 func ruleApplies(rule *schema.AccessControlRule, query *Query) bool {
 	if len(rule.Domains) > 0 {
 		if utils.None(rule.Domains, func(domain string) bool {
-			return strings.EqualFold(domain, query.RequestedDomain)
+			return glob.Star(domain, query.RequestedDomain)
 		}) {
 			return false
 		}
