@@ -48,7 +48,7 @@ X-Real-Ip: 172.18.0.1
 Geoblock logs:
 
 ```log
-geoblock-1  | time="2024-11-19T19:12:40Z" level=info msg="Request authorized" requested_domain=whoami-1.local requested_method=GET source_asn=0 source_country= source_ip=172.18.0.1 source_org=
+geoblock-1  | time="2024-11-19T19:12:40Z" level=info msg="Request authorized" request_domain=whoami-1.local request_method=GET source_asn=0 source_country= source_ip=172.18.0.1 source_org=
 ```
 
 **❌ Blocked:**
@@ -68,5 +68,5 @@ curl: (22) The requested URL returned error: 403
 Geoblock logs:
 
 ```log
-geoblock-1  | time="2024-11-19T19:12:41Z" level=warning msg="Request denied" requested_domain=whoami-2.local requested_method=GET source_asn=0 source_country= source_ip=172.18.0.1 source_org=
+geoblock-1  | time="2024-11-19T19:12:41Z" level=warning msg="Request denied" request_domain=whoami-2.local request_method=GET source_asn=0 source_country= source_ip=172.18.0.1 source_org=
 ```

@@ -25,12 +25,12 @@ const (
 
 // Fields used in the log messages.
 const (
-	FieldRequestedDomain = "requested_domain"
-	FieldRequestedMethod = "requested_method"
-	FieldSourceIP        = "source_ip"
-	FieldSourceCountry   = "source_country"
-	FieldSourceASN       = "source_asn"
-	FieldSourceOrg       = "source_org"
+	FieldRequestDomain = "request_domain"
+	FieldRequestMethod = "request_method"
+	FieldSourceIP      = "source_ip"
+	FieldSourceCountry = "source_country"
+	FieldSourceASN     = "source_asn"
+	FieldSourceOrg     = "source_org"
 )
 
 // Metrics contains the metric values of the server.
@@ -66,9 +66,9 @@ func getForwardAuth(
 	// probably means that the request didn't come from the reverse proxy.
 	if origin == "" || domain == "" || method == "" {
 		log.WithFields(log.Fields{
-			FieldRequestedDomain: domain,
-			FieldRequestedMethod: method,
-			FieldSourceIP:        origin,
+			FieldRequestDomain: domain,
+			FieldRequestMethod: method,
+			FieldSourceIP:      origin,
 		}).Error("Missing required headers")
 		writer.WriteHeader(http.StatusBadRequest)
 		metrics.Invalid.Add(1)
@@ -80,9 +80,9 @@ func getForwardAuth(
 	sourceIP := net.ParseIP(origin)
 	if sourceIP == nil {
 		log.WithFields(log.Fields{
-			FieldRequestedDomain: domain,
-			FieldRequestedMethod: method,
-			FieldSourceIP:        origin,
+			FieldRequestDomain: domain,
+			FieldRequestMethod: method,
+			FieldSourceIP:      origin,
 		}).Error("Invalid source IP")
 		writer.WriteHeader(http.StatusBadRequest)
 		metrics.Invalid.Add(1)
@@ -100,12 +100,12 @@ func getForwardAuth(
 	}
 
 	logFields := log.Fields{
-		FieldRequestedDomain: domain,
-		FieldRequestedMethod: method,
-		FieldSourceIP:        sourceIP,
-		FieldSourceCountry:   resolved.CountryCode,
-		FieldSourceASN:       resolved.ASN,
-		FieldSourceOrg:       resolved.Organization,
+		FieldRequestDomain: domain,
+		FieldRequestMethod: method,
+		FieldSourceIP:      sourceIP,
+		FieldSourceCountry: resolved.CountryCode,
+		FieldSourceASN:     resolved.ASN,
+		FieldSourceOrg:     resolved.Organization,
 	}
 
 	if engine.Authorize(query) {
