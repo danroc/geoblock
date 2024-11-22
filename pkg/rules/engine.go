@@ -7,7 +7,6 @@ import (
 	"sync/atomic"
 
 	"github.com/danroc/geoblock/pkg/config"
-	"github.com/danroc/geoblock/pkg/utils"
 	"github.com/danroc/geoblock/pkg/utils/glob"
 )
 
@@ -36,7 +35,12 @@ type Query struct {
 
 // match checks if any of the conditions match the given matchFunc.
 func match[T any](conditions []T, matchFunc func(T) bool) bool {
-	return len(conditions) == 0 || utils.Any(conditions, matchFunc)
+	for _, condition := range conditions {
+		if matchFunc(condition) {
+			return true
+		}
+	}
+	return len(conditions) == 0
 }
 
 // ruleApplies checks if the given query is allowed or denied by the given
