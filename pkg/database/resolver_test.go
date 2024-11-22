@@ -42,9 +42,9 @@ func TestStrToASN(t *testing.T) {
 		{"12345", 12345},
 		{"0", 0},
 		{"4294967295", 4294967295},
-		{"invalid", database.ReservedAS0},
-		{"", database.ReservedAS0},
-		{"-1", database.ReservedAS0},
+		{"invalid", database.AS0},
+		{"", database.AS0},
+		{"-1", database.AS0},
 	}
 
 	for _, tt := range tests {
@@ -117,10 +117,10 @@ func TestResolverResolve(t *testing.T) {
 		}{
 			{"1.0.1.1", "US", "Test1", 1},
 			{"1.1.1.1", "FR", "Test2", 2},
-			{"1.2.1.1", "", "", database.ReservedAS0},
+			{"1.2.1.1", "", "", database.AS0},
 			{"1:0::", "US", "Test3", 3},
 			{"1:2::", "FR", "Test4", 4},
-			{"1:4::", "", "", database.ReservedAS0},
+			{"1:4::", "", "", database.AS0},
 		}
 		r, _ := database.NewResolver()
 		for _, tt := range tests {

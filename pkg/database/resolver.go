@@ -17,8 +17,8 @@ const (
 	ASNIPv6URL     = "https://cdn.jsdelivr.net/npm/@ip-location-db/geolite2-asn/geolite2-asn-ipv6.csv"
 )
 
-// ReservedAS0 is the ASN used when the ASN is unknown. Its value is 0.
-const ReservedAS0 uint32 = 0
+// AS0 represents the default ASN value for unknown addresses.
+const AS0 uint32 = 0
 
 // Resolution contains the result of resolving an IP address.
 type Resolution struct {
@@ -101,7 +101,7 @@ func strIndex(data []string, index int) string {
 func strToASN(s string) uint32 {
 	asn, err := strconv.ParseUint(s, 10, 32)
 	if err != nil {
-		return ReservedAS0
+		return AS0
 	}
 	return uint32(asn)
 }
