@@ -1,5 +1,5 @@
-// Package database provides a database of IP ranges and their associated data.
-package database
+// Package iprange provides a database of IP ranges and their associated data.
+package iprange
 
 import (
 	"encoding/csv"
@@ -10,7 +10,7 @@ import (
 	"strings"
 	"sync/atomic"
 
-	"github.com/danroc/geoblock/pkg/utils"
+	"github.com/danroc/geoblock/pkg/utils/iputils"
 )
 
 // Entry represents an IP range and its associated data.
@@ -40,11 +40,11 @@ func parseRecords(records [][]string) ([]Entry, error) {
 		)
 
 		if startIP == nil {
-			return nil, &utils.ErrInvalidIP{Address: record[0]}
+			return nil, &iputils.ErrInvalidIP{Address: record[0]}
 		}
 
 		if endIP == nil {
-			return nil, &utils.ErrInvalidIP{Address: record[1]}
+			return nil, &iputils.ErrInvalidIP{Address: record[1]}
 		}
 
 		entries = append(entries, Entry{
@@ -86,7 +86,7 @@ func (db *Database) Update(reader io.Reader) error {
 	// The entries must be sorted by their start IP to allow binary search. The
 	// sort is done in-place.
 	slices.SortFunc(entries, func(a, b Entry) int {
-		return utils.CompareIP(a.StartIP, b.StartIP)
+		return iputils.CompareIP(a.StartIP, b.StartIP)
 	})
 
 	// This atomically updates the database entries.
@@ -113,7 +113,7 @@ func (db *Database) Find(ip net.IP) []string {
 	// entry whose start-IP is less than or equal to the given IP) because it
 	// would return the first entry of the list in most of the cases.
 	i := sort.Search(len(entries), func(i int) bool {
-		return utils.CompareIP(entries[i].StartIP, ip) > 0
+		return iputils.CompareIP(entries[i].StartIP, ip) > 0
 	})
 
 	// Not found: the start-IP of the first entry is greater than the given IP.
@@ -127,7 +127,7 @@ func (db *Database) Find(ip net.IP) []string {
 	// From the search, it's guaranteed that the start-IP of the match is less
 	// than or equal to the given IP. So, the IP only needs to be compared to
 	// the end-IP of the match.
-	if utils.CompareIP(ip, match.EndIP) <= 0 {
+	if iputils.CompareIP(ip, match.EndIP) <= 0 {
 		return match.Data
 	}
 

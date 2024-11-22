@@ -1,4 +1,4 @@
-package database
+package iprange
 
 import (
 	"errors"
@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/danroc/geoblock/pkg/utils"
+	"github.com/danroc/geoblock/pkg/utils/iputils"
 )
 
 // URLs of the CSV IP location databases.
@@ -130,7 +130,7 @@ func resolve(ip net.IP, countryDB *Database, asnDB *Database) *Resolution {
 // The Organization field is present for informational purposes only. It is not
 // used by the rules engine.
 func (r *Resolver) Resolve(ip net.IP) *Resolution {
-	if utils.IsIPv4(ip) {
+	if iputils.IsIPv4(ip) {
 		return resolve(ip, r.countryDBv4, r.asnDBv4)
 	}
 	return resolve(ip, r.countryDBv6, r.asnDBv6)

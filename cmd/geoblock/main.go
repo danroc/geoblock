@@ -8,7 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/danroc/geoblock/pkg/config"
-	"github.com/danroc/geoblock/pkg/database"
+	"github.com/danroc/geoblock/pkg/iprange"
 	"github.com/danroc/geoblock/pkg/rules"
 	"github.com/danroc/geoblock/pkg/server"
 )
@@ -41,7 +41,7 @@ func getOptions() *appOptions {
 }
 
 // autoUpdate updates the databases at regular intervals.
-func autoUpdate(resolver *database.Resolver) {
+func autoUpdate(resolver *iprange.Resolver) {
 	for range time.Tick(autoUpdateInterval) {
 		if err := resolver.Update(); err != nil {
 			log.Errorf("Cannot update databases: %v", err)
@@ -116,7 +116,7 @@ func main() {
 	}
 
 	log.Info("Initializing database resolver")
-	resolver, err := database.NewResolver()
+	resolver, err := iprange.NewResolver()
 	if err != nil {
 		log.Fatalf("Cannot initialize database resolver: %v", err)
 	}

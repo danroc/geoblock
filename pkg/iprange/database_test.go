@@ -1,4 +1,4 @@
-package database_test
+package iprange_test
 
 import (
 	"errors"
@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/danroc/geoblock/pkg/database"
+	"github.com/danroc/geoblock/pkg/iprange"
 )
 
 const (
@@ -49,7 +49,7 @@ func TestNewDatabase(t *testing.T) {
 
 	for _, test := range tests {
 		reader := strings.NewReader(test.data)
-		err := database.NewDatabase().Update(reader)
+		err := iprange.NewDatabase().Update(reader)
 		if test.err && err == nil {
 			t.Errorf("%s: expected an error but got nil", test.name)
 		}
@@ -67,7 +67,7 @@ func (r *errorReader) Read(p []byte) (n int, err error) {
 
 func TestNewDatabaseReadErr(t *testing.T) {
 	reader := &errorReader{}
-	err := database.NewDatabase().Update(reader)
+	err := iprange.NewDatabase().Update(reader)
 	if err == nil {
 		t.Fatalf("Expected an error but got nil")
 	}
@@ -75,7 +75,7 @@ func TestNewDatabaseReadErr(t *testing.T) {
 
 func TestFind(t *testing.T) {
 	reader := strings.NewReader(csvData1)
-	db := database.NewDatabase()
+	db := iprange.NewDatabase()
 	if err := db.Update(reader); err != nil {
 		t.Fatalf("Expected no error but got %v", err)
 	}
