@@ -4,8 +4,8 @@
 </p>
 
 - [Introduction](#introduction)
-- [Configuration](#configuration)
 - [Deployment](#deployment)
+- [Configuration](#configuration)
 - [HTTP API](#http-api)
   - [`GET /v1/forward-auth`](#get-v1forward-auth)
   - [`GET /v1/health`](#get-v1health)
@@ -28,6 +28,12 @@ based on:
 
 It works as a forward-authentication service that can be used with reverse
 proxies such as Traefik, NGINX, and Caddy.
+
+## Deployment
+
+- [Example using Traefik](./examples/traefik/README.md)
+- [Example using Caddy](./examples/caddy/README.md)
+- [Example using NGINX](./examples/nginx/README.md)
 
 ## Configuration
 
@@ -86,11 +92,6 @@ access_control:
         - POST
       policy: allow
 ```
-
-## Deployment
-
-- [Example using Traefik](./examples/traefik/README.md)
-- [Example using Caddy](./examples/caddy/README.md)
 
 ## HTTP API
 

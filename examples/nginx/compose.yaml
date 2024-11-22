@@ -1,0 +1,25 @@
+---
+services:
+  whoami-1:
+    image: traefik/whoami:latest
+    labels:
+      - "traefik.http.routers.whoami-1.rule=Host(`whoami-1.local`)"
+
+  whoami-2:
+    image: traefik/whoami:latest
+    labels:
+      - "traefik.http.routers.whoami-2.rule=Host(`whoami-2.local`)"
+
+  geoblock:
+    image: ghcr.io/danroc/geoblock:latest
+    volumes:
+      - ./config.yaml:/etc/geoblock/config.yaml
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "8080:80"
+    depends_on:
+      - geoblock
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf

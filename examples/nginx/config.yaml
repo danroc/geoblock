@@ -1,0 +1,11 @@
+---
+access_control:
+  default_policy: deny
+  rules:
+    - domains:
+        - whoami-1.local
+      policy: allow
+
+    - domains:
+        - whoami-2.local
+      policy: deny
