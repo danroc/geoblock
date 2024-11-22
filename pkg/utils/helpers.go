@@ -1,3 +1,4 @@
+// Package utils contains generic helper functions.
 package utils
 
 // Any returns true if the given function returns true for any of the given
