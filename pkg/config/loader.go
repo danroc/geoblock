@@ -2,7 +2,6 @@
 package config
 
 import (
-	"io"
 	"os"
 
 	"github.com/danroc/geoblock/pkg/utils"
@@ -42,17 +41,8 @@ func read(data []byte) (*Configuration, error) {
 	return &config, nil
 }
 
-// Read reads then configuration from the given reader.
-func Read(reader io.Reader) (*Configuration, error) {
-	data, err := io.ReadAll(reader)
-	if err != nil {
-		return nil, err
-	}
-	return read(data)
-}
-
-// ReadFile reads the configuration from the given file.
-func ReadFile(filename string) (*Configuration, error) {
+// LoadConfig reads the configuration from the given file.
+func LoadConfig(filename string) (*Configuration, error) {
 	data, err := os.ReadFile(filename) // #nosec G304
 	if err != nil {
 		return nil, err

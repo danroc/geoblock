@@ -78,7 +78,7 @@ func autoReload(engine *rules.Engine, path string) {
 		}
 		prevStat = stat
 
-		cfg, err := config.ReadFile(path)
+		cfg, err := config.LoadConfig(path)
 		if err != nil {
 			log.Errorf("Cannot read configuration file: %v", err)
 			continue
@@ -110,7 +110,7 @@ func main() {
 	configureLogger(options.logLevel)
 
 	log.Info("Loading configuration file")
-	cfg, err := config.ReadFile(options.configPath)
+	cfg, err := config.LoadConfig(options.configPath)
 	if err != nil {
 		log.Fatalf("Cannot read configuration file: %v", err)
 	}
