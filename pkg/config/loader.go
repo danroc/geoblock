@@ -1,4 +1,5 @@
-// Package config contains the configuration schema and helper functions.
+// Package config contains the schema and helper functions to work with the
+// configuration file.
 package config
 
 import (
