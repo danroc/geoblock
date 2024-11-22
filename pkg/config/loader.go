@@ -4,15 +4,9 @@ package config
 import (
 	"os"
 
-	"github.com/danroc/geoblock/pkg/utils"
 	"github.com/go-playground/validator/v10"
 	"gopkg.in/yaml.v3"
 )
-
-// isDurationField checks if the value of the given field is a valid duration.
-func isDurationField(field validator.FieldLevel) bool {
-	return utils.IsDuration(field.Field().String())
-}
 
 // isCIDRField checks if the value of the given field is a valid CIDR.
 func isCIDRField(field validator.FieldLevel) bool {
@@ -31,8 +25,7 @@ func read(data []byte) (*Configuration, error) {
 	}
 
 	validate := validator.New()
-	validate.RegisterValidation("duration", isDurationField) // #nosec G104
-	validate.RegisterValidation("cidr", isCIDRField)         // #nosec G104
+	validate.RegisterValidation("cidr", isCIDRField) // #nosec G104
 
 	if err := validate.Struct(config); err != nil {
 		return nil, err
