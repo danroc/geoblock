@@ -93,6 +93,5 @@ func (e *Engine) Authorize(query *Query) bool {
 			return rule.Policy == config.PolicyAllow
 		}
 	}
-
 	return cfg.DefaultPolicy == config.PolicyAllow
 }
