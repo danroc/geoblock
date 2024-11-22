@@ -1,7 +1,12 @@
+<!-- markdownlint-disable MD033 -->
 <h1 align="center">Geoblock</h1>
 <p align="center">
   <i>Block clients based on their country, ASN or network.</i>
 </p>
+
+<details>
+<summary><b>Table of contents</b></summary>
+<p>
 
 - [Introduction](#introduction)
 - [Deployment](#deployment)
@@ -14,6 +19,10 @@
 - [Manual testing](#manual-testing)
 - [Attribution](#attribution)
 - [Roadmap](#roadmap)
+
+</p>
+</details>
+<!-- markdownlint-enable MD033 -->
 
 ## Introduction
 
