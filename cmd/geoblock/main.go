@@ -7,9 +7,9 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/danroc/geoblock/pkg/config"
 	"github.com/danroc/geoblock/pkg/database"
 	"github.com/danroc/geoblock/pkg/rules"
-	"github.com/danroc/geoblock/pkg/schema"
 	"github.com/danroc/geoblock/pkg/server"
 )
 
@@ -59,15 +59,15 @@ func hasChanged(a, b os.FileInfo) bool {
 
 // autoReload watches the configuration file for changes and updates the engine
 // when it happens.
-func autoReload(engine *rules.Engine, config string) {
-	prevStat, err := os.Stat(config)
+func autoReload(engine *rules.Engine, path string) {
+	prevStat, err := os.Stat(path)
 	if err != nil {
 		log.Errorf("Cannot watch configuration file: %v", err)
 		return
 	}
 
 	for range time.Tick(autoReloadInterval) {
-		stat, err := os.Stat(config)
+		stat, err := os.Stat(path)
 		if err != nil {
 			log.Errorf("Cannot watch configuration file: %v", err)
 			continue
@@ -78,13 +78,13 @@ func autoReload(engine *rules.Engine, config string) {
 		}
 		prevStat = stat
 
-		config, err := schema.ReadFile(config)
+		cfg, err := config.ReadFile(path)
 		if err != nil {
 			log.Errorf("Cannot read configuration file: %v", err)
 			continue
 		}
 
-		engine.UpdateConfig(&config.AccessControl)
+		engine.UpdateConfig(&cfg.AccessControl)
 		log.Info("Configuration reloaded")
 	}
 }
@@ -110,7 +110,7 @@ func main() {
 	configureLogger(options.logLevel)
 
 	log.Info("Loading configuration file")
-	config, err := schema.ReadFile(options.configPath)
+	cfg, err := config.ReadFile(options.configPath)
 	if err != nil {
 		log.Fatalf("Cannot read configuration file: %v", err)
 	}
@@ -123,7 +123,7 @@ func main() {
 
 	var (
 		address = ":" + options.serverPort
-		engine  = rules.NewEngine(&config.AccessControl)
+		engine  = rules.NewEngine(&cfg.AccessControl)
 		server  = server.NewServer(address, engine, resolver)
 	)
 

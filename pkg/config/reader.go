@@ -1,5 +1,5 @@
-// Package schema contains configiguration schema used by geoblock.
-package schema
+// Package config contains the configuration schema and helper functions.
+package config
 
 import (
 	"io"
