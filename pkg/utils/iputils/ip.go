@@ -1,4 +1,5 @@
-package utils
+// Package iputils provides utility functions to work with IP addresses.
+package iputils
 
 import (
 	"bytes"

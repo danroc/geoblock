@@ -6,20 +6,19 @@ import (
 	"strings"
 	"sync/atomic"
 
-	"github.com/danroc/geoblock/pkg/schema"
-	"github.com/danroc/geoblock/pkg/utils"
+	"github.com/danroc/geoblock/pkg/config"
 	"github.com/danroc/geoblock/pkg/utils/glob"
 )
 
 // Engine is the access control egine that checks if a given query is allowed
 // by the rules.
 type Engine struct {
-	config atomic.Pointer[schema.AccessControl]
+	config atomic.Pointer[config.AccessControl]
 }
 
 // NewEngine creates a new access control engine for the given access control
 // configuration.
-func NewEngine(config *schema.AccessControl) *Engine {
+func NewEngine(config *config.AccessControl) *Engine {
 	e := &Engine{}
 	e.config.Store(config)
 	return e
@@ -36,7 +35,12 @@ type Query struct {
 
 // match checks if any of the conditions match the given matchFunc.
 func match[T any](conditions []T, matchFunc func(T) bool) bool {
-	return len(conditions) == 0 || utils.Any(conditions, matchFunc)
+	for _, condition := range conditions {
+		if matchFunc(condition) {
+			return true
+		}
+	}
+	return len(conditions) == 0
 }
 
 // ruleApplies checks if the given query is allowed or denied by the given
@@ -47,7 +51,7 @@ func match[T any](conditions []T, matchFunc func(T) bool) bool {
 // no domains, it will match all domains.
 //
 // Domains, methods and countries are case-insensitive.
-func ruleApplies(rule *schema.AccessControlRule, query *Query) bool {
+func ruleApplies(rule *config.AccessControlRule, query *Query) bool {
 	matchDomain := match(rule.Domains, func(domain string) bool {
 		return glob.Star(
 			strings.ToLower(domain),
@@ -59,7 +63,7 @@ func ruleApplies(rule *schema.AccessControlRule, query *Query) bool {
 		return strings.EqualFold(method, query.RequestedMethod)
 	})
 
-	matchIP := match(rule.Networks, func(network schema.CIDR) bool {
+	matchIP := match(rule.Networks, func(network config.CIDR) bool {
 		return network.Contains(query.SourceIP)
 	})
 
@@ -76,19 +80,18 @@ func ruleApplies(rule *schema.AccessControlRule, query *Query) bool {
 
 // UpdateConfig updates the engine's configuration with the given access
 // control configuration.
-func (e *Engine) UpdateConfig(config *schema.AccessControl) {
+func (e *Engine) UpdateConfig(config *config.AccessControl) {
 	e.config.Store(config)
 }
 
 // Authorize checks if the given query is allowed by the engine's rules. The
 // engine will return true if the query is allowed, false otherwise.
 func (e *Engine) Authorize(query *Query) bool {
-	config := e.config.Load()
-	for _, rule := range config.Rules {
+	cfg := e.config.Load()
+	for _, rule := range cfg.Rules {
 		if ruleApplies(&rule, query) {
-			return rule.Policy == schema.PolicyAllow
+			return rule.Policy == config.PolicyAllow
 		}
 	}
-
-	return config.DefaultPolicy == schema.PolicyAllow
+	return cfg.DefaultPolicy == config.PolicyAllow
 }

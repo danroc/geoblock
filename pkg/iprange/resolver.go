@@ -1,4 +1,4 @@
-package database
+package iprange
 
 import (
 	"errors"
@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/danroc/geoblock/pkg/utils"
+	"github.com/danroc/geoblock/pkg/utils/iputils"
 )
 
 // URLs of the CSV IP location databases.
@@ -17,8 +17,8 @@ const (
 	ASNIPv6URL     = "https://cdn.jsdelivr.net/npm/@ip-location-db/geolite2-asn/geolite2-asn-ipv6.csv"
 )
 
-// ReservedAS0 is the ASN used when the ASN is unknown. Its value is 0.
-const ReservedAS0 uint32 = 0
+// AS0 represents the default ASN value for unknown addresses.
+const AS0 uint32 = 0
 
 // Resolution contains the result of resolving an IP address.
 type Resolution struct {
@@ -101,7 +101,7 @@ func strIndex(data []string, index int) string {
 func strToASN(s string) uint32 {
 	asn, err := strconv.ParseUint(s, 10, 32)
 	if err != nil {
-		return ReservedAS0
+		return AS0
 	}
 	return uint32(asn)
 }
@@ -130,7 +130,7 @@ func resolve(ip net.IP, countryDB *Database, asnDB *Database) *Resolution {
 // The Organization field is present for informational purposes only. It is not
 // used by the rules engine.
 func (r *Resolver) Resolve(ip net.IP) *Resolution {
-	if utils.IsIPv4(ip) {
+	if iputils.IsIPv4(ip) {
 		return resolve(ip, r.countryDBv4, r.asnDBv4)
 	}
 	return resolve(ip, r.countryDBv6, r.asnDBv6)

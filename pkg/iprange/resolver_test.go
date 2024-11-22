@@ -1,4 +1,4 @@
-package database_test
+package iprange_test
 
 import (
 	"bytes"
@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/danroc/geoblock/pkg/database"
+	"github.com/danroc/geoblock/pkg/iprange"
 )
 
 func TestStrIndex(t *testing.T) {
@@ -26,7 +26,7 @@ func TestStrIndex(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run("", func(t *testing.T) {
-			result := database.StrIndex(tt.data, tt.index)
+			result := iprange.StrIndex(tt.data, tt.index)
 			if result != tt.expected {
 				t.Errorf("got %q, want %q", result, tt.expected)
 			}
@@ -42,14 +42,14 @@ func TestStrToASN(t *testing.T) {
 		{"12345", 12345},
 		{"0", 0},
 		{"4294967295", 4294967295},
-		{"invalid", database.ReservedAS0},
-		{"", database.ReservedAS0},
-		{"-1", database.ReservedAS0},
+		{"invalid", iprange.AS0},
+		{"", iprange.AS0},
+		{"-1", iprange.AS0},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
-			result := database.StrToASN(tt.input)
+			result := iprange.StrToASN(tt.input)
 			if result != tt.expected {
 				t.Errorf("got %d, want %d", result, tt.expected)
 			}
@@ -69,10 +69,10 @@ func newDummyRT() http.RoundTripper {
 	return &mockRT{
 		respond: func(req *http.Request) (*http.Response, error) {
 			body := map[string]string{
-				database.CountryIPv4URL: "1.0.0.0,1.0.2.2,US\n1.1.0.0,1.1.2.2,FR\n",
-				database.CountryIPv6URL: "1:0::,1:1::,US\n1:2::,1:3::,FR\n",
-				database.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1\n1.1.0.0,1.1.2.2,2,Test2\n",
-				database.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n1:2::,1:3::,4,Test4\n",
+				iprange.CountryIPv4URL: "1.0.0.0,1.0.2.2,US\n1.1.0.0,1.1.2.2,FR\n",
+				iprange.CountryIPv6URL: "1:0::,1:1::,US\n1:2::,1:3::,FR\n",
+				iprange.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1\n1.1.0.0,1.1.2.2,2,Test2\n",
+				iprange.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n1:2::,1:3::,4,Test4\n",
 			}[req.URL.String()]
 
 			return &http.Response{
@@ -100,7 +100,7 @@ func withRT(rt http.RoundTripper, f func()) {
 
 func TestNewResolverError(t *testing.T) {
 	withRT(newErrRT(), func() {
-		_, err := database.NewResolver()
+		_, err := iprange.NewResolver()
 		if err == nil {
 			t.Fatal("expected an error, got nil")
 		}
@@ -117,12 +117,12 @@ func TestResolverResolve(t *testing.T) {
 		}{
 			{"1.0.1.1", "US", "Test1", 1},
 			{"1.1.1.1", "FR", "Test2", 2},
-			{"1.2.1.1", "", "", database.ReservedAS0},
+			{"1.2.1.1", "", "", iprange.AS0},
 			{"1:0::", "US", "Test3", 3},
 			{"1:2::", "FR", "Test4", 4},
-			{"1:4::", "", "", database.ReservedAS0},
+			{"1:4::", "", "", iprange.AS0},
 		}
-		r, _ := database.NewResolver()
+		r, _ := iprange.NewResolver()
 		for _, tt := range tests {
 			t.Run(tt.ip, func(t *testing.T) {
 				result := r.Resolve(net.ParseIP(tt.ip))

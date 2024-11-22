@@ -1,10 +1,10 @@
-package utils_test
+package iputils_test
 
 import (
 	"net"
 	"testing"
 
-	"github.com/danroc/geoblock/pkg/utils"
+	"github.com/danroc/geoblock/pkg/utils/iputils"
 )
 
 func TestCompareIP(t *testing.T) {
@@ -27,7 +27,7 @@ func TestCompareIP(t *testing.T) {
 			t.Fatalf("Invalid IP address in test case: %s, %s", test.a, test.b)
 		}
 
-		result := utils.CompareIP(ipA, ipB)
+		result := iputils.CompareIP(ipA, ipB)
 		if result != test.result {
 			t.Errorf(
 				"CompareIP(%s, %s) = %d; want %d",
@@ -59,7 +59,7 @@ func TestIsIPv4(t *testing.T) {
 			t.Fatalf("Invalid IP address in test case: %s", test.ip)
 		}
 
-		result := utils.IsIPv4(ip)
+		result := iputils.IsIPv4(ip)
 		if result != test.result {
 			t.Errorf(
 				"IsIPv4(%s) = %t; want %t",
@@ -82,7 +82,7 @@ func TestErrInvalidIP(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		err := &utils.ErrInvalidIP{Address: test.address}
+		err := &iputils.ErrInvalidIP{Address: test.address}
 		if err.Error() != test.message {
 			t.Errorf(
 				"ErrInvalidIP(%s).Error() = %s; want %s",
