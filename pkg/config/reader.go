@@ -16,12 +16,11 @@ var domainNameRegex = regexp.MustCompile(
 	`^(\*|[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)(\.(\*|[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?))*$`,
 )
 
+// isDomainNameField checks if the value of the given field is a valid domain
+// name. It also allows labels to be a single `*` wildcard.
 func isDomainNameField(field validator.FieldLevel) bool {
 	domain, ok := field.Field().Interface().(string)
-	if !ok {
-		return false
-	}
-	return domainNameRegex.MatchString(domain)
+	return ok && domainNameRegex.MatchString(domain)
 }
 
 // isCIDRField checks if the value of the given field is a valid CIDR.
