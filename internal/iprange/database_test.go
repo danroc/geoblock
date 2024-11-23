@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/danroc/geoblock/pkg/iprange"
+	"github.com/danroc/geoblock/internal/iprange"
 )
 
 const (

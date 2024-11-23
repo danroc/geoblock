@@ -8,10 +8,10 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/danroc/geoblock/pkg/config"
-	"github.com/danroc/geoblock/pkg/iprange"
-	"github.com/danroc/geoblock/pkg/rules"
-	"github.com/danroc/geoblock/pkg/server"
+	"github.com/danroc/geoblock/internal/config"
+	"github.com/danroc/geoblock/internal/iprange"
+	"github.com/danroc/geoblock/internal/rules"
+	"github.com/danroc/geoblock/internal/server"
 )
 
 const (

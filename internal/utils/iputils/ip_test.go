@@ -4,7 +4,7 @@ import (
 	"net"
 	"testing"
 
-	"github.com/danroc/geoblock/pkg/utils/iputils"
+	"github.com/danroc/geoblock/internal/utils/iputils"
 )
 
 func TestCompareIP(t *testing.T) {

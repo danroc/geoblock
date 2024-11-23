@@ -3,7 +3,7 @@ package glob_test
 import (
 	"testing"
 
-	"github.com/danroc/geoblock/pkg/utils/glob"
+	"github.com/danroc/geoblock/internal/utils/glob"
 )
 
 func TestStar(t *testing.T) {
