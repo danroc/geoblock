@@ -33,7 +33,7 @@ func (n *CIDR) UnmarshalYAML(unmarshal func(interface{}) error) error {
 type AccessControlRule struct {
 	Policy            string   `yaml:"policy"                       validate:"required,oneof=allow deny"`
 	Networks          []CIDR   `yaml:"networks,omitempty"           validate:"dive,cidr"`
-	Domains           []string `yaml:"domains,omitempty"            validate:"dive,fqdn"`
+	Domains           []string `yaml:"domains,omitempty"            validate:"dive,domain"`
 	Methods           []string `yaml:"methods,omitempty"            validate:"dive,oneof=GET HEAD POST PUT DELETE PATCH"`
 	Countries         []string `yaml:"countries,omitempty"          validate:"dive,iso3166_1_alpha2"`
 	AutonomousSystems []uint32 `yaml:"autonomous_systems,omitempty" validate:"dive,numeric"`
