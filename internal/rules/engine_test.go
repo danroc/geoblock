@@ -4,8 +4,8 @@ import (
 	"net"
 	"testing"
 
-	"github.com/danroc/geoblock/pkg/config"
-	"github.com/danroc/geoblock/pkg/rules"
+	"github.com/danroc/geoblock/internal/config"
+	"github.com/danroc/geoblock/internal/rules"
 )
 
 func TestEngineAuthorize(t *testing.T) {

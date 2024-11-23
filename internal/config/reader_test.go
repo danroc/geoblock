@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/danroc/geoblock/pkg/config"
+	"github.com/danroc/geoblock/internal/config"
 )
 
 const validConfig = `

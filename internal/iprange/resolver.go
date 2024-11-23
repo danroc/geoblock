@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/danroc/geoblock/pkg/utils/iputils"
+	"github.com/danroc/geoblock/internal/utils/iputils"
 )
 
 // URLs of the CSV IP location databases.

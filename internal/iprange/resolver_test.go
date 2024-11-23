@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/danroc/geoblock/pkg/iprange"
+	"github.com/danroc/geoblock/internal/iprange"
 )
 
 func TestStrIndex(t *testing.T) {

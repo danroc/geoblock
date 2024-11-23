@@ -10,7 +10,7 @@ import (
 	"strings"
 	"sync/atomic"
 
-	"github.com/danroc/geoblock/pkg/utils/iputils"
+	"github.com/danroc/geoblock/internal/utils/iputils"
 )
 
 // Entry represents an IP range and its associated data.

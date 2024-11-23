@@ -10,8 +10,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/danroc/geoblock/pkg/iprange"
-	"github.com/danroc/geoblock/pkg/rules"
+	"github.com/danroc/geoblock/internal/iprange"
+	"github.com/danroc/geoblock/internal/rules"
 )
 
 // HTTP headers used by reverse proxies to identify the original request.

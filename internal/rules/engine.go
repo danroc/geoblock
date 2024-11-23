@@ -6,8 +6,8 @@ import (
 	"strings"
 	"sync/atomic"
 
-	"github.com/danroc/geoblock/pkg/config"
-	"github.com/danroc/geoblock/pkg/utils/glob"
+	"github.com/danroc/geoblock/internal/config"
+	"github.com/danroc/geoblock/internal/utils/glob"
 )
 
 // Engine is the access control egine that checks if a given query is allowed
