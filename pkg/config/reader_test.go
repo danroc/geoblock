@@ -93,7 +93,7 @@ access_control:
   default_policy: allow
   rules:
     - networks:
-        - "invalid"
+        - "invalid-cidr"
       policy: allow
 `
 
@@ -167,14 +167,16 @@ func TestReadConfigValid(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		reader := strings.NewReader(test.data)
-		cfg, err := config.ReadConfig(reader)
-		if err != nil {
-			t.Errorf("%s: unexpected error: %v", test.name, err)
-		}
-		if !reflect.DeepEqual(*cfg, *test.expected) {
-			t.Errorf("%s: expected %v, got %v", test.name, test.expected, cfg)
-		}
+		t.Run(test.name, func(t *testing.T) {
+			reader := strings.NewReader(test.data)
+			cfg, err := config.ReadConfig(reader)
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+			if !reflect.DeepEqual(*cfg, *test.expected) {
+				t.Errorf("expected %v, got %v", test.expected, cfg)
+			}
+		})
 	}
 }
 
@@ -195,11 +197,13 @@ func TestReadConfigErr(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		reader := strings.NewReader(test.data)
-		_, err := config.ReadConfig(reader)
-		if err == nil {
-			t.Errorf("%s: expected an error but got nil", test.name)
-		}
+		t.Run(test.name, func(t *testing.T) {
+			reader := strings.NewReader(test.data)
+			_, err := config.ReadConfig(reader)
+			if err == nil {
+				t.Error("expected an error but got nil")
+			}
+		})
 	}
 }
 
