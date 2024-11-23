@@ -2,6 +2,7 @@
 package main
 
 import (
+	"bytes"
 	"os"
 	"time"
 
@@ -51,6 +52,15 @@ func autoUpdate(resolver *iprange.Resolver) {
 	}
 }
 
+// loadConfig reads the configuration file from the given path and returns it.
+func loadConfig(path string) (*config.Configuration, error) {
+	file, err := os.ReadFile(path) // #nosec G304
+	if err != nil {
+		return nil, err
+	}
+	return config.ReadConfig(bytes.NewReader(file))
+}
+
 // hasChanged returns true if the two file infos are different. It only checks
 // the size and the modification time.
 func hasChanged(a, b os.FileInfo) bool {
@@ -78,7 +88,7 @@ func autoReload(engine *rules.Engine, path string) {
 		}
 		prevStat = stat
 
-		cfg, err := config.LoadConfig(path)
+		cfg, err := loadConfig(path)
 		if err != nil {
 			log.Errorf("Cannot read configuration file: %v", err)
 			continue
@@ -110,7 +120,7 @@ func main() {
 	configureLogger(options.logLevel)
 
 	log.Info("Loading configuration file")
-	cfg, err := config.LoadConfig(options.configPath)
+	cfg, err := loadConfig(options.configPath)
 	if err != nil {
 		log.Fatalf("Cannot read configuration file: %v", err)
 	}

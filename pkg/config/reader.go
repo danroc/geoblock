@@ -3,11 +3,26 @@
 package config
 
 import (
-	"os"
+	"io"
+	"regexp"
 
 	"github.com/go-playground/validator/v10"
 	"gopkg.in/yaml.v3"
 )
+
+// DomainNameRegex matches a valid domain name as per RFC 1035. It also allows
+// labels to be a single `*` wildcard.
+var domainNameRegex = regexp.MustCompile(
+	`^(\*|[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)(\.(\*|[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?))*$`,
+)
+
+func isDomainNameField(field validator.FieldLevel) bool {
+	domain, ok := field.Field().Interface().(string)
+	if !ok {
+		return false
+	}
+	return domainNameRegex.MatchString(domain)
+}
 
 // isCIDRField checks if the value of the given field is a valid CIDR.
 func isCIDRField(field validator.FieldLevel) bool {
@@ -26,7 +41,8 @@ func read(data []byte) (*Configuration, error) {
 	}
 
 	validate := validator.New()
-	validate.RegisterValidation("cidr", isCIDRField) // #nosec G104
+	validate.RegisterValidation("cidr", isCIDRField)         // #nosec G104
+	validate.RegisterValidation("domain", isDomainNameField) // #nosec G104
 
 	if err := validate.Struct(config); err != nil {
 		return nil, err
@@ -35,9 +51,9 @@ func read(data []byte) (*Configuration, error) {
 	return &config, nil
 }
 
-// LoadConfig reads the configuration from the given file.
-func LoadConfig(filename string) (*Configuration, error) {
-	data, err := os.ReadFile(filename) // #nosec G304
+// ReadConfig reads the configuration from the given reader and returns it.
+func ReadConfig(reader io.Reader) (*Configuration, error) {
+	data, err := io.ReadAll(reader)
 	if err != nil {
 		return nil, err
 	}
