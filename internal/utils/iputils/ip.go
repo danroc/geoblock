@@ -13,6 +13,20 @@ func CompareIP(a net.IP, b net.IP) int {
 	return bytes.Compare(a, b)
 }
 
+func MaxIP(a net.IP, b net.IP) net.IP {
+	if CompareIP(a, b) >= 0 {
+		return a
+	}
+	return b
+}
+
+func MinIP(a net.IP, b net.IP) net.IP {
+	if CompareIP(a, b) <= 0 {
+		return a
+	}
+	return b
+}
+
 // ErrInvalidIP is used when a give IP address is invalid.
 type ErrInvalidIP struct {
 	Address string
