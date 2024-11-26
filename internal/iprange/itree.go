@@ -2,36 +2,40 @@ package iprange
 
 import (
 	"fmt"
-	"net"
-
-	"github.com/danroc/geoblock/internal/utils/iputils"
 )
 
 // Interval represents an IP range.
 type Interval struct {
-	Start net.IP
-	End   net.IP
+	Start int
+	End   int
 }
 
-func (i Interval) Equal(other Interval) bool {
-	return iputils.CompareIP(i.Start, other.Start) == 0 &&
-		iputils.CompareIP(i.End, other.End) == 0
+// Contains returns true if the interval contains the given IP address.
+// Otherwise, it returns false.
+func (i Interval) Contains(x int) bool {
+	return i.Start <= x && x <= i.End
 }
 
 // Node represents a node in the interval tree.
 type Node struct {
-	Interval Interval
+	Value    int
 	Left     *Node
 	Right    *Node
+	Interval Interval
+	maxEnd   int
 	height   int
 }
 
-func NewNode(i Interval) *Node {
+// NewNode creates a new node with the given interval.
+func NewNode(i Interval, v int) *Node {
 	return &Node{
 		Interval: i,
+		Value:    v,
+		maxEnd:   i.End,
 	}
 }
 
+// Height returns the height of the node.
 func (n *Node) Height() int {
 	if n == nil {
 		return -1
@@ -39,7 +43,15 @@ func (n *Node) Height() int {
 	return n.height
 }
 
-func (n *Node) updateHeight() {
+func (n *Node) MaxEnd() int {
+	if n == nil {
+		return -1
+	}
+	return n.maxEnd
+}
+
+func (n *Node) updateNode() {
+	n.maxEnd = max(n.Interval.End, max(n.Left.MaxEnd(), n.Right.MaxEnd()))
 	n.height = 1 + max(n.Left.Height(), n.Right.Height())
 }
 
@@ -48,8 +60,8 @@ func (n *Node) rotateLeft() *Node {
 	n.Right = x.Left
 	x.Left = n
 
-	n.updateHeight()
-	x.updateHeight()
+	n.updateNode()
+	x.updateNode()
 
 	return x
 }
@@ -59,8 +71,8 @@ func (n *Node) rotateRight() *Node {
 	n.Left = x.Right
 	x.Right = n
 
-	n.updateHeight()
-	x.updateHeight()
+	n.updateNode()
+	x.updateNode()
 
 	return x
 }
@@ -69,56 +81,32 @@ func (n *Node) balanceFactor() int {
 	return n.Left.Height() - n.Right.Height()
 }
 
-func (n *Node) isLeftHeavy() bool {
-	return n.balanceFactor() >= 1
-}
-
-func (n *Node) isRightHeavy() bool {
-	return n.balanceFactor() <= -1
-}
-
-func (n *Node) isTooLeftHeavy() bool {
-	return n.balanceFactor() > 1
-}
-
-func (n *Node) isTooRightHeavy() bool {
-	return n.balanceFactor() < -1
-}
-
 func (n *Node) balance() *Node {
-	if n.isTooLeftHeavy() {
-		if n.Left.isRightHeavy() {
+	n.updateNode()
+	if bf := n.balanceFactor(); bf > 1 {
+		if n.Left.balanceFactor() < 0 {
 			n.Left = n.Left.rotateLeft()
 		}
 		return n.rotateRight()
-	}
-
-	if n.isTooRightHeavy() {
-		if n.Right.isLeftHeavy() {
+	} else if bf < -1 {
+		if n.Right.balanceFactor() > 0 {
 			n.Right = n.Right.rotateRight()
 		}
 		return n.rotateLeft()
 	}
-
 	return n
 }
 
-func insert(n *Node, i Interval) *Node {
+func insert(n *Node, i Interval, x int) *Node {
 	if n == nil {
-		return NewNode(i)
+		return NewNode(i, x)
 	}
 
-	if n.Interval.Equal(i) {
-		return n
-	}
-
-	if iputils.CompareIP(i.Start, n.Interval.Start) < 0 {
-		n.Left = insert(n.Left, i)
+	if i.Start <= n.Interval.Start {
+		n.Left = insert(n.Left, i, x)
 	} else {
-		n.Right = insert(n.Right, i)
+		n.Right = insert(n.Right, i, x)
 	}
-
-	n.updateHeight()
 	return n.balance()
 }
 
@@ -133,8 +121,8 @@ func NewITree() *ITree {
 }
 
 // Insert adds an interval to the interval tree.
-func (t *ITree) Insert(interval Interval) {
-	t.root = insert(t.root, interval)
+func (t *ITree) Insert(interval Interval, value int) {
+	t.root = insert(t.root, interval, value)
 }
 
 func printNode(n *Node) {
@@ -145,7 +133,7 @@ func printNode(n *Node) {
 
 	fmt.Print("<")
 	printNode(n.Left)
-	fmt.Printf(", %s/%s, ", n.Interval.Start, n.Interval.End)
+	fmt.Printf(", [%d,%d]:%d, ", n.Interval.Start, n.Interval.End, n.Value)
 	printNode(n.Right)
 	fmt.Print(">")
 }
@@ -159,4 +147,23 @@ func (t *ITree) Print() {
 // Height returns the height of the interval tree.
 func (t *ITree) Height() int {
 	return t.root.Height()
+}
+
+func query(n *Node, x int) []int {
+	if n == nil || x > n.MaxEnd() {
+		return nil
+	}
+
+	var r []int
+	if n.Interval.Contains(x) {
+		r = append(r, n.Value)
+	}
+	if x > n.Interval.Start {
+		r = append(r, query(n.Right, x)...)
+	}
+	return append(r, query(n.Left, x)...)
+}
+
+func (t *ITree) Query(x int) []int {
+	return query(t.root, x)
 }

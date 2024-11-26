@@ -2,7 +2,6 @@ package iprange_test
 
 import (
 	"fmt"
-	"net"
 	"testing"
 
 	"github.com/danroc/geoblock/internal/iprange"
@@ -12,40 +11,33 @@ func TestInsert(t *testing.T) {
 	tree := iprange.NewITree()
 
 	tree.Insert(iprange.Interval{
-		Start: net.ParseIP("127.0.0.0"),
-		End:   net.ParseIP("127.0.0.255"),
-	})
+		Start: 1,
+		End:   3,
+	}, 1)
 
 	tree.Insert(iprange.Interval{
-		Start: net.ParseIP("127.0.1.0"),
-		End:   net.ParseIP("127.0.1.255"),
-	})
+		Start: 4,
+		End:   8,
+	}, 2)
 
 	tree.Insert(iprange.Interval{
-		Start: net.ParseIP("127.0.2.0"),
-		End:   net.ParseIP("127.0.2.255"),
-	})
+		Start: 6,
+		End:   10,
+	}, 3)
 
 	tree.Insert(iprange.Interval{
-		Start: net.ParseIP("127.0.3.0"),
-		End:   net.ParseIP("127.0.3.255"),
-	})
+		Start: 11,
+		End:   13,
+	}, 4)
 
 	tree.Insert(iprange.Interval{
-		Start: net.ParseIP("127.0.4.0"),
-		End:   net.ParseIP("127.0.4.255"),
-	})
-
-	tree.Insert(iprange.Interval{
-		Start: net.ParseIP("127.0.5.0"),
-		End:   net.ParseIP("127.0.5.255"),
-	})
-
-	tree.Insert(iprange.Interval{
-		Start: net.ParseIP("127.0.6.0"),
-		End:   net.ParseIP("127.0.6.255"),
-	})
+		Start: 1,
+		End:   13,
+	}, 5)
 
 	tree.Print()
 	fmt.Printf("Tree height: %d\n", tree.Height())
+	for i := 1; i <= 13; i++ {
+		fmt.Printf("Query(%2d): %v\n", i, tree.Query(i))
+	}
 }

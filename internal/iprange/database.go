@@ -4,19 +4,17 @@ package iprange
 import (
 	"encoding/csv"
 	"io"
-	"net"
+	"net/netip"
 	"slices"
 	"sort"
 	"strings"
 	"sync/atomic"
-
-	"github.com/danroc/geoblock/internal/utils/iputils"
 )
 
 // Entry represents an IP range and its associated data.
 type Entry struct {
-	StartIP net.IP
-	EndIP   net.IP
+	StartIP netip.Addr
+	EndIP   netip.Addr
 	Data    []string
 }
 
@@ -33,24 +31,20 @@ func sanitize(data []string) []string {
 func parseRecords(records [][]string) ([]Entry, error) {
 	var entries []Entry
 	for _, record := range records {
-		var (
-			startIP = net.ParseIP(record[0])
-			endIP   = net.ParseIP(record[1])
-			data    = sanitize(record[2:])
-		)
-
-		if startIP == nil {
-			return nil, &iputils.ErrInvalidIP{Address: record[0]}
+		startIP, err := netip.ParseAddr(record[0])
+		if err != nil {
+			return nil, err
 		}
 
-		if endIP == nil {
-			return nil, &iputils.ErrInvalidIP{Address: record[1]}
+		endIP, err := netip.ParseAddr(record[1])
+		if err != nil {
+			return nil, err
 		}
 
 		entries = append(entries, Entry{
 			StartIP: startIP,
 			EndIP:   endIP,
-			Data:    data,
+			Data:    sanitize(record[2:]),
 		})
 	}
 	return entries, nil
@@ -86,7 +80,7 @@ func (db *Database) Update(reader io.Reader) error {
 	// The entries must be sorted by their start IP to allow binary search. The
 	// sort is done in-place.
 	slices.SortFunc(entries, func(a, b Entry) int {
-		return iputils.CompareIP(a.StartIP, b.StartIP)
+		return a.StartIP.Compare(b.StartIP)
 	})
 
 	// This atomically updates the database entries.
@@ -97,14 +91,7 @@ func (db *Database) Update(reader io.Reader) error {
 
 // Find returns the data associated with the entry that contains the given IP.
 // If the IP is not found, nil is returned.
-func (db *Database) Find(ip net.IP) []string {
-	// If the given IP address is invalid, we return nil to indicate that the
-	// IP cannot be found in the database. It is up to the caller to validate
-	// the IP address before calling this method.
-	if ip == nil {
-		return nil
-	}
-
+func (db *Database) Find(ip netip.Addr) []string {
 	// Atomically load the database entries.
 	entries := db.entries.Load().([]Entry)
 
@@ -113,7 +100,7 @@ func (db *Database) Find(ip net.IP) []string {
 	// entry whose start-IP is less than or equal to the given IP) because it
 	// would return the first entry of the list in most of the cases.
 	i := sort.Search(len(entries), func(i int) bool {
-		return iputils.CompareIP(entries[i].StartIP, ip) > 0
+		return entries[i].StartIP.Compare(ip) > 0
 	})
 
 	// Not found: the start-IP of the first entry is greater than the given IP.
@@ -127,7 +114,7 @@ func (db *Database) Find(ip net.IP) []string {
 	// From the search, it's guaranteed that the start-IP of the match is less
 	// than or equal to the given IP. So, the IP only needs to be compared to
 	// the end-IP of the match.
-	if iputils.CompareIP(ip, match.EndIP) <= 0 {
+	if ip.Compare(match.EndIP) <= 0 {
 		return match.Data
 	}
 

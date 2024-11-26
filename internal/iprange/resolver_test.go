@@ -3,8 +3,8 @@ package iprange_test
 import (
 	"bytes"
 	"io"
-	"net"
 	"net/http"
+	"net/netip"
 	"testing"
 
 	"github.com/danroc/geoblock/internal/iprange"
@@ -125,7 +125,7 @@ func TestResolverResolve(t *testing.T) {
 		r, _ := iprange.NewResolver()
 		for _, tt := range tests {
 			t.Run(tt.ip, func(t *testing.T) {
-				result := r.Resolve(net.ParseIP(tt.ip))
+				result := r.Resolve(netip.MustParseAddr(tt.ip))
 				if result.CountryCode != tt.country {
 					t.Errorf("got %q, want %q", result.CountryCode, tt.country)
 				}

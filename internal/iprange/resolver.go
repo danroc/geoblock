@@ -2,11 +2,9 @@ package iprange
 
 import (
 	"errors"
-	"net"
 	"net/http"
+	"net/netip"
 	"strconv"
-
-	"github.com/danroc/geoblock/internal/utils/iputils"
 )
 
 // URLs of the CSV IP location databases.
@@ -107,7 +105,7 @@ func strToASN(s string) uint32 {
 }
 
 // resolve checks the given IP address against the country and ASN databases.
-func resolve(ip net.IP, countryDB *Database, asnDB *Database) *Resolution {
+func resolve(ip netip.Addr, countryDB *Database, asnDB *Database) *Resolution {
 	var (
 		countryMatch = countryDB.Find(ip)
 		asnMatch     = asnDB.Find(ip)
@@ -129,8 +127,8 @@ func resolve(ip net.IP, countryDB *Database, asnDB *Database) *Resolution {
 //
 // The Organization field is present for informational purposes only. It is not
 // used by the rules engine.
-func (r *Resolver) Resolve(ip net.IP) *Resolution {
-	if iputils.IsIPv4(ip) {
+func (r *Resolver) Resolve(ip netip.Addr) *Resolution {
+	if ip.Is4() {
 		return resolve(ip, r.countryDBv4, r.asnDBv4)
 	}
 	return resolve(ip, r.countryDBv6, r.asnDBv6)

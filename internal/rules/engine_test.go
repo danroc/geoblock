@@ -1,7 +1,7 @@
 package rules_test
 
 import (
-	"net"
+	"net/netip"
 	"testing"
 
 	"github.com/danroc/geoblock/internal/config"
@@ -203,14 +203,8 @@ func TestEngineAuthorize(t *testing.T) {
 				Rules: []config.AccessControlRule{
 					{
 						Networks: []config.CIDR{
-							{IPNet: &net.IPNet{
-								IP:   net.IPv4(10, 0, 0, 0),
-								Mask: net.CIDRMask(8, 32),
-							}},
-							{IPNet: &net.IPNet{
-								IP:   net.IPv4(192, 168, 1, 0),
-								Mask: net.CIDRMask(24, 32),
-							}},
+							{Prefix: netip.MustParsePrefix("10.0.0.0/8")},
+							{Prefix: netip.MustParsePrefix("192.168.1.0/24")},
 						},
 						Policy: config.PolicyAllow,
 					},
@@ -218,7 +212,7 @@ func TestEngineAuthorize(t *testing.T) {
 				DefaultPolicy: config.PolicyDeny,
 			},
 			query: &rules.Query{
-				SourceIP: net.IPv4(10, 1, 1, 1),
+				SourceIP: netip.MustParseAddr("10.1.1.1"),
 			},
 			want: true,
 		},
@@ -228,14 +222,8 @@ func TestEngineAuthorize(t *testing.T) {
 				Rules: []config.AccessControlRule{
 					{
 						Networks: []config.CIDR{
-							{IPNet: &net.IPNet{
-								IP:   net.IPv4(10, 0, 0, 0),
-								Mask: net.CIDRMask(8, 32),
-							}},
-							{IPNet: &net.IPNet{
-								IP:   net.IPv4(192, 168, 1, 0),
-								Mask: net.CIDRMask(24, 32),
-							}},
+							{Prefix: netip.MustParsePrefix("10.0.0.0/8")},
+							{Prefix: netip.MustParsePrefix("192.168.1.0/24")},
 						},
 						Policy: config.PolicyDeny,
 					},
@@ -243,7 +231,7 @@ func TestEngineAuthorize(t *testing.T) {
 				DefaultPolicy: config.PolicyAllow,
 			},
 			query: &rules.Query{
-				SourceIP: net.IPv4(192, 168, 1, 1),
+				SourceIP: netip.MustParseAddr("192.168.1.1"),
 			},
 			want: false,
 		},
@@ -366,10 +354,7 @@ func TestEngineAuthorize(t *testing.T) {
 					{
 						Domains: []string{"example.com"},
 						Networks: []config.CIDR{
-							{IPNet: &net.IPNet{
-								IP:   net.IPv4(10, 0, 0, 0),
-								Mask: net.CIDRMask(8, 32),
-							}},
+							{Prefix: netip.MustParsePrefix("10.0.0.0/8")},
 						},
 						Countries:         []string{"FR"},
 						AutonomousSystems: []uint32{1111},
@@ -380,7 +365,7 @@ func TestEngineAuthorize(t *testing.T) {
 			},
 			query: &rules.Query{
 				RequestedDomain: "example.com",
-				SourceIP:        net.IPv4(10, 1, 1, 1),
+				SourceIP:        netip.MustParseAddr("10.1.1.1"),
 				SourceCountry:   "FR",
 				SourceASN:       1111,
 			},
@@ -393,10 +378,7 @@ func TestEngineAuthorize(t *testing.T) {
 					{
 						Domains: []string{"example.com"},
 						Networks: []config.CIDR{
-							{IPNet: &net.IPNet{
-								IP:   net.IPv4(10, 0, 0, 0),
-								Mask: net.CIDRMask(8, 32),
-							}},
+							{Prefix: netip.MustParsePrefix("10.0.0.0/8")},
 						},
 						Policy: config.PolicyAllow,
 					},
@@ -405,7 +387,7 @@ func TestEngineAuthorize(t *testing.T) {
 			},
 			query: &rules.Query{
 				RequestedDomain: "example.com",
-				SourceIP:        net.IPv4(192, 168, 1, 1),
+				SourceIP:        netip.MustParseAddr("192.168.1.1"),
 			},
 			want: false,
 		},

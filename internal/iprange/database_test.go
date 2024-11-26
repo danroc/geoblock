@@ -2,7 +2,7 @@ package iprange_test
 
 import (
 	"errors"
-	"net"
+	"net/netip"
 	"strings"
 	"testing"
 
@@ -92,7 +92,14 @@ func TestFind(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		ip := net.ParseIP(test.ip)
+		ip, err := netip.ParseAddr(test.ip)
+		if err != nil {
+			if test.expected != nil {
+				t.Errorf("Expected %v but got nil", test.expected)
+			}
+			continue
+		}
+
 		result := db.Find(ip)
 		if len(result) != len(test.expected) {
 			t.Errorf("Expected %v but got %v", test.expected, result)
