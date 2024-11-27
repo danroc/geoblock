@@ -132,10 +132,14 @@ func TestReadConfigValid(t *testing.T) {
 							Policy: "allow",
 							Networks: []config.CIDR{
 								{
-									Prefix: netip.MustParsePrefix("10.0.0.0/8"),
+									Prefix: netip.MustParsePrefix(
+										"10.0.0.0/8",
+									),
 								},
 								{
-									Prefix: netip.MustParsePrefix("127.0.0.0/8"),
+									Prefix: netip.MustParsePrefix(
+										"127.0.0.0/8",
+									),
 								},
 							},
 							Domains: []string{
