@@ -1,4 +1,6 @@
-package iprange
+// Package ipres provider an IP resolver that returns information about an IP
+// address.
+package ipres
 
 import (
 	"encoding/csv"
@@ -21,6 +23,16 @@ const (
 // AS0 represents the default ASN value for unknown addresses.
 const AS0 uint32 = 0
 
+// DBRecord contains the information of a database record.
+type DBRecord struct {
+	StartIP    netip.Addr
+	EndIP      netip.Addr
+	Resolution Resolution
+}
+
+// ParserFn is a function that parses a CSV record into a database record.
+type ParserFn func([]string) (*DBRecord, error)
+
 // Resolution contains the result of resolving an IP address.
 type Resolution struct {
 	CountryCode  string
@@ -30,7 +42,7 @@ type Resolution struct {
 
 // Or returns a new resolution that combines the fields of the receiver and the
 // other resolution.
-func (r *Resolution) Or(other *Resolution) Resolution {
+func (r *Resolution) Or(other Resolution) Resolution {
 	return Resolution{
 		CountryCode:  ifEmpty(r.CountryCode, other.CountryCode),
 		Organization: ifEmpty(r.Organization, other.Organization),
@@ -58,16 +70,10 @@ type Resolver struct {
 }
 
 // NewResolver creates a new IP resolver.
-func NewResolver() (*Resolver, error) {
-	resolver := &Resolver{
+func NewResolver() *Resolver {
+	return &Resolver{
 		db: itree.NewITree[netip.Addr, Resolution](),
 	}
-
-	if err := resolver.Update(); err != nil {
-		return nil, err
-	}
-
-	return resolver, nil
 }
 
 // Update updates the databases used by the resolver.
@@ -76,19 +82,19 @@ func NewResolver() (*Resolver, error) {
 // update the next database and returns all the errors at the end.
 func (r *Resolver) Update() error {
 	items := []struct {
-		db  string
-		url string
+		parser ParserFn
+		url    string
 	}{
-		{"country", CountryIPv4URL},
-		{"country", CountryIPv6URL},
-		{"asn", ASNIPv4URL},
-		{"asn", ASNIPv6URL},
+		{parseCountryRecord, CountryIPv4URL},
+		{parseCountryRecord, CountryIPv6URL},
+		{parseASNRecord, ASNIPv4URL},
+		{parseASNRecord, ASNIPv6URL},
 	}
 
 	var errs []error
 
 	for _, item := range items {
-		if err := r.updateDB(item.db, item.url); err != nil {
+		if err := r.updateDB(item.parser, item.url); err != nil {
 			errs = append(errs, err)
 		}
 	}
@@ -106,58 +112,92 @@ func (r *Resolver) Update() error {
 //
 // The Organization field is present for informational purposes only. It is not
 // used by the rules engine.
-func (r *Resolver) Resolve(ip netip.Addr) *Resolution {
+func (r *Resolver) Resolve(ip netip.Addr) Resolution {
 	results := r.db.Query(ip)
 
-	out := Resolution{}
-	for _, r := range results {
-		out = out.Or(&r)
-	}
-	return &out
+	return reduce(results, func(acc, r Resolution) Resolution {
+		return acc.Or(r)
+	}, Resolution{})
 }
 
 // updateDB updates the given database with the data from the given URL.
-func (r *Resolver) updateDB(t string, url string) error {
+func (r *Resolver) updateDB(parser ParserFn, url string) error {
+	records, err := fetchCSV(url)
+	if err != nil {
+		return err
+	}
+
+	for _, record := range records {
+		entry, err := parser(record)
+		if err != nil {
+			return err
+		}
+		r.db.Insert(
+			itree.NewInterval(entry.StartIP, entry.EndIP),
+			entry.Resolution,
+		)
+	}
+	return nil
+}
+
+func fetchCSV(url string) ([][]string, error) {
 	resp, err := http.Get(url) // #nosec G107
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer resp.Body.Close()
-	// return db.Update(resp.Body)
+	return csv.NewReader(resp.Body).ReadAll()
+}
 
-	// Records are the raw data from the CSV file.
-	records, err := csv.NewReader(resp.Body).ReadAll()
+func parseCountryRecord(record []string) (*DBRecord, error) {
+	startIP, err := netip.ParseAddr(record[0])
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	// Entries are the parsed data from the records, it is composed by a start
-	// IP, an end IP, and the string data associated with the range.
-	entries, err := parseRecords(records)
+	endIP, err := netip.ParseAddr(record[1])
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	for _, entry := range entries {
-		if t == "country" {
-			r.db.Insert(
-				itree.NewInterval(entry.StartIP, entry.EndIP),
-				Resolution{
-					CountryCode: strIndex(entry.Data, 0),
-				},
-			)
-		} else if t == "asn" {
-			r.db.Insert(
-				itree.NewInterval(entry.StartIP, entry.EndIP),
-				Resolution{
-					Organization: strIndex(entry.Data, 1),
-					ASN:          strToASN(strIndex(entry.Data, 0)),
-				},
-			)
-		}
+	return &DBRecord{
+		StartIP: startIP,
+		EndIP:   endIP,
+		Resolution: Resolution{
+			CountryCode: strIndex(record, 2),
+		},
+	}, nil
+}
+
+func parseASNRecord(record []string) (*DBRecord, error) {
+	startIP, err := netip.ParseAddr(record[0])
+	if err != nil {
+		return nil, err
 	}
 
-	return nil
+	endIP, err := netip.ParseAddr(record[1])
+	if err != nil {
+		return nil, err
+	}
+
+	return &DBRecord{
+		StartIP: startIP,
+		EndIP:   endIP,
+		Resolution: Resolution{
+			ASN:          strToASN(strIndex(record, 2)),
+			Organization: strIndex(record, 3),
+		},
+	}, nil
+}
+
+// strToASN converts a string to an ASN. If the string is not a valid ASN, the
+// function returns ReservedAS0.
+func strToASN(s string) uint32 {
+	asn, err := strconv.ParseUint(s, 10, 32)
+	if err != nil {
+		return AS0
+	}
+	return uint32(asn)
 }
 
 // strIndex returns the element at the given index of the data slice. If the
@@ -169,12 +209,13 @@ func strIndex(data []string, index int) string {
 	return data[index]
 }
 
-// strToASN converts a string to an ASN. If the string is not a valid ASN, the
-// function returns ReservedAS0.
-func strToASN(s string) uint32 {
-	asn, err := strconv.ParseUint(s, 10, 32)
-	if err != nil {
-		return AS0
+func reduce[T any, R any](
+	collection []T,
+	accumulator func(R, T) R,
+	initial R,
+) R {
+	for _, item := range collection {
+		initial = accumulator(initial, item)
 	}
-	return uint32(asn)
+	return initial
 }

@@ -10,7 +10,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/danroc/geoblock/internal/iprange"
+	"github.com/danroc/geoblock/internal/ipres"
 	"github.com/danroc/geoblock/internal/rules"
 )
 
@@ -53,7 +53,7 @@ var metrics = Metrics{}
 func getForwardAuth(
 	writer http.ResponseWriter,
 	request *http.Request,
-	resolver *iprange.Resolver,
+	resolver *ipres.Resolver,
 	engine *rules.Engine,
 ) {
 	var (
@@ -147,7 +147,7 @@ func getMetrics(writer http.ResponseWriter, _ *http.Request) {
 func NewServer(
 	address string,
 	engine *rules.Engine,
-	resolver *iprange.Resolver,
+	resolver *ipres.Resolver,
 ) *http.Server {
 	mux := http.NewServeMux()
 	mux.HandleFunc(

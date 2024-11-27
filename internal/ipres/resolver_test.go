@@ -1,4 +1,4 @@
-package iprange_test
+package ipres_test
 
 import (
 	"bytes"
@@ -7,55 +7,8 @@ import (
 	"net/netip"
 	"testing"
 
-	"github.com/danroc/geoblock/internal/iprange"
+	"github.com/danroc/geoblock/internal/ipres"
 )
-
-func TestStrIndex(t *testing.T) {
-	tests := []struct {
-		data     []string
-		index    int
-		expected string
-	}{
-		{[]string{"a", "b", "c"}, 0, "a"},
-		{[]string{"a", "b", "c"}, 1, "b"},
-		{[]string{"a", "b", "c"}, 2, "c"},
-		{[]string{"a", "b", "c"}, 3, ""},
-		{[]string{"a", "b", "c"}, -1, ""},
-		{[]string{}, 0, ""},
-	}
-
-	for _, tt := range tests {
-		t.Run("", func(t *testing.T) {
-			result := iprange.StrIndex(tt.data, tt.index)
-			if result != tt.expected {
-				t.Errorf("got %q, want %q", result, tt.expected)
-			}
-		})
-	}
-}
-
-func TestStrToASN(t *testing.T) {
-	tests := []struct {
-		input    string
-		expected uint32
-	}{
-		{"12345", 12345},
-		{"0", 0},
-		{"4294967295", 4294967295},
-		{"invalid", iprange.AS0},
-		{"", iprange.AS0},
-		{"-1", iprange.AS0},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.input, func(t *testing.T) {
-			result := iprange.StrToASN(tt.input)
-			if result != tt.expected {
-				t.Errorf("got %d, want %d", result, tt.expected)
-			}
-		})
-	}
-}
 
 type mockRT struct {
 	respond func(req *http.Request) (*http.Response, error)
@@ -65,16 +18,17 @@ func (m *mockRT) RoundTrip(req *http.Request) (*http.Response, error) {
 	return m.respond(req)
 }
 
+var dummyDatabases = map[string]string{
+	ipres.CountryIPv4URL: "1.0.0.0,1.0.2.2,US\n1.1.0.0,1.1.2.2,FR\n",
+	ipres.CountryIPv6URL: "1:0::,1:1::,US\n1:2::,1:3::,FR\n",
+	ipres.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1\n1.1.0.0,1.1.2.2,2,Test2\n",
+	ipres.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n1:2::,1:3::,4,Test4\n",
+}
+
 func newDummyRT() http.RoundTripper {
 	return &mockRT{
 		respond: func(req *http.Request) (*http.Response, error) {
-			body := map[string]string{
-				iprange.CountryIPv4URL: "1.0.0.0,1.0.2.2,US\n1.1.0.0,1.1.2.2,FR\n",
-				iprange.CountryIPv6URL: "1:0::,1:1::,US\n1:2::,1:3::,FR\n",
-				iprange.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1\n1.1.0.0,1.1.2.2,2,Test2\n",
-				iprange.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n1:2::,1:3::,4,Test4\n",
-			}[req.URL.String()]
-
+			body := dummyDatabases[req.URL.String()]
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Body:       io.NopCloser(bytes.NewBufferString(body)),
@@ -98,10 +52,10 @@ func withRT(rt http.RoundTripper, f func()) {
 	f()
 }
 
-func TestNewResolverError(t *testing.T) {
+func TestUpdateError(t *testing.T) {
 	withRT(newErrRT(), func() {
-		_, err := iprange.NewResolver()
-		if err == nil {
+		r := ipres.NewResolver()
+		if err := r.Update(); err == nil {
 			t.Fatal("expected an error, got nil")
 		}
 	})
@@ -117,12 +71,15 @@ func TestResolverResolve(t *testing.T) {
 		}{
 			{"1.0.1.1", "US", "Test1", 1},
 			{"1.1.1.1", "FR", "Test2", 2},
-			{"1.2.1.1", "", "", iprange.AS0},
+			{"1.2.1.1", "", "", ipres.AS0},
 			{"1:0::", "US", "Test3", 3},
 			{"1:2::", "FR", "Test4", 4},
-			{"1:4::", "", "", iprange.AS0},
+			{"1:4::", "", "", ipres.AS0},
 		}
-		r, _ := iprange.NewResolver()
+		r := ipres.NewResolver()
+		if err := r.Update(); err != nil {
+			t.Fatal(err)
+		}
 		for _, tt := range tests {
 			t.Run(tt.ip, func(t *testing.T) {
 				result := r.Resolve(netip.MustParseAddr(tt.ip))
