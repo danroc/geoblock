@@ -1,35 +1,29 @@
 package itree
 
-import (
-	"github.com/danroc/geoblock/internal/itree/cmp"
-)
-
 // Node represents a node in the interval tree.
-type Node[C cmp.Comparable[C], V any] struct {
-	left     *Node[C, V]
-	right    *Node[C, V]
-	interval Interval[C]
+type Node[K Comparable[K], V any] struct {
+	left     *Node[K, V]
+	right    *Node[K, V]
+	interval Interval[K]
 	value    V
-	max      C
+	max      K
 	height   int
 }
 
 // NewNode creates a new node with the given interval.
-func NewNode[C cmp.Comparable[C], V any](i Interval[C], v V) *Node[C, V] {
-	return &Node[C, V]{
-		interval: i,
-		value:    v,
-		max:      i.High,
+func NewNode[K Comparable[K], V any](
+	interval Interval[K],
+	value V,
+) *Node[K, V] {
+	return &Node[K, V]{
+		interval: interval,
+		value:    value,
+		max:      interval.High,
 	}
 }
 
-// IsLeaf returns whether the node is a leaf.
-func (n *Node[C, V]) IsLeaf() bool {
-	return n.left == nil && n.right == nil
-}
-
 // Height returns the height of the node.
-func (n *Node[C, V]) Height() int {
+func (n *Node[K, V]) Height() int {
 	if n == nil {
 		return -1
 	}
@@ -38,21 +32,21 @@ func (n *Node[C, V]) Height() int {
 
 // Max returns the maximum value between the `max` property of a node and
 // another value.
-func (n *Node[C, V]) Max(o C) C {
+func (n *Node[K, V]) Max(other K) K {
 	if n == nil {
-		return o
+		return other
 	}
-	return cmp.Max(n.max, o)
+	return Max(n.max, other)
 }
 
 // updateNode updates the `max` and `height` properties of the node.
-func (n *Node[C, V]) updateNode() {
+func (n *Node[K, V]) updateNode() {
 	n.max = n.left.Max(n.right.Max(n.interval.High))
 	n.height = 1 + max(n.left.Height(), n.right.Height())
 }
 
 // roteLeft rotates the node to the left.
-func (n *Node[C, V]) rotateLeft() *Node[C, V] {
+func (n *Node[K, V]) rotateLeft() *Node[K, V] {
 	x := n.right
 	n.right = x.left
 	x.left = n
@@ -64,7 +58,7 @@ func (n *Node[C, V]) rotateLeft() *Node[C, V] {
 }
 
 // rotateRight rotates the node to the right.
-func (n *Node[C, V]) rotateRight() *Node[C, V] {
+func (n *Node[K, V]) rotateRight() *Node[K, V] {
 	x := n.left
 	n.left = x.right
 	x.right = n
@@ -76,12 +70,12 @@ func (n *Node[C, V]) rotateRight() *Node[C, V] {
 }
 
 // balanceFactor returns the balance factor of the node.
-func (n *Node[C, V]) balanceFactor() int {
+func (n *Node[K, V]) balanceFactor() int {
 	return n.left.Height() - n.right.Height()
 }
 
 // balance balances the node using the AVL algorithm.
-func (n *Node[C, V]) balance() *Node[C, V] {
+func (n *Node[K, V]) balance() *Node[K, V] {
 	n.updateNode()
 	if bf := n.balanceFactor(); bf > 1 {
 		if n.left.balanceFactor() < 0 {
@@ -98,60 +92,69 @@ func (n *Node[C, V]) balance() *Node[C, V] {
 }
 
 // insert inserts an interval and its value into the interval tree.
-func insert[C cmp.Comparable[C], V any](
-	n *Node[C, V],
-	i Interval[C],
-	v V,
-) *Node[C, V] {
-	if n == nil {
-		return NewNode(i, v)
+func insert[K Comparable[K], V any](
+	node *Node[K, V],
+	interval Interval[K],
+	value V,
+) *Node[K, V] {
+	if node == nil {
+		return NewNode(interval, value)
 	}
 
-	if i.Low.Compare(n.interval.Low) <= 0 {
-		n.left = insert(n.left, i, v)
+	if interval.Low.Compare(node.interval.Low) <= 0 {
+		node.left = insert(node.left, interval, value)
 	} else {
-		n.right = insert(n.right, i, v)
+		node.right = insert(node.right, interval, value)
 	}
-	return n.balance()
+	return node.balance()
 }
 
 // ITree represents an interval tree.
-type ITree[C cmp.Comparable[C], V any] struct {
-	root *Node[C, V]
+type ITree[K Comparable[K], V any] struct {
+	root *Node[K, V]
 }
 
 // NewITree creates a new interval tree.
-func NewITree[C cmp.Comparable[C], V any]() *ITree[C, V] {
-	return &ITree[C, V]{}
+func NewITree[K Comparable[K], V any]() *ITree[K, V] {
+	return &ITree[K, V]{}
 }
 
 // Insert adds an interval to the interval tree.
-func (t *ITree[C, V]) Insert(interval Interval[C], value V) {
+func (t *ITree[K, V]) Insert(interval Interval[K], value V) {
 	t.root = insert(t.root, interval, value)
 }
 
-// Height returns the height of the interval tree.
-func (t *ITree[C, V]) Height() int {
-	return t.root.Height()
+// Query returns the values associated with the intervals that contain the
+// given key.
+func (t *ITree[K, V]) Query(key K) []V {
+	return query(t.root, key)
 }
 
-func query[I Interval[C], C cmp.Comparable[C], V any](n *Node[C, V], x C) []V {
-	if n == nil || n.max.Compare(x) < 0 {
+func query[K Comparable[K], V any](
+	node *Node[K, V],
+	key K,
+) []V {
+	// If the maximum of all intervals from this node and below is less than
+	// the value, there are no intervals to query.
+	if node == nil || node.max.Compare(key) < 0 {
 		return nil
 	}
 
-	var r []V
-	if n.interval.Contains(x) {
-		r = append(r, n.value)
-	}
-	if x.Compare(n.interval.Low) > 0 {
-		r = append(r, query(n.right, x)...)
-	}
-	return append(r, query(n.left, x)...)
-}
+	var results []V
 
-// Query returns the values associated with the intervals that contain the
-// given `x` value.
-func (t *ITree[C, V]) Query(x C) []V {
-	return query(t.root, x)
+	// Even if the current interval contains the key
+	if node.interval.Contains(key) {
+		results = append(results, node.value)
+	}
+
+	// If the key is less than then or equal to the low value of the interval,
+	// we know that it can only be in the left subtree, so the right subtree
+	// can be ignored.
+	if key.Compare(node.interval.Low) > 0 {
+		results = append(results, query(node.right, key)...)
+	}
+
+	// The left subtree is always queried since it can contain intervals that
+	// cover any range in the ]-∞, node.max] interval.
+	return append(results, query(node.left, key)...)
 }
