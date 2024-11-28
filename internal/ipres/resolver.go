@@ -102,19 +102,21 @@ func (r *Resolver) Update() error {
 		{parseASNRecord, ASNIPv6URL},
 	}
 
-	var errs []error
-
+	// A new database is created for each update so that it can be atomically
+	// swapped with the current database.
 	db := itree.NewITree[netip.Addr, Resolution]()
+
+	var errs []error
 	for _, item := range items {
 		if err := update(db, item.parser, item.url); err != nil {
 			errs = append(errs, err)
 		}
 	}
-
 	if len(errs) > 0 {
 		return errors.Join(errs...)
 	}
 
+	// Atomically swap the current database with the new one.
 	r.db.Store(db)
 	return nil
 }
