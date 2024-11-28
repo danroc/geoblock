@@ -5,7 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.1.13] - 2024-11-28
+
+### Changed
+
+- Use interval tree to store database entries ([#47](https://github.com/danroc/geoblock/pull/47))
 
 ## [0.1.12] - 2024-11-23
 
@@ -95,7 +99,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add CIDR unmarshalling and validation
 - Add autonomous systems to configuration
 
-[Unreleased]: https://github.com/danroc/geoblock/compare/v0.1.12...HEAD
+[0.1.13]: https://github.com/danroc/geoblock/compare/v0.1.12...v0.1.13
 [0.1.12]: https://github.com/danroc/geoblock/compare/v0.1.11...v0.1.12
 [0.1.11]: https://github.com/danroc/geoblock/compare/v0.1.10...v0.1.11
 [0.1.10]: https://github.com/danroc/geoblock/compare/v0.1.9...v0.1.10
