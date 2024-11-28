@@ -1,3 +1,4 @@
+// Package itree provides an interval tree implementation.
 package itree
 
 // Comparable is an interface for types that can be compared.
