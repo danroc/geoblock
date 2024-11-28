@@ -1,0 +1,37 @@
+name: Tag on release
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  tag_release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Extract commit message
+        run: |
+          COMMIT_MESSAGE=$(git log -1 --pretty=%B)
+          echo "Commit message: $COMMIT_MESSAGE"
+          echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> "$GITHUB_OUTPUT"
+
+      - name: Validate and parse version
+        run: |
+          if [[ $COMMIT_MESSAGE =~ ^release:\ (v?[0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            VERSION="${BASH_REMATCH[1]}"
+            TAG="v${VERSION#v}"
+            echo "Tag: $TAG"
+            echo "TAG=$TAG" >> "$GITHUB_OUTPUT"
+          else
+            echo "No valid release tag found in commit message."
+            exit 1
+          fi
+
+      - name: Create new tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git tag "$TAG"
+          git push origin "$TAG"
