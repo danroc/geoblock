@@ -28,7 +28,10 @@ const (
 )
 
 // ErrRecordLength is returned when a CSV record has an unexpected length.
-var ErrRecordLength = errors.New("invalid record length")
+var (
+	ErrRecordLength = errors.New("invalid record length")
+	ErrInvalidANS   = errors.New("invalid ASN")
+)
 
 // AS0 represents the default ASN value for unknown addresses.
 const AS0 uint32 = 0
@@ -49,33 +52,29 @@ type ResTree = itree.ITree[netip.Addr, Resolution]
 
 // Resolution contains the result of resolving an IP address.
 type Resolution struct {
-	CountryCode  string
-	Organization string
-	ASN          uint32
+	CountryCode  string // ISO 3166-1 alpha-2 country code
+	Organization string // Organization name
+	ASN          uint32 // Autonomous System Number
 }
 
-// Or returns a new resolution that combines the fields of the receiver and the
-// other resolution.
-func (r Resolution) Or(other Resolution) Resolution {
-	return Resolution{
-		CountryCode:  ifEmpty(r.CountryCode, other.CountryCode),
-		Organization: ifEmpty(r.Organization, other.Organization),
-		ASN:          ifZero(r.ASN, other.ASN),
+// mergeResolutions merges the given resolutions into a single resolution.
+//
+// The fields of the resulting resolution are the LAST non-zero fields of the
+// input resolutions.
+func mergeResolutions(resolutions []Resolution) Resolution {
+	var merged Resolution
+	for _, r := range resolutions {
+		if r.CountryCode != "" {
+			merged.CountryCode = r.CountryCode
+		}
+		if r.Organization != "" {
+			merged.Organization = r.Organization
+		}
+		if r.ASN != 0 {
+			merged.ASN = r.ASN
+		}
 	}
-}
-
-func ifEmpty(value, fallback string) string {
-	if value == "" {
-		return fallback
-	}
-	return value
-}
-
-func ifZero(value, fallback uint32) uint32 {
-	if value == 0 {
-		return fallback
-	}
-	return value
+	return merged
 }
 
 // Resolver is an IP resolver that returns information about an IP address.
@@ -131,13 +130,7 @@ func (r *Resolver) Update() error {
 // The Organization field is present for informational purposes only. It is not
 // used by the rules engine.
 func (r *Resolver) Resolve(ip netip.Addr) Resolution {
-	return reduce(
-		r.db.Load().Query(ip),
-		func(acc, r Resolution) Resolution {
-			return acc.Or(r)
-		},
-		Resolution{},
-	)
+	return mergeResolutions(r.db.Load().Query(ip))
 }
 
 // update adds the records fetched from the given URL to the database.
@@ -172,6 +165,7 @@ func fetchCSV(url string) ([][]string, error) {
 	return csv.NewReader(resp.Body).ReadAll()
 }
 
+// parseCountryRecord parses a country database record.
 func parseCountryRecord(record []string) (*DBRecord, error) {
 	if len(record) != countryRecordLength {
 		return nil, ErrRecordLength
@@ -196,6 +190,7 @@ func parseCountryRecord(record []string) (*DBRecord, error) {
 	}, nil
 }
 
+// parseASNRecord parses an ASN database record.
 func parseASNRecord(record []string) (*DBRecord, error) {
 	if len(record) != asnRecordLength {
 		return nil, ErrRecordLength
@@ -213,7 +208,7 @@ func parseASNRecord(record []string) (*DBRecord, error) {
 
 	asn, err := strconv.ParseUint(record[2], 10, 32)
 	if err != nil {
-		return nil, err
+		return nil, ErrInvalidANS
 	}
 
 	return &DBRecord{
@@ -224,15 +219,4 @@ func parseASNRecord(record []string) (*DBRecord, error) {
 			Organization: record[3],
 		},
 	}, nil
-}
-
-func reduce[T any, R any](
-	collection []T,
-	accumulator func(R, T) R,
-	initial R,
-) R {
-	for _, item := range collection {
-		initial = accumulator(initial, item)
-	}
-	return initial
 }

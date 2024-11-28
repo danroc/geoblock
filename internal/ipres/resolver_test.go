@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"net/netip"
+	"strings"
 	"testing"
 
 	"github.com/danroc/geoblock/internal/ipres"
@@ -18,23 +19,26 @@ func (m *mockRT) RoundTrip(req *http.Request) (*http.Response, error) {
 	return m.respond(req)
 }
 
-var dummyDatabases = map[string]string{
-	ipres.CountryIPv4URL: "1.0.0.0,1.0.2.2,US\n1.1.0.0,1.1.2.2,FR\n",
-	ipres.CountryIPv6URL: "1:0::,1:1::,US\n1:2::,1:3::,FR\n",
-	ipres.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1\n1.1.0.0,1.1.2.2,2,Test2\n",
-	ipres.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n1:2::,1:3::,4,Test4\n",
-}
-
-func newDummyRT() http.RoundTripper {
+func newRTWithDBs(dbs map[string]string) http.RoundTripper {
 	return &mockRT{
 		respond: func(req *http.Request) (*http.Response, error) {
-			body := dummyDatabases[req.URL.String()]
+			body := dbs[req.URL.String()]
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Body:       io.NopCloser(bytes.NewBufferString(body)),
 			}, nil
 		},
 	}
+}
+
+func newDummyRT() http.RoundTripper {
+	dummyDatabases := map[string]string{
+		ipres.CountryIPv4URL: "1.0.0.0,1.0.2.2,US\n1.1.0.0,1.1.2.2,FR\n",
+		ipres.CountryIPv6URL: "1:0::,1:1::,US\n1:2::,1:3::,FR\n",
+		ipres.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1\n1.1.0.0,1.1.2.2,2,Test2\n",
+		ipres.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n1:2::,1:3::,4,Test4\n",
+	}
+	return newRTWithDBs(dummyDatabases)
 }
 
 func newErrRT() http.RoundTripper {
@@ -61,7 +65,7 @@ func TestUpdateError(t *testing.T) {
 	})
 }
 
-func TestResolverResolve(t *testing.T) {
+func TestResolve(t *testing.T) {
 	withRT(newDummyRT(), func() {
 		tests := []struct {
 			ip      string
@@ -95,4 +99,121 @@ func TestResolverResolve(t *testing.T) {
 			})
 		}
 	})
+}
+
+func TestUpdateInvalidData(t *testing.T) {
+	tests := []struct {
+		dbs    map[string]string
+		errMsg string
+	}{
+		{
+			map[string]string{
+				ipres.CountryIPv4URL: "invalid,1.0.2.2,US\n",
+				ipres.CountryIPv6URL: "1:0::,1:1::,US\n",
+				ipres.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1\n",
+				ipres.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n",
+			},
+			"unable to parse IP",
+		},
+		{
+			map[string]string{
+				ipres.CountryIPv4URL: "1.0.0.0,invalid,US\n",
+				ipres.CountryIPv6URL: "1:0::,1:1::,US\n",
+				ipres.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1\n",
+				ipres.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n",
+			},
+			"unable to parse IP",
+		},
+		{
+			map[string]string{
+				ipres.CountryIPv4URL: "1.0.0.0,1.0.2.2,US\n",
+				ipres.CountryIPv6URL: "invalid,1:1::,US\n",
+				ipres.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1\n",
+				ipres.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n",
+			},
+			"unable to parse IP",
+		},
+		{
+			map[string]string{
+				ipres.CountryIPv4URL: "1.0.0.0,1.0.2.2,US\n",
+				ipres.CountryIPv6URL: "1:0::,invalid,US\n",
+				ipres.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1\n",
+				ipres.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n",
+			},
+			"unable to parse IP",
+		},
+		{
+			map[string]string{
+				ipres.CountryIPv4URL: "1.0.0.0,1.0.2.2,US\n",
+				ipres.CountryIPv6URL: "1:0::,1:1::,US\n",
+				ipres.ASNIPv4URL:     "invalid,1.0.2.2,1,Test1\n",
+				ipres.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n",
+			},
+			"unable to parse IP",
+		},
+		{
+			map[string]string{
+				ipres.CountryIPv4URL: "1.0.0.0,1.0.2.2,US\n",
+				ipres.CountryIPv6URL: "1:0::,1:1::,US\n",
+				ipres.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1\n",
+				ipres.ASNIPv6URL:     "1:0::,invalid,3,Test3\n",
+			},
+			"unable to parse IP",
+		},
+		{
+			map[string]string{
+				ipres.CountryIPv4URL: "1.0.0.0,1.0.2.2,US\n",
+				ipres.CountryIPv6URL: "1:0::,1:1::,US\n",
+				ipres.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1,extra\n",
+				ipres.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n",
+			},
+			"invalid record length",
+		},
+		{
+			map[string]string{
+				ipres.CountryIPv4URL: "1.0.0.0,1.0.2.2,US\n",
+				ipres.CountryIPv6URL: "1:0::,1:1::,US\n",
+				ipres.ASNIPv4URL:     "1.0.0.0,1.0.2.2,missing\n",
+				ipres.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n",
+			},
+			"invalid record length",
+		},
+		{
+			map[string]string{
+				ipres.CountryIPv4URL: "1.0.0.0,1.0.2.2,US\n",
+				ipres.CountryIPv6URL: "1:0::,1:1::,US\n",
+				ipres.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1\n",
+				ipres.ASNIPv6URL:     "1:0::,1:1::,invalid,Test3\n",
+			},
+			"invalid ASN",
+		},
+		{
+			map[string]string{
+				ipres.CountryIPv4URL: "1.0.0.0,1.0.2.2\n",
+				ipres.CountryIPv6URL: "1:0::,1:1::,US\n",
+				ipres.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1\n",
+				ipres.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n",
+			},
+			"invalid record length",
+		},
+		{
+			map[string]string{
+				ipres.CountryIPv4URL: "1.0.0.0,1.0.2.2,US\n",
+				ipres.CountryIPv6URL: "1:0::,1:1::,US,FR\n",
+				ipres.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1\n",
+				ipres.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n",
+			},
+			"invalid record length",
+		},
+	}
+
+	for _, tt := range tests {
+		withRT(newRTWithDBs(tt.dbs), func() {
+			r := ipres.NewResolver()
+			err := r.Update()
+			if err == nil || !strings.Contains(err.Error(), tt.errMsg) {
+				t.Errorf("got %v, want %v", err, tt.errMsg)
+			}
+		})
+	}
 }
