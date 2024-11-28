@@ -2,6 +2,7 @@ package itree_test
 
 import (
 	"fmt"
+	"slices"
 	"testing"
 
 	"github.com/danroc/geoblock/internal/itree"
@@ -110,8 +111,25 @@ func TestQueryDuplicate(t *testing.T) {
 	tree.Insert(itree.NewInterval[ComparableInt](1, 2), 1)
 	tree.Insert(itree.NewInterval[ComparableInt](1, 2), 1)
 
-	tree.Insert(itree.NewInterval[ComparableInt](3, 5), 1)
-	tree.Insert(itree.NewInterval[ComparableInt](3, 5), 1)
+	tree.Insert(itree.NewInterval[ComparableInt](3, 5), 2)
+	tree.Insert(itree.NewInterval[ComparableInt](2, 5), 2)
 
-	want := []int{1, 1}
+	tests := []struct {
+		key     ComparableInt
+		matches []int
+	}{
+		{0, []int{}},
+		{1, []int{1, 1}},
+		{2, []int{1, 2, 1}},
+		{3, []int{2, 2}},
+	}
+
+	for _, test := range tests {
+		t.Run(fmt.Sprintf("Query(%d)", test.key), func(t *testing.T) {
+			matches := tree.Query(test.key)
+			if !slices.Equal(test.matches, matches) {
+				t.Errorf("expected %v, got %v", test.matches, matches)
+			}
+		})
+	}
 }
