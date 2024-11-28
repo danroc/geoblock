@@ -11,26 +11,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Extract commit message
+      - name: Tag release
         id: commit_message
         run: |
-          COMMIT_MESSAGE=$(git log -1 --pretty=%B)
-          echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> "$GITHUB_OUTPUT"
-
-      - name: Validate and parse version
-        id: parse_version
-        run: |
-          COMMIT_MESSAGE="${{ steps.commit_message.outputs.COMMIT_MESSAGE }}"
-          if [[ $COMMIT_MESSAGE =~ ^release:\ v?([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
-            TAG="v${BASH_REMATCH[1]}"
-            echo "TAG=$TAG" >> "$GITHUB_OUTPUT"
+          commit_msg=$(git log -1 --pretty=%B)
+          if [[ $commit_msg =~ ^release:\ v?([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            tag="v${BASH_REMATCH[1]}"
+            git tag "$tag"
+            git push origin "$tag"
           fi
-
-      - name: Create new tag
-        if: steps.parse_version.outputs.TAG != ''
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          TAG="${{ steps.parse_version.outputs.TAG }}"
-          git tag "$TAG"
-          git push origin "$TAG"
