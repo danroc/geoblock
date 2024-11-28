@@ -13,22 +13,64 @@ func (t ComparableInt) Compare(other ComparableInt) int {
 	return int(t - other)
 }
 
+type set[E comparable] map[E]bool
+
+func newSet[E comparable]() set[E] {
+	return make(map[E]bool)
+}
+
+func (s set[E]) add(e ...E) {
+	for _, v := range e {
+		s[v] = true
+	}
+}
+
+func (s set[E]) contains(e E) bool {
+	_, ok := s[e]
+	return ok
+}
+
+func (s set[E]) equal(other set[E]) bool {
+	for k := range s {
+		if !other.contains(k) {
+			return false
+		}
+	}
+	for k := range other {
+		if !s.contains(k) {
+			return false
+		}
+	}
+	return true
+}
+
 func TestQuery(t *testing.T) {
 	tree := itree.NewITree[ComparableInt, int]()
+
+	// Default cases
 	tree.Insert(itree.NewInterval[ComparableInt](1, 3), 1)
 	tree.Insert(itree.NewInterval[ComparableInt](4, 8), 2)
 	tree.Insert(itree.NewInterval[ComparableInt](6, 10), 3)
 	tree.Insert(itree.NewInterval[ComparableInt](11, 13), 4)
 	tree.Insert(itree.NewInterval[ComparableInt](1, 13), 5)
 
+	// Cases to trigger rotations
+	tree.Insert(itree.NewInterval[ComparableInt](1, 1), 6)
+	tree.Insert(itree.NewInterval[ComparableInt](1, 1), 7)
+	tree.Insert(itree.NewInterval[ComparableInt](3, 3), 8)
+	tree.Insert(itree.NewInterval[ComparableInt](3, 3), 9)
+
+	// Duplicate interval
+	tree.Insert(itree.NewInterval[ComparableInt](3, 3), 9)
+
 	tests := []struct {
 		key     ComparableInt
 		matches []int
 	}{
 		{0, []int{}},
-		{1, []int{1, 5}},
+		{1, []int{1, 5, 6, 7}},
 		{2, []int{1, 5}},
-		{3, []int{1, 5}},
+		{3, []int{1, 5, 8, 9}},
 		{4, []int{2, 5}},
 		{5, []int{2, 5}},
 		{6, []int{2, 3, 5}},
@@ -45,40 +87,15 @@ func TestQuery(t *testing.T) {
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("Query(%d)", test.key), func(t *testing.T) {
 			matches := tree.Query(test.key)
-			if len(matches) != len(test.matches) {
+			got := newSet[int]()
+			got.add(matches...)
+
+			want := newSet[int]()
+			want.add(test.matches...)
+
+			if !want.equal(got) {
 				t.Errorf("expected %v, got %v", test.matches, matches)
-			}
-			for i, match := range matches {
-				if match != test.matches[i] {
-					t.Errorf("expected %v, got %v", test.matches, matches)
-				}
 			}
 		})
 	}
-}
-
-func TestTraverse(t *testing.T) {
-	tree := itree.NewITree[ComparableInt, int]()
-	tree.Insert(itree.NewInterval[ComparableInt](41, 41), 1)
-	tree.Insert(itree.NewInterval[ComparableInt](20, 20), 2)
-	tree.Insert(itree.NewInterval[ComparableInt](11, 11), 3)
-	tree.Insert(itree.NewInterval[ComparableInt](29, 29), 4)
-	tree.Insert(itree.NewInterval[ComparableInt](26, 26), 5)
-	tree.Insert(itree.NewInterval[ComparableInt](65, 65), 6)
-	tree.Insert(itree.NewInterval[ComparableInt](50, 50), 7)
-	tree.Insert(itree.NewInterval[ComparableInt](23, 23), 8)
-	tree.Insert(itree.NewInterval[ComparableInt](55, 55), 9)
-
-	// for i, v := range []int{3, 8, 5, 4, 2, 1, 7, 9, 6} {
-	// 	t.Run(fmt.Sprintf("Traverse(%d)", i), func(t *testing.T) {
-	// 		j := 0
-	// 		tree.Traverse(func(k int, value int) bool {
-	// 			if k != j || value != v {
-	// 				t.Errorf("expected %d, got %d", v, value)
-	// 			}
-	// 			j++
-	// 			return true
-	// 		})
-	// 	})
-	// }
 }

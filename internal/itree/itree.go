@@ -22,27 +22,27 @@ func NewNode[K Comparable[K], V any](
 	}
 }
 
-// Height returns the height of the node.
-func (n *Node[K, V]) Height() int {
+// getHeight returns the height of the node.
+func (n *Node[K, V]) getHeight() int {
 	if n == nil {
 		return -1
 	}
 	return n.height
 }
 
-// Max returns the maximum value between the `max` property of a node and
-// another value.
-func (n *Node[K, V]) Max(other K) K {
-	if n == nil {
+// maxOf returns the maximum value between the `max` property of the receiver
+// and a given value.
+func (n *Node[K, V]) maxOf(other K) K {
+	if n == nil || other.Compare(n.max) > 0 {
 		return other
 	}
-	return Max(n.max, other)
+	return n.max
 }
 
 // updateNode updates the `max` and `height` properties of the node.
 func (n *Node[K, V]) updateNode() {
-	n.max = n.left.Max(n.right.Max(n.interval.High))
-	n.height = 1 + max(n.left.Height(), n.right.Height())
+	n.max = n.left.maxOf(n.right.maxOf(n.interval.High))
+	n.height = 1 + max(n.left.getHeight(), n.right.getHeight())
 }
 
 // roteLeft rotates the node to the left.
@@ -71,7 +71,7 @@ func (n *Node[K, V]) rotateRight() *Node[K, V] {
 
 // balanceFactor returns the balance factor of the node.
 func (n *Node[K, V]) balanceFactor() int {
-	return n.left.Height() - n.right.Height()
+	return n.left.getHeight() - n.right.getHeight()
 }
 
 // balance balances the node using the AVL algorithm.
@@ -135,22 +135,26 @@ func query[K Comparable[K], V any](
 	key K,
 ) []V {
 	// If the maximum of all intervals from this node and below is less than
-	// the value, there are no intervals to query.
+	// the key, there are no intervals to query.
 	if node == nil || node.max.Compare(key) < 0 {
 		return nil
 	}
 
 	var results []V
 
-	// Even if the current interval contains the key
+	// Even if the current interval contains the key, we still need to query
+	// the subtrees since they can also contain intervals that cover the key.
 	if node.interval.Contains(key) {
 		results = append(results, node.value)
 	}
 
-	// If the key is less than then or equal to the low value of the interval,
-	// we know that it can only be in the left subtree, so the right subtree
-	// can be ignored.
-	if key.Compare(node.interval.Low) > 0 {
+	// After a re-balance, both the left and right children of a node can have
+	// the same low value. In this case, we need to query both subtrees.
+	//
+	// However, if the key is less than the low value of the interval, we know
+	// that it can only be in the left subtree, so the right subtree can be
+	// ignored.
+	if key.Compare(node.interval.Low) >= 0 {
 		results = append(results, query(node.right, key)...)
 	}
 
