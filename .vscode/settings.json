@@ -4,6 +4,7 @@
         "iprange",
         "ipres",
         "iputils",
-        "itree"
+        "itree",
+        "nosec"
     ]
 }

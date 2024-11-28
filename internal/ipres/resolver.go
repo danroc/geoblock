@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/netip"
 	"strconv"
+	"sync/atomic"
 
 	"github.com/danroc/geoblock/internal/itree"
 )
@@ -19,6 +20,15 @@ const (
 	ASNIPv4URL     = "https://cdn.jsdelivr.net/npm/@ip-location-db/geolite2-asn/geolite2-asn-ipv4.csv"
 	ASNIPv6URL     = "https://cdn.jsdelivr.net/npm/@ip-location-db/geolite2-asn/geolite2-asn-ipv6.csv"
 )
+
+// Length of the CSV records (number of fields).
+const (
+	countryRecordLength = 3
+	asnRecordLength     = 4
+)
+
+// ErrRecordLength is returned when a CSV record has an unexpected length.
+var ErrRecordLength = errors.New("invalid record length")
 
 // AS0 represents the default ASN value for unknown addresses.
 const AS0 uint32 = 0
@@ -33,6 +43,10 @@ type DBRecord struct {
 // ParserFn is a function that parses a CSV record into a database record.
 type ParserFn func([]string) (*DBRecord, error)
 
+// ResTree is a type alias for an interval tree that maps IP addresses to
+// resolutions.
+type ResTree = itree.ITree[netip.Addr, Resolution]
+
 // Resolution contains the result of resolving an IP address.
 type Resolution struct {
 	CountryCode  string
@@ -42,7 +56,7 @@ type Resolution struct {
 
 // Or returns a new resolution that combines the fields of the receiver and the
 // other resolution.
-func (r *Resolution) Or(other Resolution) Resolution {
+func (r Resolution) Or(other Resolution) Resolution {
 	return Resolution{
 		CountryCode:  ifEmpty(r.CountryCode, other.CountryCode),
 		Organization: ifEmpty(r.Organization, other.Organization),
@@ -66,14 +80,12 @@ func ifZero(value, fallback uint32) uint32 {
 
 // Resolver is an IP resolver that returns information about an IP address.
 type Resolver struct {
-	db *itree.ITree[netip.Addr, Resolution]
+	db atomic.Pointer[ResTree]
 }
 
 // NewResolver creates a new IP resolver.
 func NewResolver() *Resolver {
-	return &Resolver{
-		db: itree.NewITree[netip.Addr, Resolution](),
-	}
+	return &Resolver{}
 }
 
 // Update updates the databases used by the resolver.
@@ -93,13 +105,19 @@ func (r *Resolver) Update() error {
 
 	var errs []error
 
+	db := itree.NewITree[netip.Addr, Resolution]()
 	for _, item := range items {
-		if err := r.updateDB(item.parser, item.url); err != nil {
+		if err := update(db, item.parser, item.url); err != nil {
 			errs = append(errs, err)
 		}
 	}
 
-	return errors.Join(errs...)
+	if len(errs) > 0 {
+		return errors.Join(errs...)
+	}
+
+	r.db.Store(db)
+	return nil
 }
 
 // Resolve resolves the given IP address to a country code and an ASN.
@@ -113,33 +131,38 @@ func (r *Resolver) Update() error {
 // The Organization field is present for informational purposes only. It is not
 // used by the rules engine.
 func (r *Resolver) Resolve(ip netip.Addr) Resolution {
-	results := r.db.Query(ip)
-
-	return reduce(results, func(acc, r Resolution) Resolution {
-		return acc.Or(r)
-	}, Resolution{})
+	return reduce(
+		r.db.Load().Query(ip),
+		func(acc, r Resolution) Resolution {
+			return acc.Or(r)
+		},
+		Resolution{},
+	)
 }
 
-// updateDB updates the given database with the data from the given URL.
-func (r *Resolver) updateDB(parser ParserFn, url string) error {
+// update adds the records fetched from the given URL to the database.
+func update(db *ResTree, parser ParserFn, url string) error {
 	records, err := fetchCSV(url)
 	if err != nil {
 		return err
 	}
 
+	var errs []error
 	for _, record := range records {
 		entry, err := parser(record)
 		if err != nil {
-			return err
+			errs = append(errs, err)
+			continue
 		}
-		r.db.Insert(
+		db.Insert(
 			itree.NewInterval(entry.StartIP, entry.EndIP),
 			entry.Resolution,
 		)
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
+// fetchCSV returns the CSV records fetched from the given URL.
 func fetchCSV(url string) ([][]string, error) {
 	resp, err := http.Get(url) // #nosec G107
 	if err != nil {
@@ -150,6 +173,10 @@ func fetchCSV(url string) ([][]string, error) {
 }
 
 func parseCountryRecord(record []string) (*DBRecord, error) {
+	if len(record) != countryRecordLength {
+		return nil, ErrRecordLength
+	}
+
 	startIP, err := netip.ParseAddr(record[0])
 	if err != nil {
 		return nil, err
@@ -164,12 +191,16 @@ func parseCountryRecord(record []string) (*DBRecord, error) {
 		StartIP: startIP,
 		EndIP:   endIP,
 		Resolution: Resolution{
-			CountryCode: strIndex(record, 2),
+			CountryCode: record[2],
 		},
 	}, nil
 }
 
 func parseASNRecord(record []string) (*DBRecord, error) {
+	if len(record) != asnRecordLength {
+		return nil, ErrRecordLength
+	}
+
 	startIP, err := netip.ParseAddr(record[0])
 	if err != nil {
 		return nil, err
@@ -180,33 +211,19 @@ func parseASNRecord(record []string) (*DBRecord, error) {
 		return nil, err
 	}
 
+	asn, err := strconv.ParseUint(record[2], 10, 32)
+	if err != nil {
+		return nil, err
+	}
+
 	return &DBRecord{
 		StartIP: startIP,
 		EndIP:   endIP,
 		Resolution: Resolution{
-			ASN:          strToASN(strIndex(record, 2)),
-			Organization: strIndex(record, 3),
+			ASN:          uint32(asn),
+			Organization: record[3],
 		},
 	}, nil
-}
-
-// strToASN converts a string to an ASN. If the string is not a valid ASN, the
-// function returns ReservedAS0.
-func strToASN(s string) uint32 {
-	asn, err := strconv.ParseUint(s, 10, 32)
-	if err != nil {
-		return AS0
-	}
-	return uint32(asn)
-}
-
-// strIndex returns the element at the given index of the data slice. If the
-// index is out of bounds, the function returns an empty string.
-func strIndex(data []string, index int) string {
-	if index < 0 || index >= len(data) {
-		return ""
-	}
-	return data[index]
 }
 
 func reduce[T any, R any](

@@ -3,7 +3,7 @@ package cmp
 
 // Comparable is an interface for types that can be compared.
 type Comparable[V any] interface {
-	Compare(V) int
+	Compare(other V) int
 }
 
 // Max returns the maximum value from the given comparable values.
