@@ -5,7 +5,7 @@ on:
     branches: ["main"]
 
 jobs:
-  tag_release:
+  tag-release:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
