@@ -25,8 +25,8 @@ func isDomainNameField(field validator.FieldLevel) bool {
 
 // isCIDRField checks if the value of the given field is a valid CIDR.
 func isCIDRField(field validator.FieldLevel) bool {
-	cidr, ok := field.Field().Interface().(CIDR)
-	return ok && cidr.IPNet != nil
+	_, ok := field.Field().Interface().(CIDR)
+	return ok
 }
 
 // read reads the configuration from the giver bytes slice.

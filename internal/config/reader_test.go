@@ -2,7 +2,7 @@ package config_test
 
 import (
 	"errors"
-	"net"
+	"net/netip"
 	"reflect"
 	"strings"
 	"testing"
@@ -132,16 +132,14 @@ func TestReadConfigValid(t *testing.T) {
 							Policy: "allow",
 							Networks: []config.CIDR{
 								{
-									IPNet: &net.IPNet{
-										IP:   net.IP{10, 0, 0, 0},
-										Mask: net.CIDRMask(8, 32),
-									},
+									Prefix: netip.MustParsePrefix(
+										"10.0.0.0/8",
+									),
 								},
 								{
-									IPNet: &net.IPNet{
-										IP:   net.IP{127, 0, 0, 0},
-										Mask: net.CIDRMask(8, 32),
-									},
+									Prefix: netip.MustParsePrefix(
+										"127.0.0.0/8",
+									),
 								},
 							},
 							Domains: []string{

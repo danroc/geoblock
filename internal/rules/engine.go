@@ -2,7 +2,7 @@
 package rules
 
 import (
-	"net"
+	"net/netip"
 	"strings"
 	"sync/atomic"
 
@@ -28,7 +28,7 @@ func NewEngine(config *config.AccessControl) *Engine {
 type Query struct {
 	RequestedDomain string
 	RequestedMethod string
-	SourceIP        net.IP
+	SourceIP        netip.Addr
 	SourceCountry   string
 	SourceASN       uint32
 }
