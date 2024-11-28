@@ -2,46 +2,39 @@
 package config
 
 import (
-	"bytes"
-	"net"
+	"net/netip"
 	"testing"
 
 	"gopkg.in/yaml.v3"
 )
 
-func equalCIDR(a, b *net.IPNet) bool {
-	if a == nil || b == nil {
-		return a == b
-	}
-	return a.IP.Equal(b.IP) && bytes.Equal(a.Mask, b.Mask)
+func equalCIDR(a, b netip.Prefix) bool {
+	return a.String() == b.String()
 }
 
 func TestUnmarshalYAML(t *testing.T) {
 	tests := []struct {
 		name    string
 		input   string
-		want    *net.IPNet
+		want    netip.Prefix
 		wantErr bool
 	}{
 		{
-			name:  "valid CIDR",
-			input: "192.168.1.0/24",
-			want: &net.IPNet{
-				IP:   net.IPv4(192, 168, 1, 0),
-				Mask: net.CIDRMask(24, 32),
-			},
+			name:    "valid CIDR",
+			input:   "192.168.1.0/24",
+			want:    netip.MustParsePrefix("192.168.1.0/24"),
 			wantErr: false,
 		},
 		{
 			name:    "invalid CIDR",
 			input:   "invalid-cidr",
-			want:    nil,
+			want:    netip.Prefix{},
 			wantErr: true,
 		},
 		{
 			name:    "empty CIDR",
 			input:   "",
-			want:    nil,
+			want:    netip.Prefix{},
 			wantErr: false, // The variable is left uninitialized
 		},
 	}
@@ -58,10 +51,10 @@ func TestUnmarshalYAML(t *testing.T) {
 				)
 				return
 			}
-			if !equalCIDR(cidr.IPNet, tt.want) {
+			if !equalCIDR(cidr.Prefix, tt.want) {
 				t.Errorf(
 					"UnmarshalYAML() got = %v, want %v",
-					cidr.IPNet,
+					cidr.Prefix,
 					tt.want,
 				)
 			}

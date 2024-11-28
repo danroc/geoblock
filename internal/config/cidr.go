@@ -1,12 +1,12 @@
 package config
 
 import (
-	"net"
+	"net/netip"
 )
 
 // CIDR represents a CIDR network. It's used to support unmarshaling from YAML.
 type CIDR struct {
-	*net.IPNet
+	netip.Prefix
 }
 
 // UnmarshalYAML unmarshals a CIDR network from YAML.
@@ -16,11 +16,11 @@ func (n *CIDR) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		return err
 	}
 
-	_, ipNet, err := net.ParseCIDR(network)
+	prefix, err := netip.ParsePrefix(network)
 	if err != nil {
 		return err
 	}
 
-	n.IPNet = ipNet
+	n.Prefix = prefix
 	return nil
 }

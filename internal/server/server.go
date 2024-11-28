@@ -3,14 +3,14 @@ package server
 
 import (
 	"fmt"
-	"net"
 	"net/http"
+	"net/netip"
 	"sync/atomic"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/danroc/geoblock/internal/iprange"
+	"github.com/danroc/geoblock/internal/ipres"
 	"github.com/danroc/geoblock/internal/rules"
 )
 
@@ -53,7 +53,7 @@ var metrics = Metrics{}
 func getForwardAuth(
 	writer http.ResponseWriter,
 	request *http.Request,
-	resolver *iprange.Resolver,
+	resolver *ipres.Resolver,
 	engine *rules.Engine,
 ) {
 	var (
@@ -77,13 +77,13 @@ func getForwardAuth(
 
 	// For sanity, we check if the source IP is a valid IP address. If the IP
 	// is invalid, we deny the request regardless of the default policy.
-	sourceIP := net.ParseIP(origin)
-	if sourceIP == nil {
+	sourceIP, err := netip.ParseAddr(origin)
+	if err != nil {
 		log.WithFields(log.Fields{
 			FieldRequestDomain: domain,
 			FieldRequestMethod: method,
 			FieldSourceIP:      origin,
-		}).Error("Invalid source IP")
+		}).WithError(err).Error("Invalid source IP")
 		writer.WriteHeader(http.StatusBadRequest)
 		metrics.Invalid.Add(1)
 		return
@@ -147,7 +147,7 @@ func getMetrics(writer http.ResponseWriter, _ *http.Request) {
 func NewServer(
 	address string,
 	engine *rules.Engine,
-	resolver *iprange.Resolver,
+	resolver *ipres.Resolver,
 ) *http.Server {
 	mux := http.NewServeMux()
 	mux.HandleFunc(

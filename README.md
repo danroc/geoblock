@@ -190,6 +190,15 @@ X-Forwarded-For: 127.0.0.1
 X-Forwarded-Method: GET
 ```
 
+**Invalid `X-Forwarded-Host` header:**
+
+```http
+GET http://localhost:8080/v1/forward-auth
+X-Forwarded-For: invalid-ip
+X-Forwarded-Host: example.org
+X-Forwarded-Method: GET
+```
+
 **Missing `X-Forwarded-For` header:**
 
 ```http
