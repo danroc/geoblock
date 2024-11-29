@@ -7,16 +7,24 @@ on:
 jobs:
   tag-release:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Tag release
-        id: commit_message
+        id: tag-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           commit_msg=$(git log -1 --pretty=%B)
-          if [[ $commit_msg =~ ^release:\ v?([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
-            tag="v${BASH_REMATCH[1]}"
-            git tag "$tag"
-            git push origin "$tag"
+          if [[ $commit_msg =~ ^release:\ v?([0-9]+\.[0-9]+\.[0-9]+)( \(#[0-9]+\))?$ ]]; then
+            TAG="v${BASH_REMATCH[1]}"
+            git tag "$TAG"
+            git push origin "$TAG"
+            echo "TAG=$TAG" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Trigger publish
+        if: steps.tag-release.outputs.TAG != ''
+        uses: ./.github/workflows/publish-docker.yml
