@@ -15,9 +15,6 @@ tidy: ## Tidy up dependencies
 update: ## Update dependencies
 	go get -u ./...
 
-vendor: ## Vendor dependencies
-	go mod vendor
-
 run: ## Run the main program
 	go run ./cmd/geoblock/
 
