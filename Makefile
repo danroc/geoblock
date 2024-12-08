@@ -44,13 +44,13 @@ lint.sec: ## Run gosec linter
 lint.vet: ## Run go-vet linter
 	go vet ./...
 
-.PHONY: tidy
-tidy: ## Tidy up dependencies
-	go mod tidy
-
 # =============================================================================
 # @Dependencies
 # =============================================================================
+
+.PHONY: deps.tidy
+deps.tidy: ## Tidy up dependencies
+	go mod tidy
 
 .PHONY: deps.update
 deps.update: ## Update dependencies
@@ -59,8 +59,8 @@ deps.update: ## Update dependencies
 # We use the latest version of the tools since they cannot be automatically
 # updated by Renovate. Once development dependencies are managed by `go tool`,
 # we can remove this target and track the tools in the `go.mod` file.
-.PHONY: deps.dev
-deps.dev: ## Install development dependencies
+.PHONY: deps.install
+deps.install: ## Install development dependencies
 	go install github.com/segmentio/golines@latest
 	go install mvdan.cc/gofumpt@latest
 	go install github.com/securego/gosec/v2/cmd/gosec@latest
