@@ -1,7 +1,16 @@
 # =============================================================================
-# Configuration
+# Project Configuration
 # =============================================================================
 
+# Project metadata
+PROJECT_NAME := geoblock
+DESCRIPTION := A simple IP-based geoblocking service
+
+# Directories
+ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+DIST_DIR := $(ROOT_DIR)/dist
+
+# Colors
 BLUE := \033[34m
 GREEN := \033[32m
 YELLOW := \033[33m
@@ -59,6 +68,13 @@ deps.dev: ## Install development dependencies
 	go install github.com/boumenot/gocover-cobertura@latest
 
 # =============================================================================
+# Directory Creation
+# =============================================================================
+
+$(DIST_DIR):
+	mkdir -p $@
+
+# =============================================================================
 # @Build
 # =============================================================================
 
@@ -67,9 +83,8 @@ run: ## Run the main program
 	go run ./cmd/geoblock/
 
 .PHONY: build
-build: ## Build the binary
-	mkdir -p dist
-	go build -ldflags="-s -w" -o ./dist/geoblock ./cmd/geoblock/
+build: $(DIST_DIR) ## Build the binary
+	go build -ldflags="-s -w" -o $(DIST_DIR)/geoblock ./cmd/geoblock/
 
 .PHONY: docker
 docker: ## Build docker image
@@ -95,18 +110,17 @@ test.e2e: ## Run end-to-end tests
 test.coverage: test.unit ## Generate coverage report
 	gocover-cobertura < coverage.out > coverage.xml
 
-
 # =============================================================================
 # @Help
 # =============================================================================
 
 .PHONY: help
 help: ## Display this help message
+	@echo "$(CYAN)$(BOLD)$(PROJECT_NAME) - $(DESCRIPTION)$(RESET)"
 	@awk 'BEGIN { FS = ":.*?##" } \
 		/^[a-zA-Z0-9._-]+:.*?##/ { printf "  $(CYAN)%-15s$(RESET) %s\n", $$1, $$2 } \
-		/^# @/ { printf "\n$(MAGENTA)%s$(RESET)\n\n", substr($$0, 4) } \
-		' $(MAKEFILE_LIST)
+		/^# @/ { printf "\n$(MAGENTA)%s$(RESET)\n\n", substr($$0, 4) }' \
+		$(MAKEFILE_LIST)
 	@echo
-
 
 .DEFAULT_GOAL := help
