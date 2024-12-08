@@ -16,9 +16,7 @@
   - [`GET /v1/health`](#get-v1health)
   - [`GET /v1/metrics`](#get-v1metrics)
 - [Environment variables](#environment-variables)
-- [Manual testing](#manual-testing)
 - [Attribution](#attribution)
-- [Roadmap](#roadmap)
 
 </p>
 </details>
@@ -174,71 +172,6 @@ The following environment variables can be used to configure Geoblock:
 Supported log levels are: `trace`, `debug`, `info`, `warn`, `error`, `fatal` or
 `panic`.
 
-## Manual testing
-
-Start geoblock with the provided example configuration:
-
-```bash
-GEOBLOCK_CONFIG=examples/config.yaml GEOBLOCK_PORT=8080 GEOBLOCK_LOG_LEVEL=debug make run
-```
-
-**Missing `X-Forwarded-Host` header:**
-
-```http
-GET http://localhost:8080/v1/forward-auth
-X-Forwarded-For: 127.0.0.1
-X-Forwarded-Method: GET
-```
-
-**Invalid `X-Forwarded-Host` header:**
-
-```http
-GET http://localhost:8080/v1/forward-auth
-X-Forwarded-For: invalid-ip
-X-Forwarded-Host: example.org
-X-Forwarded-Method: GET
-```
-
-**Missing `X-Forwarded-For` header:**
-
-```http
-GET http://localhost:8080/v1/forward-auth
-X-Forwarded-Host: example.com
-X-Forwarded-Method: GET
-```
-
-**Missing `X-Forwarded-Method` header:**
-
-```http
-GET http://localhost:8080/v1/forward-auth
-X-Forwarded-For: 8.8.8.8
-X-Forwarded-Host: example.com
-```
-
-**Blocked country:**
-
-```http
-GET http://localhost:8080/v1/forward-auth
-X-Forwarded-For: 8.8.8.8
-X-Forwarded-Host: example.org
-X-Forwarded-Method: GET
-```
-
-**Authorized by country:**
-
-```http
-GET http://localhost:8080/v1/forward-auth
-X-Forwarded-For: 8.8.8.8
-X-Forwarded-Host: example.com
-X-Forwarded-Method: GET
-```
-
-**Metrics:**
-
-```http
-GET http://localhost:8080/v1/metrics
-```
-
 ## Attribution
 
 - This project uses the [GeoLite2][geolite2] databases provided by
@@ -246,20 +179,6 @@ GET http://localhost:8080/v1/metrics
 
 - This project uses the database files provided by the
   [ip-location-db][ip-location-db] project.
-
-## Roadmap
-
-- [x] Support environment variables
-- [x] Docker image
-- [x] Publish Docker image
-- [x] Auto-update databases
-- [x] Auto-reload configuration
-- [x] Add metrics
-- [x] Write documentation
-- [ ] Add e2e tests
-- [ ] Cache responses
-- [ ] ~~Cache databases~~
-- [ ] ~~Support command line arguments~~
 
 [geolite2]: https://dev.maxmind.com/geoip/geolite2-free-geolocation-data/
 [maxmind]: https://www.maxmind.com/
