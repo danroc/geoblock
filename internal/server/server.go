@@ -83,7 +83,7 @@ func getForwardAuth(
 			FieldRequestDomain: domain,
 			FieldRequestMethod: method,
 			FieldSourceIP:      origin,
-		}).WithError(err).Error("Invalid source IP")
+		}).Error("Invalid source IP")
 		writer.WriteHeader(http.StatusBadRequest)
 		metrics.Invalid.Add(1)
 		return
