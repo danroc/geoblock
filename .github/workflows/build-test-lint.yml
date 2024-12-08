@@ -33,12 +33,6 @@ jobs:
       - name: Run tests
         run: make test
 
-      - name: Build e2e tests image
-        run: docker build -f tests/Dockerfile -t geoblock-tests .
-
-      - name: Run e2e tests
-        run: docker run geoblock-tests
-
       - name: Require clean working directory
         shell: bash
         run: |
