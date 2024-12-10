@@ -22,6 +22,15 @@ type AccessControl struct {
 	Rules         []AccessControlRule `yaml:"rules"          validate:"dive"`
 }
 
+type Telegram struct {
+	Token string  `yaml:"token"`
+	Chats []int64 `yaml:"chats"`
+}
+
+type Notifications struct {
+	Telegram Telegram `yaml:"telegram"`
+}
+
 // Configuration represents the configuration of the application.
 type Configuration struct {
 	AccessControl AccessControl `yaml:"access_control"`
