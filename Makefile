@@ -38,7 +38,7 @@ lint.revive: ## Run revive linter
 
 .PHONY: lint.sec
 lint.sec: ## Run gosec linter
-	gosec ./...
+	gosec --exclude-dir=internal/tools ./...
 
 .PHONY: lint.vet
 lint.vet: ## Run go-vet linter
@@ -56,16 +56,9 @@ deps.tidy: ## Tidy up dependencies
 deps.update: ## Update dependencies
 	go get -u ./...
 
-# We use the latest version of the tools since they cannot be automatically
-# updated by Renovate. Once development dependencies are managed by `go tool`,
-# we can remove this target and track the tools in the `go.mod` file.
-.PHONY: deps.install
-deps.install: ## Install development dependencies
-	go install github.com/segmentio/golines@latest
-	go install mvdan.cc/gofumpt@latest
-	go install github.com/securego/gosec/v2/cmd/gosec@latest
-	go install github.com/mgechev/revive@latest
-	go install github.com/boumenot/gocover-cobertura@latest
+.PHONY: deps.tools
+deps.tools: ## Install development dependencies
+	$(MAKE) -C internal/tools install
 
 # =============================================================================
 # Directory Creation
