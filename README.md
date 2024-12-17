@@ -9,13 +9,14 @@
 <p>
 
 - [Introduction](#introduction)
+- [Features](#features)
 - [Deployment](#deployment)
 - [Configuration](#configuration)
+- [Environment variables](#environment-variables)
 - [HTTP API](#http-api)
   - [`GET /v1/forward-auth`](#get-v1forward-auth)
   - [`GET /v1/health`](#get-v1health)
   - [`GET /v1/metrics`](#get-v1metrics)
-- [Environment variables](#environment-variables)
 - [Attribution](#attribution)
 
 </p>
@@ -35,6 +36,19 @@ based on:
 
 It works as a forward-authentication service that can be used with reverse
 proxies such as Traefik, NGINX, and Caddy.
+
+## Features
+
+- 🔧 **Flexible:** Allows you to define access control rules based on
+  countries, domains, methods, networks, and ASNs.
+
+- 🔄 **Auto-reload**: Automatically reloads the configuration file when it
+  changes.
+
+- 📅 **Auto-update**: Automatically updates the GeoLite2 databases every day.
+
+- 📊 **Metrics**: Exposes simple metrics to monitor the service and build
+  dashboards.
 
 ## Deployment
 
@@ -100,6 +114,24 @@ access_control:
       policy: allow
 ```
 
+## Environment variables
+
+> [!NOTE]
+> Environment variables are intended primarily to be used when running Geoblock
+> locally during development. It is discouraged to set or modify their values
+> when running the Docker image. Instead, use mounts or remap ports as needed.
+
+The following environment variables can be used to configure Geoblock:
+
+| Variable             | Description                    | Default                     |
+| :------------------- | :----------------------------- | :-------------------------- |
+| `GEOBLOCK_CONFIG`    | Path to the configuration file | `/etc/geoblock/config.yaml` |
+| `GEOBLOCK_PORT`      | Port to listen on              | `8080`                      |
+| `GEOBLOCK_LOG_LEVEL` | Log level                      | `info`                      |
+
+Supported log levels are: `trace`, `debug`, `info`, `warn`, `error`, `fatal` or
+`panic`.
+
 ## HTTP API
 
 The following HTTP endpoints are exposed by Geoblock.
@@ -153,24 +185,6 @@ Returns metrics in JSON format.
   ```json
   { "denied": 0, "allowed": 0, "invalid": 0, "total": 0 }
   ```
-
-## Environment variables
-
-> [!NOTE]
-> Environment variables are intended primarily to be used when running Geoblock
-> locally during development. It is discouraged to set or modify their values
-> when running the Docker image. Instead, use mounts or remap ports as needed.
-
-The following environment variables can be used to configure Geoblock:
-
-| Variable             | Description                    | Default                     |
-| :------------------- | :----------------------------- | :-------------------------- |
-| `GEOBLOCK_CONFIG`    | Path to the configuration file | `/etc/geoblock/config.yaml` |
-| `GEOBLOCK_PORT`      | Port to listen on              | `8080`                      |
-| `GEOBLOCK_LOG_LEVEL` | Log level                      | `info`                      |
-
-Supported log levels are: `trace`, `debug`, `info`, `warn`, `error`, `fatal` or
-`panic`.
 
 ## Attribution
 
