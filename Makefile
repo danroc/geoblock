@@ -58,7 +58,11 @@ deps-update: ## Update dependencies
 
 .PHONY: deps-tools
 deps-tools: ## Install development dependencies
-	$(MAKE) -C internal/tools install
+	go install github.com/boumenot/gocover-cobertura@latest
+	go install github.com/mgechev/revive@latest
+	go install github.com/securego/gosec/v2/cmd/gosec@latest
+	go install github.com/segmentio/golines@latest
+	go install mvdan.cc/gofumpt@latest
 
 # =============================================================================
 # Directory Creation
