@@ -26,46 +26,43 @@ RESET := \033[0m
 # =============================================================================
 
 .PHONY: lint
-lint: lint.lines lint.revive lint.sec lint.vet ## Run all linters
+lint: lint-lines lint-revive lint-sec lint-vet ## Run all linters
 
-.PHONY: lint.lines
-lint.lines: ## Lint lines length
+.PHONY: lint-lines
+lint-lines: ## Lint lines length
 	golines -w -m 79 --base-formatter=gofumpt .
 
-.PHONY: lint.revive
-lint.revive: ## Run revive linter
+.PHONY: lint-revive
+lint-revive: ## Run revive linter
 	revive -config revive.toml  ./...
 
-.PHONY: lint.sec
-lint.sec: ## Run gosec linter
-	gosec ./...
+.PHONY: lint-sec
+lint-sec: ## Run gosec linter
+	gosec --exclude-dir=internal/tools ./...
 
-.PHONY: lint.vet
-lint.vet: ## Run go-vet linter
+.PHONY: lint-vet
+lint-vet: ## Run go-vet linter
 	go vet ./...
 
 # =============================================================================
 # @Dependencies
 # =============================================================================
 
-.PHONY: deps.tidy
-deps.tidy: ## Tidy up dependencies
+.PHONY: deps-tidy
+deps-tidy: ## Tidy up dependencies
 	go mod tidy
 
-.PHONY: deps.update
-deps.update: ## Update dependencies
+.PHONY: deps-update
+deps-update: ## Update dependencies
 	go get -u ./...
 
-# We use the latest version of the tools since they cannot be automatically
-# updated by Renovate. Once development dependencies are managed by `go tool`,
-# we can remove this target and track the tools in the `go.mod` file.
-.PHONY: deps.install
-deps.install: ## Install development dependencies
+.PHONY: deps-tools
+deps-tools: ## Install development dependencies
+	go install github.com/boumenot/gocover-cobertura@latest
+	go install github.com/mgechev/revive@latest
+	go install github.com/securego/gosec/v2/cmd/gosec@latest
 	go install github.com/segmentio/golines@latest
 	go install mvdan.cc/gofumpt@latest
-	go install github.com/securego/gosec/v2/cmd/gosec@latest
-	go install github.com/mgechev/revive@latest
-	go install github.com/boumenot/gocover-cobertura@latest
 
 # =============================================================================
 # Directory Creation
@@ -95,19 +92,19 @@ docker: ## Build docker image
 # =============================================================================
 
 .PHONY: test
-test: test.unit test.e2e ## Run all tests
+test: test-unit test-e2e ## Run all tests
 
-.PHONY: test.unit
-test.unit: ## Run unit tests
+.PHONY: test-unit
+test-unit: ## Run unit tests
 	go test -coverprofile=coverage.out ./...
 
-.PHONY: test.e2e
-test.e2e: ## Run end-to-end tests
+.PHONY: test-e2e
+test-e2e: ## Run end-to-end tests
 	docker build -f tests/Dockerfile -t geoblock-tests .
 	docker run --rm geoblock-tests
 
-.PHONY: test.coverage
-test.coverage: test.unit ## Generate coverage report
+.PHONY: test-coverage
+test-coverage: test-unit ## Generate coverage report
 	gocover-cobertura < coverage.out > coverage.xml
 
 # =============================================================================
