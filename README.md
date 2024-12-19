@@ -1,7 +1,7 @@
 <!-- markdownlint-disable MD033 -->
 <h1 align="center">Geoblock</h1>
 <p align="center">
-  <i>Block clients based on their country, ASN or network.</i>
+  <i>Block clients based on their country, ASN, or network.</i>
 </p>
 
 <details>
@@ -42,12 +42,12 @@ proxies such as Traefik, NGINX, and Caddy.
 - 🔧 **Flexible:** Allows you to define access control rules based on
   countries, domains, methods, networks, and ASNs.
 
-- 🔄 **Auto-reload**: Automatically reloads the configuration file when it
+- 🔄 **Auto-reload:** Automatically reloads the configuration file when it
   changes.
 
-- 📅 **Auto-update**: Automatically updates the GeoLite2 databases every day.
+- 📅 **Auto-update:** Automatically updates the GeoLite2 databases every day.
 
-- 📊 **Metrics**: Exposes simple metrics to monitor the service and build
+- 📊 **Metrics:** Exposes simple metrics to monitor the service and build
   dashboards.
 
 ## Deployment
@@ -129,8 +129,8 @@ The following environment variables can be used to configure Geoblock:
 | `GEOBLOCK_PORT`      | Port to listen on              | `8080`                      |
 | `GEOBLOCK_LOG_LEVEL` | Log level                      | `info`                      |
 
-Supported log levels are: `trace`, `debug`, `info`, `warn`, `error`, `fatal` or
-`panic`.
+Supported log levels are: `trace`, `debug`, `info`, `warn`, `error`, `fatal`,
+or `panic`.
 
 ## HTTP API
 
