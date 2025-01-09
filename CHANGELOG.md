@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.16] - 2025-01-09
+
+### Added
+
+- Add basic e2e tests ([#70](https://github.com/danroc/geoblock/pull/70))
+- Add a license ([#76](https://github.com/danroc/geoblock/pull/76))
+- Add "Unreleased" to CHANGELOG ([#86](https://github.com/danroc/geoblock/pull/86))
+- Document some of the main features ([#87](https://github.com/danroc/geoblock/pull/87))
+
+### Changed
+
+- Update README following addition of e2e tests ([#72](https://github.com/danroc/geoblock/pull/72))
+- Refactor Makefile ([#73](https://github.com/danroc/geoblock/pull/73))
+- Small improvements to Makefile ([#74](https://github.com/danroc/geoblock/pull/74))
+- Rename some Makefile targets ([#75](https://github.com/danroc/geoblock/pull/75))
+- Update module golang.org/x/crypto to 0.31.0 ([#77](https://github.com/danroc/geoblock/pull/77))
+- Enable indirect packages updates ([#78](https://github.com/danroc/geoblock/pull/78))
+- Update module github.com/gabriel-vasile/mimetype to v1.4.7 ([#79](https://github.com/danroc/geoblock/pull/79))
+- Update module golang.org/x/net to v0.32.0 ([#80](https://github.com/danroc/geoblock/pull/80))
+- Run `go mod tidy` on package update ([#81](https://github.com/danroc/geoblock/pull/81))
+- Version dev dependencies ([#82](https://github.com/danroc/geoblock/pull/82))
+- Rename targets ([#84](https://github.com/danroc/geoblock/pull/84))
+- Move dev deps back to main Makefile ([#85](https://github.com/danroc/geoblock/pull/85))
+- Update module golang.org/x/net to v0.33.0 ([#88](https://github.com/danroc/geoblock/pull/88))
+- Small grammar fixes ([#89](https://github.com/danroc/geoblock/pull/89))
+- Update module github.com/gabriel-vasile/mimetype to v1.4.8 ([#90](https://github.com/danroc/geoblock/pull/90))
+- Update module golang.org/x/sys to v0.29.0 ([#91](https://github.com/danroc/geoblock/pull/91))
+- Update outputs of examples ([#92](https://github.com/danroc/geoblock/pull/92))
+- Update module golang.org/x/crypto to v0.32.0 ([#93](https://github.com/danroc/geoblock/pull/93))
+- Update module golang.org/x/net to v0.34.0 ([#94](https://github.com/danroc/geoblock/pull/94))
+- Update alpine docker tag to v3.21.2 ([#95](https://github.com/danroc/geoblock/pull/95))
+
+### Removed
+
+- Remove broken CI action ([#69](https://github.com/danroc/geoblock/pull/69))
+- Don't log redundant error message ([#71](https://github.com/danroc/geoblock/pull/71))
+
 ## [0.1.15] - 2024-12-07
 
 ### Changed
@@ -113,7 +150,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add CIDR unmarshalling and validation
 - Add autonomous systems to configuration
 
-[Unreleased]: https://github.com/danroc/geoblock/compare/v0.1.15...HEAD
+[Unreleased]: https://github.com/danroc/geoblock/compare/v0.1.16...HEAD
+[0.1.16]: https://github.com/danroc/geoblock/compare/v0.1.15...v0.1.16
 [0.1.15]: https://github.com/danroc/geoblock/compare/v0.1.14...v0.1.15
 [0.1.14]: https://github.com/danroc/geoblock/compare/v0.1.13...v0.1.14
 [0.1.13]: https://github.com/danroc/geoblock/compare/v0.1.12...v0.1.13
