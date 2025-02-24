@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.17] - 2025-02-24
+
+### Changed
+
+- Update module golang.org/x/crypto to v0.34.0 ([#107](https://github.com/danroc/geoblock/pull/107))
+- Update module github.com/go-playground/validator/v10 to v10.25.0 ([#106](https://github.com/danroc/geoblock/pull/106))
+- Update alpine docker tag to v3.21.3 ([#105](https://github.com/danroc/geoblock/pull/105))
+- Update golang docker tag to v1.24.0 ([#104](https://github.com/danroc/geoblock/pull/104))
+- Update module golang.org/x/net to v0.35.0 ([#103](https://github.com/danroc/geoblock/pull/103))
+- Update module golang.org/x/crypto to v0.33.0 ([#102](https://github.com/danroc/geoblock/pull/102))
+- Update module golang.org/x/sys to v0.30.0 ([#99](https://github.com/danroc/geoblock/pull/99))
+- Update module golang.org/x/text to v0.22.0 ([#100](https://github.com/danroc/geoblock/pull/100))
+- Update golang docker tag to v1.23.6 ([#101](https://github.com/danroc/geoblock/pull/101))
+- Update golang docker tag to v1.23.5 ([#98](https://github.com/danroc/geoblock/pull/98))
+- Update module github.com/go-playground/validator/v10 to v10.24.0 ([#97](https://github.com/danroc/geoblock/pull/97))
+
 ## [0.1.16] - 2025-01-09
 
 ### Added
@@ -150,7 +166,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add CIDR unmarshalling and validation
 - Add autonomous systems to configuration
 
-[Unreleased]: https://github.com/danroc/geoblock/compare/v0.1.16...HEAD
+[Unreleased]: https://github.com/danroc/geoblock/compare/0.1.17...HEAD
+[0.1.17]: https://github.com/danroc/geoblock/compare/v0.1.16...0.1.17
 [0.1.16]: https://github.com/danroc/geoblock/compare/v0.1.15...v0.1.16
 [0.1.15]: https://github.com/danroc/geoblock/compare/v0.1.14...v0.1.15
 [0.1.14]: https://github.com/danroc/geoblock/compare/v0.1.13...v0.1.14
