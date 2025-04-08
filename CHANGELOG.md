@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.18] - 2025-04-08
+
+### Changed
+
+- Update module golang.org/x/net to v0.39.0 ([#122](https://github.com/danroc/geoblock/pull/122))
+- Update module golang.org/x/crypto to v0.37.0 ([#121](https://github.com/danroc/geoblock/pull/121))
+- Update golang docker tag to v1.24.2 ([#118](https://github.com/danroc/geoblock/pull/118))
+- Update module github.com/go-playground/validator/v10 to v10.26.0 ([#117](https://github.com/danroc/geoblock/pull/117))
+- Update module golang.org/x/net to v0.38.0 ([#116](https://github.com/danroc/geoblock/pull/116))
+- Update module golang.org/x/net to v0.37.0 ([#115](https://github.com/danroc/geoblock/pull/115))
+- Update module golang.org/x/net to v0.36.0 ([#111](https://github.com/danroc/geoblock/pull/111))
+- Update golang docker tag to v1.24.1 ([#110](https://github.com/danroc/geoblock/pull/110))
+- Update module golang.org/x/crypto to v0.35.0 ([#108](https://github.com/danroc/geoblock/pull/108))
+
 ## [0.1.17] - 2025-02-24
 
 ### Changed
@@ -166,8 +180,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add CIDR unmarshalling and validation
 - Add autonomous systems to configuration
 
-[Unreleased]: https://github.com/danroc/geoblock/compare/0.1.17...HEAD
-[0.1.17]: https://github.com/danroc/geoblock/compare/v0.1.16...0.1.17
+[Unreleased]: https://github.com/danroc/geoblock/compare/0.1.18...HEAD
+[0.1.18]: https://github.com/danroc/geoblock/compare/v0.1.17...0.1.18
+[0.1.17]: https://github.com/danroc/geoblock/compare/v0.1.16...v0.1.17
 [0.1.16]: https://github.com/danroc/geoblock/compare/v0.1.15...v0.1.16
 [0.1.15]: https://github.com/danroc/geoblock/compare/v0.1.14...v0.1.15
 [0.1.14]: https://github.com/danroc/geoblock/compare/v0.1.13...v0.1.14
