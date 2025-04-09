@@ -39,15 +39,15 @@ proxies such as Traefik, NGINX, and Caddy.
 
 ## Features
 
-- 🔧 **Flexible:** Allows you to define access control rules based on
+- **Flexible:** Allows you to define access control rules based on
   countries, domains, methods, networks, and ASNs.
 
-- 🔄 **Auto-reload:** Automatically reloads the configuration file when it
+- **Auto-reload:** Automatically reloads the configuration file when it
   changes.
 
-- 📅 **Auto-update:** Automatically updates the GeoLite2 databases every day.
+- **Auto-update:** Automatically updates the GeoLite2 databases every day.
 
-- 📊 **Metrics:** Exposes simple metrics to monitor the service and build
+- **Metrics:** Exposes simple metrics to monitor the service and build
   dashboards.
 
 ## Deployment
