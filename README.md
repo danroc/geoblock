@@ -66,7 +66,7 @@ applies.
 A rule matches if all specified conditions are met. Rules can include one or
 more of the following criteria:
 
-- `countries`: List of country codes (ISO 3166-1 alpha-2)
+- `countries`: List of country codes ([ISO 3166-1 alpha-2](https://www.iban.com/country-codes))
 - `domains`: List of domain names
 - `methods`: List of HTTP methods
 - `networks`: List of IP ranges in CIDR notation
@@ -98,6 +98,11 @@ access_control:
         - 1234
         - 5678
       policy: deny
+
+    # Allow access to any domain from clients in Germany (DE).
+    - countries:
+        - DE
+      policy: allow
 
     # Allow access to example.com and example.org from clients in
     # France (FR) and the United States (US) using the GET or POST HTTP
