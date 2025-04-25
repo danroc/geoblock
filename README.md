@@ -99,6 +99,11 @@ access_control:
         - 5678
       policy: deny
 
+    # Allow access to any domain from clients in Germany (DE).
+    - countries:
+        - DE
+      policy: allow
+
     # Allow access to example.com and example.org from clients in
     # France (FR) and the United States (US) using the GET or POST HTTP
     # methods.
