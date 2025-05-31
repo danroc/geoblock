@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.19] - 2025-05-31
+
+### Added
+
+- Add `countries`-only example and link to country codes ([#126](https://github.com/danroc/geoblock/pull/126))
+
+### Changed
+
+- Update alpine docker tag to v3.22.0 ([#132](https://github.com/danroc/geoblock/pull/132))
+- Update module golang.org/x/net to v0.40.0 ([#130](https://github.com/danroc/geoblock/pull/130))
+- Update golang docker tag to v1.24.3 ([#131](https://github.com/danroc/geoblock/pull/131))
+- Update module golang.org/x/crypto to v0.38.0 ([#128](https://github.com/danroc/geoblock/pull/128))
+- Update module golang.org/x/sys to v0.33.0 ([#127](https://github.com/danroc/geoblock/pull/127))
+- Update module github.com/gabriel-vasile/mimetype to v1.4.9 ([#125](https://github.com/danroc/geoblock/pull/125))
+- Remove emojis from README ([#124](https://github.com/danroc/geoblock/pull/124))
+
+### Fixed
+
+- Fix version comparison links for v0.1.18 ([#134](https://github.com/danroc/geoblock/pull/134))
+- Fix linting errors ([#133](https://github.com/danroc/geoblock/pull/133))
+
 ## [0.1.18] - 2025-04-08
 
 ### Changed
@@ -180,7 +201,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add CIDR unmarshalling and validation
 - Add autonomous systems to configuration
 
-[Unreleased]: https://github.com/danroc/geoblock/compare/v0.1.18...HEAD
+[Unreleased]: https://github.com/danroc/geoblock/compare/v0.1.19...HEAD
+[0.1.19]: https://github.com/danroc/geoblock/compare/v0.1.18...v0.1.19
 [0.1.18]: https://github.com/danroc/geoblock/compare/v0.1.17...v0.1.18
 [0.1.17]: https://github.com/danroc/geoblock/compare/v0.1.16...v0.1.17
 [0.1.16]: https://github.com/danroc/geoblock/compare/v0.1.15...v0.1.16
