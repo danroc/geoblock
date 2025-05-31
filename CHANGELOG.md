@@ -180,8 +180,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add CIDR unmarshalling and validation
 - Add autonomous systems to configuration
 
-[Unreleased]: https://github.com/danroc/geoblock/compare/0.1.18...HEAD
-[0.1.18]: https://github.com/danroc/geoblock/compare/v0.1.17...0.1.18
+[Unreleased]: https://github.com/danroc/geoblock/compare/v0.1.18...HEAD
+[0.1.18]: https://github.com/danroc/geoblock/compare/v0.1.17...v0.1.18
 [0.1.17]: https://github.com/danroc/geoblock/compare/v0.1.16...v0.1.17
 [0.1.16]: https://github.com/danroc/geoblock/compare/v0.1.15...v0.1.16
 [0.1.15]: https://github.com/danroc/geoblock/compare/v0.1.14...v0.1.15
