@@ -207,7 +207,7 @@ func TestReadConfigErr(t *testing.T) {
 
 type errReader struct{}
 
-func (r *errReader) Read(p []byte) (n int, err error) {
+func (r *errReader) Read(_ []byte) (n int, err error) {
 	return 0, errors.New("read error")
 }
 

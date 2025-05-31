@@ -43,7 +43,7 @@ func newDummyRT() http.RoundTripper {
 
 func newErrRT() http.RoundTripper {
 	return &mockRT{
-		respond: func(req *http.Request) (*http.Response, error) {
+		respond: func(_ *http.Request) (*http.Response, error) {
 			return nil, io.ErrUnexpectedEOF
 		},
 	}
