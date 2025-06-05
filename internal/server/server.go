@@ -40,11 +40,6 @@ type Metrics struct {
 	Invalid atomic.Uint64
 }
 
-// Total returns the total number of requests.
-func (m *Metrics) Total() uint64 {
-	return m.Denied.Load() + m.Allowed.Load() + m.Invalid.Load()
-}
-
 var metrics = Metrics{}
 
 // getForwardAuth checks if the request is authorized to access the requested
@@ -126,16 +121,20 @@ func getHealth(writer http.ResponseWriter, _ *http.Request) {
 
 // getMetrics returns the metrics in JSON format.
 func getMetrics(writer http.ResponseWriter, _ *http.Request) {
+	var (
+		denied  = metrics.Denied.Load()
+		allowed = metrics.Allowed.Load()
+		invalid = metrics.Invalid.Load()
+		total   = denied + allowed + invalid
+	)
+
 	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader(http.StatusOK)
 	if _, err := writer.Write(
 		[]byte(
 			fmt.Sprintf(
 				`{"denied": %d, "allowed": %d, "invalid": %d, "total": %d}`,
-				metrics.Denied.Load(),
-				metrics.Allowed.Load(),
-				metrics.Invalid.Load(),
-				metrics.Total(),
+				denied, allowed, invalid, total,
 			),
 		),
 	); err != nil {
