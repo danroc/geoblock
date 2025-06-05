@@ -63,6 +63,9 @@ test 'allowed by domain+country' 204 \
     -H "X-Forwarded-Host: example.com" \
     -H "X-Forwarded-Method: GET"
 
+curl http://localhost:8080/v1/metrics > metrics.json
+diff metrics.json tests/metrics-expected.json
+
 diff <(sed 's/^time="[^"]*"//' tests/expected.log) \
      <(sed 's/^time="[^"]*"//' geoblock.log)
 
