@@ -1,4 +1,4 @@
-// Package ipres provider an IP resolver that returns information about an IP
+// Package ipres provides an IP resolver that returns information about an IP
 // address.
 package ipres
 
