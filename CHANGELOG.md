@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Add test to `/metrics` endpoint ([#137](https://github.com/danroc/geoblock/pull/137))
+- Add test for `/metrics` endpoint ([#137](https://github.com/danroc/geoblock/pull/137))
 
 ### Changed
 
@@ -29,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Prevent possible race condition when computing `total` metric ([#136](https://github.com/danroc/geoblock/pull/136))
+- Prevent possible race condition when computing the `total` metric ([#136](https://github.com/danroc/geoblock/pull/136))
 
 ### Uncategorized
 
