@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.20] - 2025-07-11
+
+### Changed
+
+- Use `WithError` ([#148](https://github.com/danroc/geoblock/pull/148))
+- Update module golang.org/x/net to v0.42.0 ([#147](https://github.com/danroc/geoblock/pull/147))
+- Update module golang.org/x/crypto to v0.40.0 ([#146](https://github.com/danroc/geoblock/pull/146))
+- Update module golang.org/x/text to v0.27.0 ([#145](https://github.com/danroc/geoblock/pull/145))
+- Update module golang.org/x/sys to v0.34.0 ([#144](https://github.com/danroc/geoblock/pull/144))
+- Update golang docker tag to v1.24.5 ([#143](https://github.com/danroc/geoblock/pull/143))
+- Update module github.com/go-playground/validator/v10 to v10.27.0 ([#142](https://github.com/danroc/geoblock/pull/142))
+- Update module golang.org/x/net to v0.41.0 ([#140](https://github.com/danroc/geoblock/pull/140))
+- Update module golang.org/x/crypto to v0.39.0 ([#139](https://github.com/danroc/geoblock/pull/139))
+- Update golang docker tag to v1.24.4 ([#138](https://github.com/danroc/geoblock/pull/138))
+- Test `/metrics` endpoint ([#137](https://github.com/danroc/geoblock/pull/137))
+
+### Fixed
+
+- Compute `total` locally to avoid race conditions ([#136](https://github.com/danroc/geoblock/pull/136))
+- Fix typo ([#141](https://github.com/danroc/geoblock/pull/141))
+
+### Uncategorized
+
 ## [0.1.19] - 2025-05-31
 
 ### Added
@@ -201,7 +224,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add CIDR unmarshalling and validation
 - Add autonomous systems to configuration
 
-[Unreleased]: https://github.com/danroc/geoblock/compare/v0.1.19...HEAD
+[Unreleased]: https://github.com/danroc/geoblock/compare/v0.1.20...HEAD
+[0.1.20]: https://github.com/danroc/geoblock/compare/v0.1.19...v0.1.20
 [0.1.19]: https://github.com/danroc/geoblock/compare/v0.1.18...v0.1.19
 [0.1.18]: https://github.com/danroc/geoblock/compare/v0.1.17...v0.1.18
 [0.1.17]: https://github.com/danroc/geoblock/compare/v0.1.16...v0.1.17
