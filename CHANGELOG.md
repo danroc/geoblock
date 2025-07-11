@@ -9,24 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.1.20] - 2025-07-11
 
+### Added
+
+- Add test to `/metrics` endpoint ([#137](https://github.com/danroc/geoblock/pull/137))
+
 ### Changed
 
-- Use `WithError` ([#148](https://github.com/danroc/geoblock/pull/148))
-- Update module golang.org/x/net to v0.42.0 ([#147](https://github.com/danroc/geoblock/pull/147))
-- Update module golang.org/x/crypto to v0.40.0 ([#146](https://github.com/danroc/geoblock/pull/146))
-- Update module golang.org/x/text to v0.27.0 ([#145](https://github.com/danroc/geoblock/pull/145))
-- Update module golang.org/x/sys to v0.34.0 ([#144](https://github.com/danroc/geoblock/pull/144))
-- Update golang docker tag to v1.24.5 ([#143](https://github.com/danroc/geoblock/pull/143))
-- Update module github.com/go-playground/validator/v10 to v10.27.0 ([#142](https://github.com/danroc/geoblock/pull/142))
-- Update module golang.org/x/net to v0.41.0 ([#140](https://github.com/danroc/geoblock/pull/140))
-- Update module golang.org/x/crypto to v0.39.0 ([#139](https://github.com/danroc/geoblock/pull/139))
-- Update golang docker tag to v1.24.4 ([#138](https://github.com/danroc/geoblock/pull/138))
-- Test `/metrics` endpoint ([#137](https://github.com/danroc/geoblock/pull/137))
+- Improve error logging ([#148](https://github.com/danroc/geoblock/pull/148))
+- Update dependencies
+  - Update module golang.org/x/net to v0.42.0 ([#147](https://github.com/danroc/geoblock/pull/147))
+  - Update module golang.org/x/crypto to v0.40.0 ([#146](https://github.com/danroc/geoblock/pull/146))
+  - Update module golang.org/x/text to v0.27.0 ([#145](https://github.com/danroc/geoblock/pull/145))
+  - Update module golang.org/x/sys to v0.34.0 ([#144](https://github.com/danroc/geoblock/pull/144))
+  - Update golang docker tag to v1.24.5 ([#143](https://github.com/danroc/geoblock/pull/143))
+  - Update module github.com/go-playground/validator/v10 to v10.27.0 ([#142](https://github.com/danroc/geoblock/pull/142))
+  - Update module golang.org/x/net to v0.41.0 ([#140](https://github.com/danroc/geoblock/pull/140))
+  - Update module golang.org/x/crypto to v0.39.0 ([#139](https://github.com/danroc/geoblock/pull/139))
+  - Update golang docker tag to v1.24.4 ([#138](https://github.com/danroc/geoblock/pull/138))
 
 ### Fixed
 
-- Compute `total` locally to avoid race conditions ([#136](https://github.com/danroc/geoblock/pull/136))
-- Fix typo ([#141](https://github.com/danroc/geoblock/pull/141))
+- Prevent possible race condition when computing `total` metric ([#136](https://github.com/danroc/geoblock/pull/136))
 
 ### Uncategorized
 
@@ -34,52 +37,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Add `countries`-only example and link to country codes ([#126](https://github.com/danroc/geoblock/pull/126))
+- Add `countries`-only example and link to country codes in the README ([#126](https://github.com/danroc/geoblock/pull/126))
 
 ### Changed
 
-- Update alpine docker tag to v3.22.0 ([#132](https://github.com/danroc/geoblock/pull/132))
-- Update module golang.org/x/net to v0.40.0 ([#130](https://github.com/danroc/geoblock/pull/130))
-- Update golang docker tag to v1.24.3 ([#131](https://github.com/danroc/geoblock/pull/131))
-- Update module golang.org/x/crypto to v0.38.0 ([#128](https://github.com/danroc/geoblock/pull/128))
-- Update module golang.org/x/sys to v0.33.0 ([#127](https://github.com/danroc/geoblock/pull/127))
-- Update module github.com/gabriel-vasile/mimetype to v1.4.9 ([#125](https://github.com/danroc/geoblock/pull/125))
-- Remove emojis from README ([#124](https://github.com/danroc/geoblock/pull/124))
+- Update dependencies
+  - Update alpine docker tag to v3.22.0 ([#132](https://github.com/danroc/geoblock/pull/132))
+  - Update module golang.org/x/net to v0.40.0 ([#130](https://github.com/danroc/geoblock/pull/130))
+  - Update golang docker tag to v1.24.3 ([#131](https://github.com/danroc/geoblock/pull/131))
+  - Update module golang.org/x/crypto to v0.38.0 ([#128](https://github.com/danroc/geoblock/pull/128))
+  - Update module golang.org/x/sys to v0.33.0 ([#127](https://github.com/danroc/geoblock/pull/127))
+  - Update module github.com/gabriel-vasile/mimetype to v1.4.9 ([#125](https://github.com/danroc/geoblock/pull/125))
+- Remove emojis from the README ([#124](https://github.com/danroc/geoblock/pull/124))
 
 ### Fixed
 
-- Fix version comparison links for v0.1.18 ([#134](https://github.com/danroc/geoblock/pull/134))
+- Fix links for v0.1.18 in the changelog ([#134](https://github.com/danroc/geoblock/pull/134))
 - Fix linting errors ([#133](https://github.com/danroc/geoblock/pull/133))
 
 ## [0.1.18] - 2025-04-08
 
 ### Changed
 
-- Update module golang.org/x/net to v0.39.0 ([#122](https://github.com/danroc/geoblock/pull/122))
-- Update module golang.org/x/crypto to v0.37.0 ([#121](https://github.com/danroc/geoblock/pull/121))
-- Update golang docker tag to v1.24.2 ([#118](https://github.com/danroc/geoblock/pull/118))
-- Update module github.com/go-playground/validator/v10 to v10.26.0 ([#117](https://github.com/danroc/geoblock/pull/117))
-- Update module golang.org/x/net to v0.38.0 ([#116](https://github.com/danroc/geoblock/pull/116))
-- Update module golang.org/x/net to v0.37.0 ([#115](https://github.com/danroc/geoblock/pull/115))
-- Update module golang.org/x/net to v0.36.0 ([#111](https://github.com/danroc/geoblock/pull/111))
-- Update golang docker tag to v1.24.1 ([#110](https://github.com/danroc/geoblock/pull/110))
-- Update module golang.org/x/crypto to v0.35.0 ([#108](https://github.com/danroc/geoblock/pull/108))
+- Update dependencies
+  - Update module golang.org/x/net to v0.39.0 ([#122](https://github.com/danroc/geoblock/pull/122))
+  - Update module golang.org/x/crypto to v0.37.0 ([#121](https://github.com/danroc/geoblock/pull/121))
+  - Update golang docker tag to v1.24.2 ([#118](https://github.com/danroc/geoblock/pull/118))
+  - Update module github.com/go-playground/validator/v10 to v10.26.0 ([#117](https://github.com/danroc/geoblock/pull/117))
+  - Update module golang.org/x/net to v0.38.0 ([#116](https://github.com/danroc/geoblock/pull/116))
+  - Update module golang.org/x/net to v0.37.0 ([#115](https://github.com/danroc/geoblock/pull/115))
+  - Update module golang.org/x/net to v0.36.0 ([#111](https://github.com/danroc/geoblock/pull/111))
+  - Update golang docker tag to v1.24.1 ([#110](https://github.com/danroc/geoblock/pull/110))
+  - Update module golang.org/x/crypto to v0.35.0 ([#108](https://github.com/danroc/geoblock/pull/108))
 
 ## [0.1.17] - 2025-02-24
 
 ### Changed
 
-- Update module golang.org/x/crypto to v0.34.0 ([#107](https://github.com/danroc/geoblock/pull/107))
-- Update module github.com/go-playground/validator/v10 to v10.25.0 ([#106](https://github.com/danroc/geoblock/pull/106))
-- Update alpine docker tag to v3.21.3 ([#105](https://github.com/danroc/geoblock/pull/105))
-- Update golang docker tag to v1.24.0 ([#104](https://github.com/danroc/geoblock/pull/104))
-- Update module golang.org/x/net to v0.35.0 ([#103](https://github.com/danroc/geoblock/pull/103))
-- Update module golang.org/x/crypto to v0.33.0 ([#102](https://github.com/danroc/geoblock/pull/102))
-- Update module golang.org/x/sys to v0.30.0 ([#99](https://github.com/danroc/geoblock/pull/99))
-- Update module golang.org/x/text to v0.22.0 ([#100](https://github.com/danroc/geoblock/pull/100))
-- Update golang docker tag to v1.23.6 ([#101](https://github.com/danroc/geoblock/pull/101))
-- Update golang docker tag to v1.23.5 ([#98](https://github.com/danroc/geoblock/pull/98))
-- Update module github.com/go-playground/validator/v10 to v10.24.0 ([#97](https://github.com/danroc/geoblock/pull/97))
+- Update dependencies
+  - Update module golang.org/x/crypto to v0.34.0 ([#107](https://github.com/danroc/geoblock/pull/107))
+  - Update module github.com/go-playground/validator/v10 to v10.25.0 ([#106](https://github.com/danroc/geoblock/pull/106))
+  - Update alpine docker tag to v3.21.3 ([#105](https://github.com/danroc/geoblock/pull/105))
+  - Update golang docker tag to v1.24.0 ([#104](https://github.com/danroc/geoblock/pull/104))
+  - Update module golang.org/x/net to v0.35.0 ([#103](https://github.com/danroc/geoblock/pull/103))
+  - Update module golang.org/x/crypto to v0.33.0 ([#102](https://github.com/danroc/geoblock/pull/102))
+  - Update module golang.org/x/sys to v0.30.0 ([#99](https://github.com/danroc/geoblock/pull/99))
+  - Update module golang.org/x/text to v0.22.0 ([#100](https://github.com/danroc/geoblock/pull/100))
+  - Update golang docker tag to v1.23.6 ([#101](https://github.com/danroc/geoblock/pull/101))
+  - Update golang docker tag to v1.23.5 ([#98](https://github.com/danroc/geoblock/pull/98))
+  - Update module github.com/go-playground/validator/v10 to v10.24.0 ([#97](https://github.com/danroc/geoblock/pull/97))
 
 ## [0.1.16] - 2025-01-09
 
@@ -96,22 +102,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Refactor Makefile ([#73](https://github.com/danroc/geoblock/pull/73))
 - Small improvements to Makefile ([#74](https://github.com/danroc/geoblock/pull/74))
 - Rename some Makefile targets ([#75](https://github.com/danroc/geoblock/pull/75))
-- Update module golang.org/x/crypto to 0.31.0 ([#77](https://github.com/danroc/geoblock/pull/77))
 - Enable indirect packages updates ([#78](https://github.com/danroc/geoblock/pull/78))
-- Update module github.com/gabriel-vasile/mimetype to v1.4.7 ([#79](https://github.com/danroc/geoblock/pull/79))
-- Update module golang.org/x/net to v0.32.0 ([#80](https://github.com/danroc/geoblock/pull/80))
 - Run `go mod tidy` on package update ([#81](https://github.com/danroc/geoblock/pull/81))
 - Version dev dependencies ([#82](https://github.com/danroc/geoblock/pull/82))
 - Rename targets ([#84](https://github.com/danroc/geoblock/pull/84))
 - Move dev deps back to main Makefile ([#85](https://github.com/danroc/geoblock/pull/85))
-- Update module golang.org/x/net to v0.33.0 ([#88](https://github.com/danroc/geoblock/pull/88))
 - Small grammar fixes ([#89](https://github.com/danroc/geoblock/pull/89))
-- Update module github.com/gabriel-vasile/mimetype to v1.4.8 ([#90](https://github.com/danroc/geoblock/pull/90))
-- Update module golang.org/x/sys to v0.29.0 ([#91](https://github.com/danroc/geoblock/pull/91))
 - Update outputs of examples ([#92](https://github.com/danroc/geoblock/pull/92))
-- Update module golang.org/x/crypto to v0.32.0 ([#93](https://github.com/danroc/geoblock/pull/93))
-- Update module golang.org/x/net to v0.34.0 ([#94](https://github.com/danroc/geoblock/pull/94))
-- Update alpine docker tag to v3.21.2 ([#95](https://github.com/danroc/geoblock/pull/95))
+- Update dependencies
+  - Update module golang.org/x/crypto to 0.31.0 ([#77](https://github.com/danroc/geoblock/pull/77))
+  - Update module github.com/gabriel-vasile/mimetype to v1.4.7 ([#79](https://github.com/danroc/geoblock/pull/79))
+  - Update module golang.org/x/net to v0.32.0 ([#80](https://github.com/danroc/geoblock/pull/80))
+  - Update module golang.org/x/net to v0.33.0 ([#88](https://github.com/danroc/geoblock/pull/88))
+  - Update module github.com/gabriel-vasile/mimetype to v1.4.8 ([#90](https://github.com/danroc/geoblock/pull/90))
+  - Update module golang.org/x/sys to v0.29.0 ([#91](https://github.com/danroc/geoblock/pull/91))
+  - Update module golang.org/x/crypto to v0.32.0 ([#93](https://github.com/danroc/geoblock/pull/93))
+  - Update module golang.org/x/net to v0.34.0 ([#94](https://github.com/danroc/geoblock/pull/94))
+  - Update alpine docker tag to v3.21.2 ([#95](https://github.com/danroc/geoblock/pull/95))
 
 ### Removed
 
