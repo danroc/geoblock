@@ -45,7 +45,7 @@ func getOptions() *appOptions {
 func autoUpdate(resolver *ipres.Resolver) {
 	for range time.Tick(autoUpdateInterval) {
 		if err := resolver.Update(); err != nil {
-			log.Errorf("Cannot update databases: %v", err)
+			log.WithError(err).Error("Cannot update databases")
 			continue
 		}
 		log.Info("Databases updated")
@@ -72,14 +72,14 @@ func hasChanged(a, b os.FileInfo) bool {
 func autoReload(engine *rules.Engine, path string) {
 	prevStat, err := os.Stat(path)
 	if err != nil {
-		log.Errorf("Cannot watch configuration file: %v", err)
+		log.WithError(err).Error("Cannot watch configuration file")
 		return
 	}
 
 	for range time.Tick(autoReloadInterval) {
 		stat, err := os.Stat(path)
 		if err != nil {
-			log.Errorf("Cannot watch configuration file: %v", err)
+			log.WithError(err).Error("Cannot watch configuration file")
 			continue
 		}
 
@@ -90,7 +90,7 @@ func autoReload(engine *rules.Engine, path string) {
 
 		cfg, err := loadConfig(path)
 		if err != nil {
-			log.Errorf("Cannot read configuration file: %v", err)
+			log.WithError(err).Error("Cannot read configuration file")
 			continue
 		}
 
@@ -122,13 +122,13 @@ func main() {
 	log.Info("Loading configuration file")
 	cfg, err := loadConfig(options.configPath)
 	if err != nil {
-		log.Fatalf("Cannot read configuration file: %v", err)
+		log.WithError(err).Fatal("Cannot read configuration file")
 	}
 
 	log.Info("Initializing database resolver")
 	resolver := ipres.NewResolver()
 	if err := resolver.Update(); err != nil {
-		log.Fatalf("Cannot initialize database resolver: %v", err)
+		log.WithError(err).Fatal("Cannot initialize database resolver")
 	}
 
 	var (
