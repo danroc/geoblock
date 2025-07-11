@@ -31,8 +31,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Prevent possible race condition when computing the `total` metric ([#136](https://github.com/danroc/geoblock/pull/136))
 
-### Uncategorized
-
 ## [0.1.19] - 2025-05-31
 
 ### Added
