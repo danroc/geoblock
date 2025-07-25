@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.21] - 2025-07-25
+
+### Added
+
+- Log whether the source IP is from a local network ([#155](https://github.com/danroc/geoblock/pull/155))
+
+### Changed
+
+- Update dependencies
+  - Update alpine docker tag to v3.22.1 ([#153](https://github.com/danroc/geoblock/pull/153))
+- Remove empty section from the changelog ([#152](https://github.com/danroc/geoblock/pull/152))
+- Fix small typos in the changelog ([#151](https://github.com/danroc/geoblock/pull/151))
+- Group dependency updates in the changelog ([#150](https://github.com/danroc/geoblock/pull/150))
+
 ## [0.1.20] - 2025-07-11
 
 ### Added
@@ -229,7 +243,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add CIDR unmarshalling and validation
 - Add autonomous systems to configuration
 
-[Unreleased]: https://github.com/danroc/geoblock/compare/v0.1.20...HEAD
+[Unreleased]: https://github.com/danroc/geoblock/compare/v0.1.21...HEAD
+[0.1.21]: https://github.com/danroc/geoblock/compare/v0.1.20...v0.1.21
 [0.1.20]: https://github.com/danroc/geoblock/compare/v0.1.19...v0.1.20
 [0.1.19]: https://github.com/danroc/geoblock/compare/v0.1.18...v0.1.19
 [0.1.18]: https://github.com/danroc/geoblock/compare/v0.1.17...v0.1.18
