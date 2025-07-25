@@ -63,6 +63,12 @@ test 'allowed by domain+country' 204 \
     -H "X-Forwarded-Host: example.com" \
     -H "X-Forwarded-Method: GET"
 
+test 'allowed local network' 204 \
+    http://localhost:8080/v1/forward-auth \
+    -H "X-Forwarded-For: 127.0.0.1" \
+    -H "X-Forwarded-Host: example.com" \
+    -H "X-Forwarded-Method: GET"
+
 curl http://localhost:8080/v1/metrics > metrics.json
 diff metrics.json tests/metrics-expected.json
 
