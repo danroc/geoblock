@@ -108,10 +108,10 @@ func configureLogger(level string) {
 		FullTimestamp: true,
 	})
 
-	if lvl, err := log.ParseLevel(level); err != nil {
-		log.Warnf("Invalid log level: %s", level)
+	if parsedLevel, err := log.ParseLevel(level); err != nil {
+		log.WithField("level", level).Warn("Invalid log level")
 	} else {
-		log.SetLevel(lvl)
+		log.SetLevel(parsedLevel)
 	}
 }
 
