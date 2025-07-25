@@ -25,13 +25,13 @@ const (
 
 // Fields used in the log messages.
 const (
-	FieldRequestDomain   = "request_domain"
-	FieldRequestMethod   = "request_method"
-	FieldSourceIP        = "source_ip"
-	FieldSourceIPPrivate = "source_ip_private"
-	FieldSourceCountry   = "source_country"
-	FieldSourceASN       = "source_asn"
-	FieldSourceOrg       = "source_org"
+	FieldRequestDomain = "request_domain"
+	FieldRequestMethod = "request_method"
+	FieldSourceIP      = "source_ip"
+	FieldSourceIPLocal = "source_ip_local"
+	FieldSourceCountry = "source_country"
+	FieldSourceASN     = "source_asn"
+	FieldSourceOrg     = "source_org"
 )
 
 // Metrics contains the metric values of the server.
@@ -43,8 +43,8 @@ type Metrics struct {
 
 var metrics = Metrics{}
 
-// privateCIDRs contains the list of private networks.
-var privateCIDRs = []netip.Prefix{
+// localNetworkCIDRs contains the list of local networks CIDRs.
+var localNetworkCIDRs = []netip.Prefix{
 	netip.MustParsePrefix("10.0.0.0/8"),     // (RFC 1918) Class A private
 	netip.MustParsePrefix("172.16.0.0/12"),  // (RFC 1918) Class B private
 	netip.MustParsePrefix("192.168.0.0/16"), // (RFC 1918) Class C private
@@ -55,9 +55,9 @@ var privateCIDRs = []netip.Prefix{
 	netip.MustParsePrefix("fe80::/10"),      // (RFC 4291) IPv6 link‑local
 }
 
-// isPrivateIP checks if the given IP address is a private IP address.
-func isPrivateIP(ip netip.Addr) bool {
-	for _, cidr := range privateCIDRs {
+// isLocalIP checks if the given IP address is a local IP address.
+func isLocalIP(ip netip.Addr) bool {
+	for _, cidr := range localNetworkCIDRs {
 		if cidr.Contains(ip) {
 			return true
 		}
@@ -118,13 +118,13 @@ func getForwardAuth(
 	}
 
 	logFields := log.Fields{
-		FieldRequestDomain:   domain,
-		FieldRequestMethod:   method,
-		FieldSourceIP:        sourceIP,
-		FieldSourceIPPrivate: isPrivateIP(sourceIP),
-		FieldSourceCountry:   resolved.CountryCode,
-		FieldSourceASN:       resolved.ASN,
-		FieldSourceOrg:       resolved.Organization,
+		FieldRequestDomain: domain,
+		FieldRequestMethod: method,
+		FieldSourceIP:      sourceIP,
+		FieldSourceIPLocal: isLocalIP(sourceIP),
+		FieldSourceCountry: resolved.CountryCode,
+		FieldSourceASN:     resolved.ASN,
+		FieldSourceOrg:     resolved.Organization,
 	}
 
 	if engine.Authorize(query) {
