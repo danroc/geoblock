@@ -7,4 +7,4 @@ time="2024-12-08T08:54:10Z" level=error msg="Missing required headers" request_d
 time="2024-12-08T08:54:10Z" level=error msg="Missing required headers" request_domain=example.com request_method= source_ip=8.8.8.8
 time="2024-12-08T08:54:10Z" level=warning msg="Request denied" request_domain=example.org request_method=GET source_asn=15169 source_country=US source_ip=8.8.8.8 source_ip_local=false source_org=GOOGLE
 time="2024-12-08T08:54:10Z" level=info msg="Request authorized" request_domain=example.com request_method=GET source_asn=15169 source_country=US source_ip=8.8.8.8 source_ip_local=false source_org=GOOGLE
-time="2024-12-08T08:54:10Z" level=info msg="Request authorized" request_domain=example.com request_method=GET source_asn= source_country= source_ip=127.0.0.1 source_ip_local=true source_org=
+time="2024-12-08T08:54:10Z" level=info msg="Request authorized" request_domain=example.com request_method=GET source_asn=0 source_country= source_ip=127.0.0.1 source_ip_local=true source_org=
