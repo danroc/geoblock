@@ -25,12 +25,13 @@ const (
 
 // Fields used in the log messages.
 const (
-	FieldRequestDomain = "request_domain"
-	FieldRequestMethod = "request_method"
-	FieldSourceIP      = "source_ip"
-	FieldSourceCountry = "source_country"
-	FieldSourceASN     = "source_asn"
-	FieldSourceOrg     = "source_org"
+	FieldRequestDomain   = "request_domain"
+	FieldRequestMethod   = "request_method"
+	FieldSourceIP        = "source_ip"
+	FieldSourceIPPrivate = "source_ip_private"
+	FieldSourceCountry   = "source_country"
+	FieldSourceASN       = "source_asn"
+	FieldSourceOrg       = "source_org"
 )
 
 // Metrics contains the metric values of the server.
@@ -41,6 +42,28 @@ type Metrics struct {
 }
 
 var metrics = Metrics{}
+
+// privateCIDRs contains the list of private networks.
+var privateCIDRs = []netip.Prefix{
+	netip.MustParsePrefix("10.0.0.0/8"),     // (RFC 1918) Class A private
+	netip.MustParsePrefix("172.16.0.0/12"),  // (RFC 1918) Class B private
+	netip.MustParsePrefix("192.168.0.0/16"), // (RFC 1918) Class C private
+	netip.MustParsePrefix("127.0.0.0/8"),    // (RFC 1122) Loopback
+	netip.MustParsePrefix("169.254.0.0/16"), // (RFC 3927) Link‑local
+	netip.MustParsePrefix("::1/128"),        // (RFC 4291) IPv6 loopback
+	netip.MustParsePrefix("fc00::/7"),       // (RFC 4193) IPv6 unique local
+	netip.MustParsePrefix("fe80::/10"),      // (RFC 4291) IPv6 link‑local
+}
+
+// isPrivateIP checks if the given IP address is a private IP address.
+func isPrivateIP(ip netip.Addr) bool {
+	for _, cidr := range privateCIDRs {
+		if cidr.Contains(ip) {
+			return true
+		}
+	}
+	return false
+}
 
 // getForwardAuth checks if the request is authorized to access the requested
 // resource. It uses the reverse proxy headers to determine the source IP and
@@ -95,12 +118,13 @@ func getForwardAuth(
 	}
 
 	logFields := log.Fields{
-		FieldRequestDomain: domain,
-		FieldRequestMethod: method,
-		FieldSourceIP:      sourceIP,
-		FieldSourceCountry: resolved.CountryCode,
-		FieldSourceASN:     resolved.ASN,
-		FieldSourceOrg:     resolved.Organization,
+		FieldRequestDomain:   domain,
+		FieldRequestMethod:   method,
+		FieldSourceIP:        sourceIP,
+		FieldSourceIPPrivate: isPrivateIP(sourceIP),
+		FieldSourceCountry:   resolved.CountryCode,
+		FieldSourceASN:       resolved.ASN,
+		FieldSourceOrg:       resolved.Organization,
 	}
 
 	if engine.Authorize(query) {
