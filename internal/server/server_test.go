@@ -28,7 +28,12 @@ func TestIsLocalIP(t *testing.T) {
 			t.Fatalf("Failed to parse IP %s: %v", test.ip, err)
 		}
 		if isLocalIP(ip) != test.isLocal {
-			t.Errorf("isLocalIP(%s) = %v, want %v", test.ip, isLocalIP(ip), test.isLocal)
+			t.Errorf(
+				"isLocalIP(%s) = %v, want %v",
+				test.ip,
+				isLocalIP(ip),
+				test.isLocal,
+			)
 		}
 	}
 }
