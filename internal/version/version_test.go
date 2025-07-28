@@ -17,49 +17,39 @@ func TestGet(t *testing.T) {
 		expected string
 	}{
 		{
-			name:     "semantic version with v prefix",
-			version:  "v1.0.0",
+			name:     "clean release with v prefix",
+			version:  "v1.0.0-0-1234567",
 			expected: "1.0.0",
 		},
 		{
-			name:     "dev version",
-			version:  "dev",
-			expected: "dev",
+			name:     "clean release without v prefix",
+			version:  "1.0.0-0-1234567",
+			expected: "1.0.0",
 		},
 		{
-			name:     "git describe style version with v prefix",
-			version:  "v1.0.0-g1234567",
-			expected: "1.0.0-g1234567",
+			name:     "dev build with commits ahead",
+			version:  "v1.0.0-5-abcdef0",
+			expected: "1.0.0-dev.abcdef0",
 		},
 		{
-			name:     "dirty version gets dev suffix and v prefix removed",
-			version:  "v1.0.0-g1234567-dirty",
-			expected: "1.0.0-g1234567-dev",
+			name:     "dev build with dirty flag",
+			version:  "v1.0.0-0-1234567-dirty",
+			expected: "1.0.0-dev.1234567",
 		},
 		{
-			name:     "simple dirty version with v prefix removed",
-			version:  "v1.0.0-dirty",
-			expected: "1.0.0-dev",
+			name:     "dev build with broken flag",
+			version:  "v1.0.0-0-1234567-broken",
+			expected: "1.0.0-dev.1234567",
 		},
 		{
-			name:     "version without v prefix remains unchanged",
-			version:  "1.2.3",
-			expected: "1.2.3",
+			name:     "dev build with commits ahead and dirty flag",
+			version:  "v1.0.0-5-abcdef0-dirty",
+			expected: "1.0.0-dev.abcdef0",
 		},
 		{
-			name:     "v followed by non-digit is preserved",
-			version:  "version1.0.0",
-			expected: "version1.0.0",
-		},
-		{
-			name:     "v prefix with major version only",
-			version:  "v2",
-			expected: "2",
-		},
-		{
-			name:     "v prefix with beta version",
-			version:  "v1.0.0-beta1",
-			expected: "1.0.0-beta1",
+			name:     "dev build with commits ahead and broken flag",
+			version:  "v1.0.0-5-abcdef0-broken",
+			expected: "1.0.0-dev.abcdef0",
 		},
 	}
 

@@ -1,3 +1,4 @@
+time="2024-12-08T08:54:07Z" level=info msg="Starting Geoblock version 0.0.0-dev.0000000"
 time="2024-12-08T08:54:07Z" level=info msg="Loading configuration file"
 time="2024-12-08T08:54:07Z" level=info msg="Initializing database resolver"
 time="2024-12-08T08:54:09Z" level=info msg="Starting server at :8080"
