@@ -2,7 +2,7 @@
 package server
 
 import (
-	"fmt"
+	"encoding/json"
 	"net/http"
 	"net/netip"
 	"sync/atomic"
@@ -143,25 +143,26 @@ func getHealth(writer http.ResponseWriter, _ *http.Request) {
 	writer.WriteHeader(http.StatusNoContent)
 }
 
+// MetricsResponse contains the response object for the metrics endpoint.
+type MetricsResponse struct {
+	Denied  uint64 `json:"denied"`
+	Allowed uint64 `json:"allowed"`
+	Invalid uint64 `json:"invalid"`
+	Total   uint64 `json:"total"`
+}
+
 // getMetrics returns the metrics in JSON format.
 func getMetrics(writer http.ResponseWriter, _ *http.Request) {
-	var (
-		denied  = metrics.Denied.Load()
-		allowed = metrics.Allowed.Load()
-		invalid = metrics.Invalid.Load()
-		total   = denied + allowed + invalid
-	)
+	metrics := MetricsResponse{
+		Denied:  metrics.Denied.Load(),
+		Allowed: metrics.Allowed.Load(),
+		Invalid: metrics.Invalid.Load(),
+	}
+	metrics.Total = metrics.Denied + metrics.Allowed + metrics.Invalid
 
 	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader(http.StatusOK)
-	if _, err := writer.Write(
-		[]byte(
-			fmt.Sprintf(
-				`{"denied": %d, "allowed": %d, "invalid": %d, "total": %d}`,
-				denied, allowed, invalid, total,
-			),
-		),
-	); err != nil {
+	if err := json.NewEncoder(writer).Encode(metrics); err != nil {
 		log.WithError(err).Error("Cannot write metrics response")
 	}
 }
