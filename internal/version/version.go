@@ -8,15 +8,12 @@ import (
 	"strings"
 )
 
-var (
-	// Version is set at build time via ldflags
-	Version = "v0.0.0-0-0000000-dirty"
-)
+// Version is set at build time via ldflags
+var Version = "v0.0.0-0-0000000-dirty"
 
-var (
-	prefixRegex = regexp.MustCompile(`^v(\d.*)`)
-)
+var prefixRegex = regexp.MustCompile(`^v(\d.*)`)
 
+// GitDescribe represents the parsed components of a git describe string.
 type GitDescribe struct {
 	Tag    string
 	Ahead  int
