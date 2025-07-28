@@ -38,6 +38,14 @@ jobs:
           tags: |
             type=semver,pattern={{version}}
 
+      - name: Require clean working directory
+        shell: bash
+        run: |
+          if ! git diff --exit-code; then
+            echo "Working tree dirty at end of job"
+            exit 1
+          fi
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
