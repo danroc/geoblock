@@ -71,11 +71,11 @@ func ruleApplies(rule *config.AccessControlRule, query *Query) bool {
 		return strings.EqualFold(country, query.SourceCountry)
 	})
 
-	matchANS := match(rule.AutonomousSystems, func(asn uint32) bool {
+	matchASN := match(rule.AutonomousSystems, func(asn uint32) bool {
 		return asn == query.SourceASN
 	})
 
-	return matchDomain && matchMethod && matchIP && matchCountry && matchANS
+	return matchDomain && matchMethod && matchIP && matchCountry && matchASN
 }
 
 // UpdateConfig updates the engine's configuration with the given access

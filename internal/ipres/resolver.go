@@ -30,7 +30,7 @@ const (
 // ErrRecordLength is returned when a CSV record has an unexpected length.
 var (
 	ErrRecordLength = errors.New("invalid record length")
-	ErrInvalidANS   = errors.New("invalid ASN")
+	ErrInvalidASN   = errors.New("invalid ASN")
 )
 
 // AS0 represents the default ASN value for unknown addresses.
@@ -210,7 +210,7 @@ func parseASNRecord(record []string) (*DBRecord, error) {
 
 	asn, err := strconv.ParseUint(record[2], 10, 32)
 	if err != nil {
-		return nil, ErrInvalidANS
+		return nil, ErrInvalidASN
 	}
 
 	return &DBRecord{
