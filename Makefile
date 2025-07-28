@@ -10,6 +10,13 @@ DESCRIPTION := A simple IP-based geoblocking service
 ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 DIST_DIR := $(ROOT_DIR)/dist
 
+# Version information from git describe
+VERSION := $(shell git describe --tags --dirty --always || echo "dev")
+
+# Build flags
+LDFLAGS := -X 'github.com/danroc/geoblock/internal/version.Version=$(VERSION)'
+LDFLAGS += -s -w
+
 # Colors
 BLUE := \033[34m
 GREEN := \033[32m
@@ -81,7 +88,7 @@ run: ## Run the main program
 
 .PHONY: build
 build: $(DIST_DIR) ## Build the binary
-	go build -ldflags="-s -w" -o $(DIST_DIR)/geoblock ./cmd/geoblock/
+	go build -ldflags="$(LDFLAGS)" -o $(DIST_DIR)/geoblock ./cmd/geoblock/
 
 .PHONY: docker
 docker: ## Build docker image
