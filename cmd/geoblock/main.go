@@ -86,6 +86,8 @@ func autoReload(engine *rules.Engine, path string) {
 		if !hasChanged(prevStat, stat) {
 			continue
 		}
+
+		// Since the file has changed, we update the previous stat.
 		prevStat = stat
 
 		cfg, err := loadConfig(path)
