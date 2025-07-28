@@ -9,6 +9,7 @@ import (
 	"net/netip"
 	"strconv"
 	"sync/atomic"
+	"time"
 
 	"github.com/danroc/geoblock/internal/itree"
 )
@@ -25,6 +26,11 @@ const (
 const (
 	countryRecordLength = 3
 	asnRecordLength     = 4
+)
+
+const (
+	// The timeout for the HTTP client.
+	clientTimeout = 15 * time.Second
 )
 
 // ErrRecordLength is returned when a CSV record has an unexpected length.
@@ -159,7 +165,13 @@ func update(db *ResTree, parser ParserFn, url string) error {
 
 // fetchCSV returns the CSV records fetched from the given URL.
 func fetchCSV(url string) ([][]string, error) {
-	resp, err := http.Get(url) // #nosec G107
+	// It's important to set a timeout to avoid hanging the program if the
+	// remote server doesn't respond.
+	client := &http.Client{
+		Timeout: clientTimeout,
+	}
+
+	resp, err := client.Get(url) // #nosec G107
 	if err != nil {
 		return nil, err
 	}
