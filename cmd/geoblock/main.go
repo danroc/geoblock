@@ -12,6 +12,7 @@ import (
 	"github.com/danroc/geoblock/internal/ipres"
 	"github.com/danroc/geoblock/internal/rules"
 	"github.com/danroc/geoblock/internal/server"
+	"github.com/danroc/geoblock/internal/version"
 )
 
 const (
@@ -121,6 +122,7 @@ func main() {
 	options := getOptions()
 	configureLogger(options.logLevel)
 
+	log.Infof("Starting Geoblock version %s", version.Get())
 	log.Info("Loading configuration file")
 	cfg, err := loadConfig(options.configPath)
 	if err != nil {

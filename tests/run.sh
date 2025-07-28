@@ -72,7 +72,7 @@ test 'allowed local network' 204 \
 curl http://localhost:8080/v1/metrics > metrics.json
 diff metrics.json tests/metrics-expected.json
 
-diff <(sed 's/^time="[^"]*"//' tests/expected.log) \
-     <(sed 's/^time="[^"]*"//' geoblock.log)
+diff <(sed 's/^time="[^"]*"//; s/msg="Starting Geoblock version [^"]*"//' tests/expected.log) \
+     <(sed 's/^time="[^"]*"//; s/msg="Starting Geoblock version [^"]*"//' geoblock.log)
 
 echo ":: ALL E2E TESTS PASSED"
