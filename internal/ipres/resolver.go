@@ -30,7 +30,7 @@ const (
 
 const (
 	// The timeout for the HTTP client.
-	clientTimeout = 15 * time.Second
+	clientTimeout = 30 * time.Second
 )
 
 // ErrRecordLength is returned when a CSV record has an unexpected length.
