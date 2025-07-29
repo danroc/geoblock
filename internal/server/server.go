@@ -153,16 +153,16 @@ type MetricsResponse struct {
 
 // getMetrics returns the metrics in JSON format.
 func getMetrics(writer http.ResponseWriter, _ *http.Request) {
-	metrics := MetricsResponse{
+	response := MetricsResponse{
 		Denied:  metrics.Denied.Load(),
 		Allowed: metrics.Allowed.Load(),
 		Invalid: metrics.Invalid.Load(),
 	}
-	metrics.Total = metrics.Denied + metrics.Allowed + metrics.Invalid
+	response.Total = response.Denied + response.Allowed + response.Invalid
 
 	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(writer).Encode(metrics); err != nil {
+	if err := json.NewEncoder(writer).Encode(response); err != nil {
 		log.WithError(err).Error("Cannot write metrics response")
 	}
 }
