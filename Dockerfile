@@ -7,7 +7,7 @@ WORKDIR /app
 COPY . .
 
 ARG CGO_ENABLED=0
-RUN make check && make clean build
+RUN make clean check build
 
 # -----------------------------------------------------------------------------
 # Run
