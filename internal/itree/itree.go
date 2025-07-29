@@ -67,7 +67,7 @@ func (n *Node[K, V]) updateNode() {
 	n.height = 1 + max(n.left.getHeight(), n.right.getHeight())
 }
 
-// roteLeft rotates the node to the left.
+// rotateLeft rotates the node to the left.
 func (n *Node[K, V]) rotateLeft() *Node[K, V] {
 	x := n.right
 	n.right = x.left
