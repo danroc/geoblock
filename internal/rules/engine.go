@@ -10,7 +10,7 @@ import (
 	"github.com/danroc/geoblock/internal/utils/glob"
 )
 
-// Engine is the access control egine that checks if a given query is allowed
+// Engine is the access control engine that checks if a given query is allowed
 // by the rules.
 type Engine struct {
 	config atomic.Pointer[config.AccessControl]
