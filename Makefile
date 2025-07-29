@@ -105,7 +105,7 @@ check: ## Check for untracked or modified files
 		echo "$(RED)Uncommitted changes detected:$(RESET)"; \
 		git status --short; \
 		echo "$(YELLOW)Consider committing or stashing changes before proceeding.$(RESET)"; \
-		echo; \
+		exit 1; \
 	else \
 		echo "$(GREEN)✅ Git working directory is clean$(RESET)"; \
 	fi
