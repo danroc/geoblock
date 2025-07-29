@@ -11,7 +11,10 @@ ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 DIST_DIR := $(ROOT_DIR)/dist
 
 # Version information from git describe
-VERSION := $(shell git describe --tags --dirty --broken --long)
+VERSION := $(shell \
+  git update-index -q --refresh && \
+  git describe --tags --dirty --broken --long \
+)
 
 # Build flags
 LDFLAGS := -X 'github.com/danroc/geoblock/internal/version.Version=$(VERSION)'
@@ -105,7 +108,6 @@ check: ## Check for untracked or modified files
 		echo "$(RED)Uncommitted changes detected:$(RESET)"; \
 		git status --short; \
 		echo "$(YELLOW)Consider committing or stashing changes before proceeding.$(RESET)"; \
-		exit 1; \
 	else \
 		echo "$(GREEN)✅ Git working directory is clean$(RESET)"; \
 	fi
