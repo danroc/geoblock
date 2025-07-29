@@ -3,7 +3,7 @@
 # =============================================================================
 
 # Project metadata
-PROJECT_NAME := geoblock
+PROJECT_NAME := Geoblock
 DESCRIPTION := A simple IP-based geoblocking service
 
 # Directories
