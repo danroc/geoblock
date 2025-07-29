@@ -7,7 +7,10 @@ WORKDIR /app
 COPY . .
 
 ARG CGO_ENABLED=0
-RUN make build
+RUN make build \
+    && git status \
+    && git diff \
+    && git describe --tags --dirty --broken --long
 
 # -----------------------------------------------------------------------------
 # Run
