@@ -94,6 +94,22 @@ build: $(DIST_DIR) ## Build the binary
 docker: ## Build docker image
 	docker build -t geoblock .
 
+.PHONY: clean
+clean: ## Clean the dist directory
+	rm -rf $(DIST_DIR)
+
+.PHONY: check
+check: ## Check for untracked or modified files
+	@if [ -n "$$(git status --porcelain)" ]; then \
+		echo "$(YELLOW)$(BOLD)⚠️  WARNING: You have untracked or modified files!$(RESET)"; \
+		echo "$(RED)Uncommitted changes detected:$(RESET)"; \
+		git status --short; \
+		echo "$(YELLOW)Consider committing or stashing changes before proceeding.$(RESET)"; \
+		echo; \
+	else \
+		echo "$(GREEN)✅ Git working directory is clean$(RESET)"; \
+	fi
+
 # =============================================================================
 # @Tests
 # =============================================================================
