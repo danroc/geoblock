@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2025-07-30
+
+### Changed
+
+- **BREAKING:** Change the object returned by the `/metrics` endpoint ([#181](https://github.com/danroc/geoblock/pull/181))
+
 ## [0.1.23] - 2025-07-28
 
 ### Added
@@ -177,7 +183,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add CIDR unmarshalling and validation
 - Add autonomous systems to configuration
 
-[Unreleased]: https://github.com/danroc/geoblock/compare/v0.1.23...HEAD
+[Unreleased]: https://github.com/danroc/geoblock/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/danroc/geoblock/compare/v0.1.23...v0.2.0
 [0.1.23]: https://github.com/danroc/geoblock/compare/v0.1.22...v0.1.23
 [0.1.22]: https://github.com/danroc/geoblock/compare/v0.1.21...v0.1.22
 [0.1.21]: https://github.com/danroc/geoblock/compare/v0.1.20...v0.1.21

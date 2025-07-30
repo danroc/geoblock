@@ -210,7 +210,7 @@ Returns metrics in JSON format.
 
   ```json
   {
-    "version": "1.0.0",
+    "version": "0.2.0",
     "requests": {
       "allowed": 3,
       "denied": 2,
