@@ -5,12 +5,12 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/netip"
-	"sync/atomic"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 
 	"github.com/danroc/geoblock/internal/ipres"
+	"github.com/danroc/geoblock/internal/metrics"
 	"github.com/danroc/geoblock/internal/rules"
 )
 
@@ -33,15 +33,6 @@ const (
 	FieldSourceASN     = "source_asn"
 	FieldSourceOrg     = "source_org"
 )
-
-// Metrics contains the metric values of the server.
-type Metrics struct {
-	Denied  atomic.Uint64
-	Allowed atomic.Uint64
-	Invalid atomic.Uint64
-}
-
-var metrics = Metrics{}
 
 // localNetworkCIDRs contains the list of local networks CIDRs.
 var localNetworkCIDRs = []netip.Prefix{
@@ -89,7 +80,7 @@ func getForwardAuth(
 			FieldSourceIP:      origin,
 		}).Error("Missing required headers")
 		writer.WriteHeader(http.StatusBadRequest)
-		metrics.Invalid.Add(1)
+		metrics.IncInvalid()
 		return
 	}
 
@@ -103,7 +94,7 @@ func getForwardAuth(
 			FieldSourceIP:      origin,
 		}).Error("Invalid source IP")
 		writer.WriteHeader(http.StatusBadRequest)
-		metrics.Invalid.Add(1)
+		metrics.IncInvalid()
 		return
 	}
 
@@ -130,11 +121,11 @@ func getForwardAuth(
 	if engine.Authorize(query) {
 		log.WithFields(logFields).Info("Request authorized")
 		writer.WriteHeader(http.StatusNoContent)
-		metrics.Allowed.Add(1)
+		metrics.IncAllowed()
 	} else {
 		log.WithFields(logFields).Warn("Request denied")
 		writer.WriteHeader(http.StatusForbidden)
-		metrics.Denied.Add(1)
+		metrics.IncDenied()
 	}
 }
 
@@ -143,26 +134,11 @@ func getHealth(writer http.ResponseWriter, _ *http.Request) {
 	writer.WriteHeader(http.StatusNoContent)
 }
 
-// MetricsResponse contains the response object for the metrics endpoint.
-type MetricsResponse struct {
-	Denied  uint64 `json:"denied"`
-	Allowed uint64 `json:"allowed"`
-	Invalid uint64 `json:"invalid"`
-	Total   uint64 `json:"total"`
-}
-
 // getMetrics returns the metrics in JSON format.
 func getMetrics(writer http.ResponseWriter, _ *http.Request) {
-	response := MetricsResponse{
-		Denied:  metrics.Denied.Load(),
-		Allowed: metrics.Allowed.Load(),
-		Invalid: metrics.Invalid.Load(),
-	}
-	response.Total = response.Denied + response.Allowed + response.Invalid
-
 	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(writer).Encode(response); err != nil {
+	if err := json.NewEncoder(writer).Encode(metrics.Get()); err != nil {
 		log.WithError(err).Error("Cannot write metrics response")
 	}
 }

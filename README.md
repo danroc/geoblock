@@ -199,15 +199,25 @@ Returns metrics in JSON format.
 
 - Properties:
 
-  - `denied`: Number of denied requests
-  - `allowed`: Number of allowed requests
-  - `invalid`: Number of invalid requests
-  - `total`: Total number of requests
+  - `version`: Application version string
+  - `requests`: Object containing request count metrics
+    - `allowed`: Number of allowed requests
+    - `denied`: Number of denied requests
+    - `invalid`: Number of invalid requests
+    - `total`: Total number of requests
 
 - Example:
 
   ```json
-  { "denied": 0, "allowed": 0, "invalid": 0, "total": 0 }
+  {
+    "version": "1.0.0",
+    "requests": {
+      "allowed": 3,
+      "denied": 2,
+      "invalid": 1,
+      "total": 6
+    }
+  }
   ```
 
 ## Attribution
