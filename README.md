@@ -63,7 +63,7 @@ flowchart TD
   Geoblock
 
   Client --->|Request| Proxy
-  Proxy --->|Authorize?| Geoblock
+  Proxy --->|Authorize request?| Geoblock
   Geoblock -..->|Yes / No| Proxy
   Proxy -..->|Return error if not authorized| Client
   Proxy --->|Forward request if authorized| App
