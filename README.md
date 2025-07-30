@@ -52,6 +52,25 @@ proxies such as Traefik, NGINX, and Caddy.
 
 ## Deployment
 
+Geoblock should be deployed as a forward authentication service that integrates
+with your existing reverse proxy.
+
+```mermaid
+flowchart TD
+  Client
+  Proxy["Reverse Proxy"]
+  App
+  Geoblock
+
+  Client --->|Request| Proxy
+  Proxy --->|Authorize?| Geoblock
+  Geoblock -..->|Yes / No| Proxy
+  Proxy -..->|Return error if not authorized| Client
+  Proxy --->|Forward request if authorized| App
+```
+
+**Examples:**
+
 - [Example using Traefik](./examples/traefik/README.md)
 - [Example using Caddy](./examples/caddy/README.md)
 - [Example using NGINX](./examples/nginx/README.md)
