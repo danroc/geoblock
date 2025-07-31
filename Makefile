@@ -132,6 +132,10 @@ test-e2e: ## Run end-to-end tests
 test-coverage: test-unit ## Generate coverage report
 	gocover-cobertura < coverage.out > coverage.xml
 
+.PHONY: test-bench
+test-bench: ## Run benchmarks
+	go test -bench=. -benchmem ./...
+
 # =============================================================================
 # @Help
 # =============================================================================
