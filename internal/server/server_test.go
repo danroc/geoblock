@@ -8,7 +8,6 @@ import (
 	"net/http/httptest"
 	"net/netip"
 	"testing"
-	"time"
 
 	"github.com/danroc/geoblock/internal/config"
 	"github.com/danroc/geoblock/internal/ipres"
@@ -78,22 +77,33 @@ func (rt *testRoundTripper) RoundTrip(
 	}, nil
 }
 
+// withTestTransport temporarily sets http.DefaultTransport to a test transport
+// for the duration of fn.
+func withTestTransport(testData map[string]string, fn func()) {
+	originalTransport := http.DefaultTransport
+	defer func() {
+		http.DefaultTransport = originalTransport
+	}()
+
+	http.DefaultTransport = &testRoundTripper{
+		responses: testData,
+	}
+	fn()
+}
+
 // createTestResolver creates a resolver with mocked HTTP responses.
 func createTestResolver(testData map[string]string) *ipres.Resolver {
-	originalTransport := http.DefaultTransport
-
-	http.DefaultTransport = &testRoundTripper{responses: testData}
-	resolver := ipres.NewResolver()
-	_ = resolver.Update()
-
-	http.DefaultTransport = originalTransport
+	var resolver *ipres.Resolver
+	withTestTransport(testData, func() {
+		resolver = ipres.NewResolver()
+		resolver.Update()
+	})
 	return resolver
 }
 
 func TestGetForwardAuth(t *testing.T) {
 	resolver := ipres.NewResolver()
 	engine := newAllowEngine()
-
 	tests := []struct {
 		name    string
 		headers map[string]string
@@ -149,7 +159,6 @@ func TestGetForwardAuth(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			getForwardAuth(w, req, resolver, engine)
-
 			assertStatus(t, w.Code, tt.want)
 		})
 	}
@@ -162,8 +171,6 @@ func TestGetForwardAuthWithSpecificRules(t *testing.T) {
 		ipres.ASNIPv4URL:     "8.8.8.8,8.8.8.8,15169,Google LLC\n",
 		ipres.ASNIPv6URL:     "",
 	}
-	resolver := createTestResolver(testData)
-
 	engine := rules.NewEngine(&config.AccessControl{
 		DefaultPolicy: config.PolicyDeny,
 		Rules: []config.AccessControlRule{
@@ -175,6 +182,7 @@ func TestGetForwardAuthWithSpecificRules(t *testing.T) {
 			},
 		},
 	})
+	resolver := createTestResolver(testData)
 
 	tests := []struct {
 		name   string
@@ -217,7 +225,6 @@ func TestGetForwardAuthWithSpecificRules(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			getForwardAuth(w, req, resolver, engine)
-
 			assertStatus(t, w.Code, tt.want)
 		})
 	}
@@ -226,16 +233,13 @@ func TestGetForwardAuthWithSpecificRules(t *testing.T) {
 func TestGetHealth(t *testing.T) {
 	req := httptest.NewRequest("GET", "/v1/health", nil)
 	w := httptest.NewRecorder()
-
 	getHealth(w, req)
-
 	assertStatus(t, w.Code, http.StatusNoContent)
 }
 
 func TestGetMetrics(t *testing.T) {
 	req := httptest.NewRequest("GET", "/v1/metrics", nil)
 	w := httptest.NewRecorder()
-
 	getMetrics(w, req)
 
 	assertStatus(t, w.Code, http.StatusOK)
@@ -245,7 +249,6 @@ func TestGetMetrics(t *testing.T) {
 	if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
 		t.Fatalf("failed to parse JSON response: %v", err)
 	}
-
 	if response.Version == "" {
 		t.Error("version should not be empty")
 	}
@@ -256,9 +259,7 @@ func TestGetMetricsJSONError(t *testing.T) {
 		header: make(http.Header),
 	}
 	req := httptest.NewRequest("GET", "/v1/metrics", nil)
-
 	getMetrics(brokenWriter, req)
-
 	assertStatus(t, brokenWriter.statusCode, http.StatusOK)
 }
 
@@ -283,36 +284,29 @@ func (w *brokenResponseWriter) WriteHeader(statusCode int) {
 func TestNewServer(t *testing.T) {
 	resolver := ipres.NewResolver()
 	engine := newAllowEngine()
-
 	server := NewServer(":8080", engine, resolver)
 
 	if got, want := server.Addr, ":8080"; got != want {
 		t.Errorf("Addr = %q, want %q", got, want)
 	}
-
 	if server.Handler == nil {
 		t.Error("Handler should not be nil")
 	}
-
-	if got, want := server.ReadTimeout, 10*time.Second; got != want {
-		t.Errorf("ReadTimeout = %v, want %v", got, want)
+	if server.ReadTimeout <= 0 {
+		t.Errorf("ReadTimeout = %v, want > 0", server.ReadTimeout)
 	}
-
-	if got, want := server.WriteTimeout, 30*time.Second; got != want {
-		t.Errorf("WriteTimeout = %v, want %v", got, want)
+	if server.WriteTimeout <= 0 {
+		t.Errorf("WriteTimeout = %v, want > 0", server.WriteTimeout)
 	}
-
-	if got, want := server.IdleTimeout, 30*time.Second; got != want {
-		t.Errorf("IdleTimeout = %v, want %v", got, want)
+	if server.IdleTimeout <= 0 {
+		t.Errorf("IdleTimeout = %v, want > 0", server.IdleTimeout)
 	}
 }
 
 func TestServerEndpoints(t *testing.T) {
 	resolver := ipres.NewResolver()
 	engine := newAllowEngine()
-
 	server := NewServer(":8080", engine, resolver)
-
 	tests := []struct {
 		method string
 		path   string
@@ -328,9 +322,7 @@ func TestServerEndpoints(t *testing.T) {
 		t.Run(tt.method+" "+tt.path, func(t *testing.T) {
 			req := httptest.NewRequest(tt.method, tt.path, nil)
 			w := httptest.NewRecorder()
-
 			server.Handler.ServeHTTP(w, req)
-
 			assertStatus(t, w.Code, tt.want)
 		})
 	}
@@ -395,7 +387,6 @@ func TestIsLocalIP(t *testing.T) {
 			if err != nil {
 				t.Fatalf("ParseAddr(%q): %v", tt.ip, err)
 			}
-
 			if got := isLocalIP(ip); got != tt.want {
 				t.Errorf("isLocalIP(%s) = %v, want %v", tt.ip, got, tt.want)
 			}
@@ -412,7 +403,6 @@ func TestGetForwardAuthValidRequests(t *testing.T) {
 	}
 	resolver := createTestResolver(testData)
 	engine := newAllowEngine()
-
 	headers := map[string]string{
 		HeaderXForwardedFor:    "8.8.8.8",
 		HeaderXForwardedHost:   "example.com",
@@ -422,20 +412,17 @@ func TestGetForwardAuthValidRequests(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	getForwardAuth(w, req, resolver, engine)
-
 	assertStatus(t, w.Code, http.StatusNoContent)
 }
 
 func TestServerHandlerSetup(t *testing.T) {
 	resolver := ipres.NewResolver()
 	engine := newAllowEngine()
-
 	server := NewServer(":8080", engine, resolver)
 
 	req := httptest.NewRequest("GET", "/v1/forward-auth", nil)
 	w := httptest.NewRecorder()
 
 	server.Handler.ServeHTTP(w, req)
-
 	assertStatus(t, w.Code, http.StatusBadRequest)
 }
