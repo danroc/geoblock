@@ -115,6 +115,35 @@ access_control:
       policy: allow
 `
 
+const invalidPolicyValue = `
+access_control:
+  default_policy: invalid_policy
+  rules: []
+`
+
+const missingDefaultPolicy = `
+access_control:
+  rules: []
+`
+
+const invalidMethodValue = `
+access_control:
+  default_policy: allow
+  rules:
+    - policy: allow
+      methods:
+        - INVALID_METHOD
+`
+
+const invalidCountryCode = `
+access_control:
+  default_policy: allow
+  rules:
+    - policy: allow
+      countries:
+        - INVALID
+`
+
 func TestReadConfigValid(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -200,6 +229,28 @@ func TestReadConfigErr(t *testing.T) {
 			_, err := config.ReadConfig(reader)
 			if err == nil {
 				t.Error("expected an error but got nil")
+			}
+		})
+	}
+}
+
+func TestReadConfigValidationErrors(t *testing.T) {
+	tests := []struct {
+		name string
+		data string
+	}{
+		{"invalid policy value", invalidPolicyValue},
+		{"missing default policy", missingDefaultPolicy},
+		{"invalid method value", invalidMethodValue},
+		{"invalid country code", invalidCountryCode},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			reader := strings.NewReader(test.data)
+			_, err := config.ReadConfig(reader)
+			if err == nil {
+				t.Error("expected validation error but got nil")
 			}
 		})
 	}
