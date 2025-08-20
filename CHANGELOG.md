@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Log in JSON format by default ([#195](https://github.com/danroc/geoblock/pull/195))
+- **BREAKING:** Log in JSON format by default ([#195](https://github.com/danroc/geoblock/pull/195))
 
 ## [0.2.1] - 2025-08-14
 
