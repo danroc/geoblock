@@ -25,13 +25,15 @@ const (
 
 // Fields used in the log messages.
 const (
-	FieldRequestDomain = "request_domain"
-	FieldRequestMethod = "request_method"
-	FieldSourceIP      = "source_ip"
-	FieldSourceIPLocal = "source_ip_local"
-	FieldSourceCountry = "source_country"
-	FieldSourceASN     = "source_asn"
-	FieldSourceOrg     = "source_org"
+	FieldRequestDomain  = "request_domain"
+	FieldRequestMethod  = "request_method"
+	FieldRequestValid   = "request_valid"
+	FieldRequestAllowed = "request_allowed"
+	FieldSourceIP       = "source_ip"
+	FieldSourceIPLocal  = "source_ip_local"
+	FieldSourceCountry  = "source_country"
+	FieldSourceASN      = "source_asn"
+	FieldSourceOrg      = "source_org"
 )
 
 // localNetworkCIDRs contains the list of local networks CIDRs.
@@ -75,9 +77,11 @@ func getForwardAuth(
 	// probably means that the request didn't come from the reverse proxy.
 	if origin == "" || domain == "" || method == "" {
 		log.WithFields(log.Fields{
-			FieldRequestDomain: domain,
-			FieldRequestMethod: method,
-			FieldSourceIP:      origin,
+			FieldRequestDomain:  domain,
+			FieldRequestMethod:  method,
+			FieldRequestValid:   false,
+			FieldRequestAllowed: false,
+			FieldSourceIP:       origin,
 		}).Error("Missing required headers")
 		writer.WriteHeader(http.StatusBadRequest)
 		metrics.IncInvalid()
@@ -89,9 +93,11 @@ func getForwardAuth(
 	sourceIP, err := netip.ParseAddr(origin)
 	if err != nil {
 		log.WithFields(log.Fields{
-			FieldRequestDomain: domain,
-			FieldRequestMethod: method,
-			FieldSourceIP:      origin,
+			FieldRequestDomain:  domain,
+			FieldRequestMethod:  method,
+			FieldRequestValid:   false,
+			FieldRequestAllowed: false,
+			FieldSourceIP:       origin,
 		}).Error("Invalid source IP")
 		writer.WriteHeader(http.StatusBadRequest)
 		metrics.IncInvalid()
@@ -99,27 +105,28 @@ func getForwardAuth(
 	}
 
 	resolved := resolver.Resolve(sourceIP)
-
-	query := &rules.Query{
+	isAuthorized := engine.Authorize(&rules.Query{
 		RequestedDomain: domain,
 		RequestedMethod: method,
 		SourceIP:        sourceIP,
 		SourceCountry:   resolved.CountryCode,
 		SourceASN:       resolved.ASN,
-	}
+	})
 
 	logFields := log.Fields{
-		FieldRequestDomain: domain,
-		FieldRequestMethod: method,
-		FieldSourceIP:      sourceIP,
-		FieldSourceIPLocal: isLocalIP(sourceIP),
-		FieldSourceCountry: resolved.CountryCode,
-		FieldSourceASN:     resolved.ASN,
-		FieldSourceOrg:     resolved.Organization,
+		FieldRequestDomain:  domain,
+		FieldRequestMethod:  method,
+		FieldRequestValid:   true,
+		FieldRequestAllowed: isAuthorized,
+		FieldSourceIP:       sourceIP,
+		FieldSourceIPLocal:  isLocalIP(sourceIP),
+		FieldSourceCountry:  resolved.CountryCode,
+		FieldSourceASN:      resolved.ASN,
+		FieldSourceOrg:      resolved.Organization,
 	}
 
-	if engine.Authorize(query) {
-		log.WithFields(logFields).Info("Request authorized")
+	if isAuthorized {
+		log.WithFields(logFields).Info("Request allowed")
 		writer.WriteHeader(http.StatusNoContent)
 		metrics.IncAllowed()
 	} else {
