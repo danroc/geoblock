@@ -2,10 +2,10 @@ time="2024-12-08T08:54:07Z" level=info msg="Starting Geoblock version 0.0.0-dev.
 time="2024-12-08T08:54:07Z" level=info msg="Loading configuration file"
 time="2024-12-08T08:54:07Z" level=info msg="Initializing database resolver"
 time="2024-12-08T08:54:09Z" level=info msg="Starting server at :8080"
-time="2024-12-08T08:54:09Z" level=error msg="Missing required headers" request_domain= request_method=GET source_ip=127.0.0.1
-time="2024-12-08T08:54:10Z" level=error msg="Invalid source IP" request_domain=example.org request_method=GET source_ip=invalid-ip
-time="2024-12-08T08:54:10Z" level=error msg="Missing required headers" request_domain=example.com request_method=GET source_ip=
-time="2024-12-08T08:54:10Z" level=error msg="Missing required headers" request_domain=example.com request_method= source_ip=8.8.8.8
-time="2024-12-08T08:54:10Z" level=warning msg="Request denied" request_domain=example.org request_method=GET source_asn=15169 source_country=US source_ip=8.8.8.8 source_ip_local=false source_org=GOOGLE
-time="2024-12-08T08:54:10Z" level=info msg="Request authorized" request_domain=example.com request_method=GET source_asn=15169 source_country=US source_ip=8.8.8.8 source_ip_local=false source_org=GOOGLE
-time="2024-12-08T08:54:10Z" level=info msg="Request authorized" request_domain=example.com request_method=GET source_asn=0 source_country= source_ip=127.0.0.1 source_ip_local=true source_org=
+time="2024-12-08T08:54:09Z" level=error msg="Missing required headers" request_allowed=false request_domain= request_method=GET request_valid=false source_ip=127.0.0.1
+time="2024-12-08T08:54:10Z" level=error msg="Invalid source IP" request_allowed=false request_domain=example.org request_method=GET request_valid=false source_ip=invalid-ip
+time="2024-12-08T08:54:10Z" level=error msg="Missing required headers" request_allowed=false request_domain=example.com request_method=GET request_valid=false source_ip=
+time="2024-12-08T08:54:10Z" level=error msg="Missing required headers" request_allowed=false request_domain=example.com request_method= request_valid=false source_ip=8.8.8.8
+time="2024-12-08T08:54:10Z" level=warning msg="Request denied" request_allowed=false request_domain=example.org request_method=GET request_valid=true source_asn=15169 source_country=US source_ip=8.8.8.8 source_ip_local=false source_org=GOOGLE
+time="2024-12-08T08:54:10Z" level=info msg="Request allowed" request_allowed=true request_domain=example.com request_method=GET request_valid=true source_asn=15169 source_country=US source_ip=8.8.8.8 source_ip_local=false source_org=GOOGLE
+time="2024-12-08T08:54:10Z" level=info msg="Request allowed" request_allowed=true request_domain=example.com request_method=GET request_valid=true source_asn=0 source_country= source_ip=127.0.0.1 source_ip_local=true source_org=
