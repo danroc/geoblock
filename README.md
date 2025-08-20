@@ -147,14 +147,17 @@ access_control:
 
 The following environment variables can be used to configure Geoblock:
 
-| Variable             | Description                    | Default                     |
-| :------------------- | :----------------------------- | :-------------------------- |
-| `GEOBLOCK_CONFIG`    | Path to the configuration file | `/etc/geoblock/config.yaml` |
-| `GEOBLOCK_PORT`      | Port to listen on              | `8080`                      |
-| `GEOBLOCK_LOG_LEVEL` | Log level                      | `info`                      |
+| Variable              | Description                    | Default                     |
+| :-------------------- | :----------------------------- | :-------------------------- |
+| `GEOBLOCK_CONFIG`     | Path to the configuration file | `/etc/geoblock/config.yaml` |
+| `GEOBLOCK_PORT`       | Port to listen on              | `8080`                      |
+| `GEOBLOCK_LOG_LEVEL`  | Log level                      | `info`                      |
+| `GEOBLOCK_LOG_FORMAT` | Log format                     | `json`                      |
 
-Supported log levels are: `trace`, `debug`, `info`, `warn`, `error`, `fatal`,
-or `panic`.
+- Supported log levels are: `trace`, `debug`, `info`, `warn`, `error`, `fatal`,
+  or `panic`.
+
+- Supported log formats are: `json`, and `text`.
 
 ## HTTP API
 
