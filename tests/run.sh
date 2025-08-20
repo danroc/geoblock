@@ -7,6 +7,7 @@ CGO_ENABLED=0 make build
 export GEOBLOCK_CONFIG=/app/examples/config.yaml
 export GEOBLOCK_PORT=8080
 export GEOBLOCK_LOG_LEVEL=debug
+export GEOBLOCK_LOG_FORMAT=text
 
 ./dist/geoblock &> geoblock.log &
 

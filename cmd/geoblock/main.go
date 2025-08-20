@@ -20,6 +20,36 @@ const (
 	autoReloadInterval = 5 * time.Second
 )
 
+// Log levels.
+const (
+	LogLevelInfo  = "info"
+	LogLevelDebug = "debug"
+)
+
+// Log formats.
+const (
+	LogFormatJSON = "json"
+	LogFormatText = "text"
+)
+
+// Default options.
+const (
+	DefaultConfigPath = "/etc/geoblock/config.yaml"
+	DefaultServerPort = "8080"
+	DefaultLogLevel   = LogLevelInfo
+	DefaultLogFormat  = LogFormatJSON
+)
+
+// Environment variable names.
+const (
+	OptionConfigPath = "GEOBLOCK_CONFIG"
+	OptionServerPort = "GEOBLOCK_PORT"
+	OptionLogLevel   = "GEOBLOCK_LOG_LEVEL"
+	OptionLogFormat  = "GEOBLOCK_LOG_FORMAT"
+)
+
+// getEnv retrieves the value of the environment variable `key`. If it is not
+// set, it returns the `fallback` value.
 func getEnv(key, fallback string) string {
 	if value := os.Getenv(key); value != "" {
 		return value
@@ -31,14 +61,16 @@ type appOptions struct {
 	configPath string
 	serverPort string
 	logLevel   string
+	logFormat  string
 }
 
 // getOptions returns the application options from the environment variables.
 func getOptions() *appOptions {
 	return &appOptions{
-		configPath: getEnv("GEOBLOCK_CONFIG", "/etc/geoblock/config.yaml"),
-		serverPort: getEnv("GEOBLOCK_PORT", "8080"),
-		logLevel:   getEnv("GEOBLOCK_LOG_LEVEL", "info"),
+		configPath: getEnv(OptionConfigPath, DefaultConfigPath),
+		serverPort: getEnv(OptionServerPort, DefaultServerPort),
+		logLevel:   getEnv(OptionLogLevel, DefaultLogLevel),
+		logFormat:  getEnv(OptionLogFormat, DefaultLogFormat),
 	}
 }
 
@@ -102,14 +134,25 @@ func autoReload(engine *rules.Engine, path string) {
 	}
 }
 
-// configureLogger configures the logger with the given log level and sets the
-// formatter.
-func configureLogger(level string) {
+// configureLogger configures the logger with the given log format and level.
+func configureLogger(logFormat string, level string) {
 	// This should be done first, before any log message is emitted to avoid
 	// inconsistent log messages.
-	log.SetFormatter(&log.TextFormatter{
-		FullTimestamp: true,
-	})
+	switch logFormat {
+	case "json":
+		log.SetFormatter(&log.JSONFormatter{
+			TimestampFormat: time.RFC3339Nano,
+		})
+	case "text":
+		log.SetFormatter(&log.TextFormatter{
+			FullTimestamp: true,
+		})
+	default:
+		log.SetFormatter(&log.TextFormatter{
+			FullTimestamp: true,
+		})
+		log.WithField("logFormat", logFormat).Warn("Invalid log format")
+	}
 
 	if parsedLevel, err := log.ParseLevel(level); err != nil {
 		log.WithField("level", level).Warn("Invalid log level")
@@ -120,7 +163,7 @@ func configureLogger(level string) {
 
 func main() {
 	options := getOptions()
-	configureLogger(options.logLevel)
+	configureLogger(options.logFormat, options.logLevel)
 
 	log.Infof("Starting Geoblock version %s", version.Get())
 	log.Info("Loading configuration file")
