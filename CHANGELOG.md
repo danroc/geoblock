@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2025-08-20
+
+### Added
+
+- Log whether requests are valid and allowed ([#199](https://github.com/danroc/geoblock/pull/199))
+
 ## [0.3.0] - 2025-08-20
 
 ### Changed
@@ -195,7 +201,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add CIDR unmarshalling and validation
 - Add autonomous systems to configuration
 
-[Unreleased]: https://github.com/danroc/geoblock/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/danroc/geoblock/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/danroc/geoblock/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/danroc/geoblock/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/danroc/geoblock/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/danroc/geoblock/compare/v0.1.23...v0.2.0
