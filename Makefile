@@ -36,27 +36,27 @@ RESET   := \033[0m
 # =============================================================================
 
 .PHONY: lint
-lint: lint-lines lint-revive lint-sec lint-vet lint-staticcheck ## Run all linters
-
-.PHONY: lint-lines
-lint-lines: ## Lint lines length
-	golines -w -m 79 --base-formatter=gofumpt .
-
-.PHONY: lint-revive
-lint-revive: ## Run revive linter
-	revive -config revive.toml  ./...
-
-.PHONY: lint-sec
-lint-sec: ## Run gosec linter
-	gosec --exclude-dir=internal/tools ./...
+lint: lint-vet lint-lines lint-revive lint-sec lint-staticcheck ## Run all linters
 
 .PHONY: lint-vet
 lint-vet: ## Run go-vet linter
 	go vet ./...
 
+.PHONY: lint-lines
+lint-lines: ## Lint lines length
+	go tool golines -w -m 79 --base-formatter=gofumpt .
+
+.PHONY: lint-revive
+lint-revive: ## Run revive linter
+	go tool revive -config revive.toml  ./...
+
+.PHONY: lint-sec
+lint-sec: ## Run gosec linter
+	go tool gosec --exclude-dir=internal/tools ./...
+
 .PHONY: lint-staticcheck
 lint-staticcheck: ## Run staticcheck linter
-	staticcheck ./...
+	go tool staticcheck ./...
 
 # =============================================================================
 # @Dependencies
@@ -72,12 +72,7 @@ deps-update: ## Update dependencies
 
 .PHONY: deps-tools
 deps-tools: ## Install development dependencies
-	go install github.com/boumenot/gocover-cobertura@latest
-	go install github.com/mgechev/revive@latest
-	go install github.com/securego/gosec/v2/cmd/gosec@latest
-	go install github.com/segmentio/golines@latest
-	go install mvdan.cc/gofumpt@latest
-	go install honnef.co/go/tools/cmd/staticcheck@latest
+	go install tool
 
 # =============================================================================
 # Directory Creation
