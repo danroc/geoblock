@@ -53,14 +53,6 @@ func newAllowEngine() *rules.Engine {
 	})
 }
 
-// newDenyEngine creates a rules engine that denies all requests by default.
-func newDenyEngine() *rules.Engine {
-	return rules.NewEngine(&config.AccessControl{
-		DefaultPolicy: config.PolicyDeny,
-		Rules:         []config.AccessControlRule{},
-	})
-}
-
 // testRoundTripper allows mocking HTTP responses for resolver testing.
 type testRoundTripper struct {
 	responses map[string]string
