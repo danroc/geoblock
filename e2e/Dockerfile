@@ -7,4 +7,4 @@ FROM golang:1.23.4 AS builder
 WORKDIR /app
 COPY . .
 
-ENTRYPOINT [ "/app/tests/run.sh" ]
+ENTRYPOINT [ "/app/e2e/run.sh" ]
