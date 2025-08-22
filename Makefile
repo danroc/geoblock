@@ -36,7 +36,7 @@ RESET   := \033[0m
 # =============================================================================
 
 .PHONY: lint
-lint: lint-lines lint-revive lint-sec lint-vet ## Run all linters
+lint: lint-lines lint-revive lint-sec lint-vet lint-staticcheck ## Run all linters
 
 .PHONY: lint-lines
 lint-lines: ## Lint lines length
@@ -53,6 +53,10 @@ lint-sec: ## Run gosec linter
 .PHONY: lint-vet
 lint-vet: ## Run go-vet linter
 	go vet ./...
+
+.PHONY: lint-staticcheck
+lint-staticcheck: ## Run staticcheck linter
+	staticcheck ./...
 
 # =============================================================================
 # @Dependencies
@@ -73,6 +77,7 @@ deps-tools: ## Install development dependencies
 	go install github.com/securego/gosec/v2/cmd/gosec@latest
 	go install github.com/segmentio/golines@latest
 	go install mvdan.cc/gofumpt@latest
+	go install honnef.co/go/tools/cmd/staticcheck@latest
 
 # =============================================================================
 # Directory Creation
@@ -144,7 +149,7 @@ test-bench: ## Run benchmarks
 help: ## Display this help message
 	@echo "$(CYAN)$(BOLD)$(PROJECT_NAME) - $(DESCRIPTION)$(RESET)"
 	@awk 'BEGIN { FS = ":.*?##" } \
-		/^[a-zA-Z0-9._-]+:.*?##/ { printf "  $(CYAN)%-15s$(RESET) %s\n", $$1, $$2 } \
+		/^[a-zA-Z0-9._-]+:.*?##/ { printf "  $(CYAN)%-16s$(RESET) %s\n", $$1, $$2 } \
 		/^# @/ { printf "\n$(MAGENTA)%s$(RESET)\n\n", substr($$0, 4) }' \
 		$(MAKEFILE_LIST)
 	@echo
