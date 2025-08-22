@@ -130,8 +130,8 @@ test-unit: ## Run unit tests
 
 .PHONY: test-e2e
 test-e2e: ## Run end-to-end tests
-	docker build -f tests/Dockerfile -t geoblock-tests .
-	docker run --rm geoblock-tests
+	docker build -f e2e/Dockerfile -t geoblock-e2e .
+	docker run --rm geoblock-e2e
 
 .PHONY: test-coverage
 test-coverage: test-unit ## Generate coverage report
