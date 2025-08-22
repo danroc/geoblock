@@ -95,13 +95,11 @@ func TestGetOptions(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Set environment variables for this test
 			for key, value := range tt.envVars {
 				t.Setenv(key, value)
 			}
 
 			got := getOptions()
-
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("getOptions() = %+v, want %+v", got, tt.want)
 			}
