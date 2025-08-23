@@ -11,7 +11,7 @@ require (
 )
 
 require (
-	cloud.google.com/go v0.121.2 // indirect
+	cloud.google.com/go v0.121.6 // indirect
 	cloud.google.com/go/ai v0.12.1 // indirect
 	cloud.google.com/go/auth v0.16.5 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
@@ -73,7 +73,7 @@ require (
 	golang.org/x/tools v0.36.0 // indirect
 	golang.org/x/tools/go/expect v0.1.1-deprecated // indirect
 	google.golang.org/api v0.248.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20250707201910-8d1bb00bc6a7 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20250721164621-a45f3dfb1074 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250818200422-3122310a409c // indirect
 	google.golang.org/grpc v1.75.0 // indirect
 	google.golang.org/protobuf v1.36.7 // indirect
