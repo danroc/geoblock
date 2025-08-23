@@ -229,3 +229,5 @@ Returns metrics in JSON format.
 [geolite2]: https://dev.maxmind.com/geoip/geolite2-free-geolocation-data/
 [maxmind]: https://www.maxmind.com/
 [ip-location-db]: https://github.com/sapics/ip-location-db
+
+<!-- TEST -->
