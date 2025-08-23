@@ -15,7 +15,7 @@ require (
 	cloud.google.com/go/ai v0.12.1 // indirect
 	cloud.google.com/go/auth v0.16.3 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
-	cloud.google.com/go/compute/metadata v0.7.0 // indirect
+	cloud.google.com/go/compute/metadata v0.8.0 // indirect
 	cloud.google.com/go/longrunning v0.6.7 // indirect
 	codeberg.org/chavacava/garif v0.2.0 // indirect
 	github.com/BurntSushi/toml v1.5.0 // indirect
