@@ -25,16 +25,28 @@ const (
 
 // Fields used in the log messages.
 const (
-	FieldRequestDomain  = "request_domain"
-	FieldRequestMethod  = "request_method"
-	FieldRequestValid   = "request_valid"
-	FieldRequestAllowed = "request_allowed"
-	FieldSourceIP       = "source_ip"
-	FieldSourceIPLocal  = "source_ip_local"
-	FieldSourceCountry  = "source_country"
-	FieldSourceASN      = "source_asn"
-	FieldSourceOrg      = "source_org"
+	FieldRequestDomain = "request_domain"
+	FieldRequestMethod = "request_method"
+	FieldRequestStatus = "request_status"
+	FieldSourceIP      = "source_ip"
+	FieldSourceIsLocal = "source_is_local"
+	FieldSourceCountry = "source_country"
+	FieldSourceASN     = "source_asn"
+	FieldSourceOrg     = "source_org"
 )
+
+// Possible request statuses.
+const (
+	RequestStatusInvalid = "invalid"
+	RequestStatusAllowed = "allowed"
+	RequestStatusDenied  = "denied"
+)
+
+// IsAllowedStatus maps the boolean authorization result to a string status.
+var IsAllowedStatus = map[bool]string{
+	true:  RequestStatusAllowed,
+	false: RequestStatusDenied,
+}
 
 // localNetworkCIDRs contains the list of local networks CIDRs.
 var localNetworkCIDRs = []netip.Prefix{
@@ -77,11 +89,10 @@ func getForwardAuth(
 	// probably means that the request didn't come from the reverse proxy.
 	if origin == "" || domain == "" || method == "" {
 		log.WithFields(log.Fields{
-			FieldRequestDomain:  domain,
-			FieldRequestMethod:  method,
-			FieldRequestValid:   false,
-			FieldRequestAllowed: false,
-			FieldSourceIP:       origin,
+			FieldRequestDomain: domain,
+			FieldRequestMethod: method,
+			FieldRequestStatus: RequestStatusInvalid,
+			FieldSourceIP:      origin,
 		}).Error("Missing required headers")
 		writer.WriteHeader(http.StatusBadRequest)
 		metrics.IncInvalid()
@@ -93,11 +104,10 @@ func getForwardAuth(
 	sourceIP, err := netip.ParseAddr(origin)
 	if err != nil {
 		log.WithFields(log.Fields{
-			FieldRequestDomain:  domain,
-			FieldRequestMethod:  method,
-			FieldRequestValid:   false,
-			FieldRequestAllowed: false,
-			FieldSourceIP:       origin,
+			FieldRequestDomain: domain,
+			FieldRequestMethod: method,
+			FieldRequestStatus: RequestStatusInvalid,
+			FieldSourceIP:      origin,
 		}).Error("Invalid source IP")
 		writer.WriteHeader(http.StatusBadRequest)
 		metrics.IncInvalid()
@@ -105,7 +115,7 @@ func getForwardAuth(
 	}
 
 	resolved := resolver.Resolve(sourceIP)
-	isAuthorized := engine.Authorize(&rules.Query{
+	isAllowed := engine.Authorize(&rules.Query{
 		RequestedDomain: domain,
 		RequestedMethod: method,
 		SourceIP:        sourceIP,
@@ -114,18 +124,17 @@ func getForwardAuth(
 	})
 
 	logFields := log.Fields{
-		FieldRequestDomain:  domain,
-		FieldRequestMethod:  method,
-		FieldRequestValid:   true,
-		FieldRequestAllowed: isAuthorized,
-		FieldSourceIP:       sourceIP,
-		FieldSourceIPLocal:  isLocalIP(sourceIP),
-		FieldSourceCountry:  resolved.CountryCode,
-		FieldSourceASN:      resolved.ASN,
-		FieldSourceOrg:      resolved.Organization,
+		FieldRequestDomain: domain,
+		FieldRequestMethod: method,
+		FieldRequestStatus: IsAllowedStatus[isAllowed],
+		FieldSourceIP:      sourceIP,
+		FieldSourceIsLocal: isLocalIP(sourceIP),
+		FieldSourceCountry: resolved.CountryCode,
+		FieldSourceASN:     resolved.ASN,
+		FieldSourceOrg:     resolved.Organization,
 	}
 
-	if isAuthorized {
+	if isAllowed {
 		log.WithFields(logFields).Info("Request allowed")
 		writer.WriteHeader(http.StatusNoContent)
 		metrics.IncAllowed()
