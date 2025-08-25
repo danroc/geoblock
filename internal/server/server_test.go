@@ -104,42 +104,42 @@ func TestGetForwardAuth(t *testing.T) {
 		{
 			name: "missing X-Forwarded-For header",
 			headers: map[string]string{
-				HeaderXForwardedHost:   "example.com",
-				HeaderXForwardedMethod: "GET",
+				headerForwardedHost:   "example.com",
+				headerForwardedMethod: "GET",
 			},
 			want: http.StatusBadRequest,
 		},
 		{
 			name: "missing X-Forwarded-Host header",
 			headers: map[string]string{
-				HeaderXForwardedFor:    "8.8.8.8",
-				HeaderXForwardedMethod: "GET",
+				headerForwardedFor:    "8.8.8.8",
+				headerForwardedMethod: "GET",
 			},
 			want: http.StatusBadRequest,
 		},
 		{
 			name: "missing X-Forwarded-Method header",
 			headers: map[string]string{
-				HeaderXForwardedFor:  "8.8.8.8",
-				HeaderXForwardedHost: "example.com",
+				headerForwardedFor:  "8.8.8.8",
+				headerForwardedHost: "example.com",
 			},
 			want: http.StatusBadRequest,
 		},
 		{
 			name: "invalid IP address",
 			headers: map[string]string{
-				HeaderXForwardedFor:    "invalid-ip",
-				HeaderXForwardedHost:   "example.com",
-				HeaderXForwardedMethod: "GET",
+				headerForwardedFor:    "invalid-ip",
+				headerForwardedHost:   "example.com",
+				headerForwardedMethod: "GET",
 			},
 			want: http.StatusBadRequest,
 		},
 		{
 			name: "empty headers",
 			headers: map[string]string{
-				HeaderXForwardedFor:    "",
-				HeaderXForwardedHost:   "",
-				HeaderXForwardedMethod: "",
+				headerForwardedFor:    "",
+				headerForwardedHost:   "",
+				headerForwardedMethod: "",
 			},
 			want: http.StatusBadRequest,
 		},
@@ -209,9 +209,9 @@ func TestGetForwardAuthWithSpecificRules(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			headers := map[string]string{
-				HeaderXForwardedFor:    tt.ip,
-				HeaderXForwardedHost:   tt.domain,
-				HeaderXForwardedMethod: tt.method,
+				headerForwardedFor:    tt.ip,
+				headerForwardedHost:   tt.domain,
+				headerForwardedMethod: tt.method,
 			}
 			req := newTestRequest("GET", "/v1/forward-auth", headers)
 			w := httptest.NewRecorder()
@@ -396,9 +396,9 @@ func TestGetForwardAuthValidRequests(t *testing.T) {
 	resolver := createTestResolver(testData)
 	engine := newAllowEngine()
 	headers := map[string]string{
-		HeaderXForwardedFor:    "8.8.8.8",
-		HeaderXForwardedHost:   "example.com",
-		HeaderXForwardedMethod: "GET",
+		headerForwardedFor:    "8.8.8.8",
+		headerForwardedHost:   "example.com",
+		headerForwardedMethod: "GET",
 	}
 	req := newTestRequest("GET", "/v1/forward-auth", headers)
 	w := httptest.NewRecorder()

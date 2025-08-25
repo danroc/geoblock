@@ -16,43 +16,41 @@ import (
 
 // HTTP server timeout constants
 const (
-	HTTPTimeoutRead  = 10 * time.Second
-	HTTPTimeoutWrite = 30 * time.Second
-	HTTPTimeoutIdle  = 30 * time.Second
+	httpTimeoutRead  = 10 * time.Second
+	httpTimeoutWrite = 30 * time.Second
+	httpTimeoutIdle  = 30 * time.Second
 )
 
 // HTTP headers used by reverse proxies to identify the original request.
 const (
-	HeaderXForwardedMethod = "X-Forwarded-Method"
-	HeaderXForwardedProto  = "X-Forwarded-Proto"
-	HeaderXForwardedHost   = "X-Forwarded-Host"
-	HeaderXForwardedURI    = "X-Forwarded-Uri"
-	HeaderXForwardedFor    = "X-Forwarded-For"
+	headerForwardedMethod = "X-Forwarded-Method"
+	headerForwardedHost   = "X-Forwarded-Host"
+	headerForwardedFor    = "X-Forwarded-For"
 )
 
 // Fields used in the log messages.
 const (
-	FieldRequestDomain = "request_domain"
-	FieldRequestMethod = "request_method"
-	FieldRequestStatus = "request_status"
-	FieldSourceIP      = "source_ip"
-	FieldSourceIsLocal = "source_is_local"
-	FieldSourceCountry = "source_country"
-	FieldSourceASN     = "source_asn"
-	FieldSourceOrg     = "source_org"
+	fieldRequestDomain = "request_domain"
+	fieldRequestMethod = "request_method"
+	fieldRequestStatus = "request_status"
+	fieldSourceIP      = "source_ip"
+	fieldSourceIsLocal = "source_is_local"
+	fieldSourceCountry = "source_country"
+	fieldSourceASN     = "source_asn"
+	fieldSourceOrg     = "source_org"
 )
 
 // Possible request statuses.
 const (
-	RequestStatusInvalid = "invalid"
-	RequestStatusAllowed = "allowed"
-	RequestStatusDenied  = "denied"
+	requestStatusInvalid = "invalid"
+	requestStatusAllowed = "allowed"
+	requestStatusDenied  = "denied"
 )
 
-// IsAllowedStatus maps the boolean authorization result to a string status.
-var IsAllowedStatus = map[bool]string{
-	true:  RequestStatusAllowed,
-	false: RequestStatusDenied,
+// isAllowedStatus maps the boolean authorization result to a string status.
+var isAllowedStatus = map[bool]string{
+	true:  requestStatusAllowed,
+	false: requestStatusDenied,
 }
 
 // localNetworkCIDRs contains the list of local networks CIDRs.
@@ -87,19 +85,19 @@ func getForwardAuth(
 	engine *rules.Engine,
 ) {
 	var (
-		origin = request.Header.Get(HeaderXForwardedFor)
-		domain = request.Header.Get(HeaderXForwardedHost)
-		method = request.Header.Get(HeaderXForwardedMethod)
+		origin = request.Header.Get(headerForwardedFor)
+		domain = request.Header.Get(headerForwardedHost)
+		method = request.Header.Get(headerForwardedMethod)
 	)
 
 	// Block the request if one or more of the required headers are missing. It
 	// probably means that the request didn't come from the reverse proxy.
 	if origin == "" || domain == "" || method == "" {
 		log.WithFields(log.Fields{
-			FieldRequestDomain: domain,
-			FieldRequestMethod: method,
-			FieldRequestStatus: RequestStatusInvalid,
-			FieldSourceIP:      origin,
+			fieldRequestDomain: domain,
+			fieldRequestMethod: method,
+			fieldRequestStatus: requestStatusInvalid,
+			fieldSourceIP:      origin,
 		}).Error("Missing required headers")
 		writer.WriteHeader(http.StatusBadRequest)
 		metrics.IncInvalid()
@@ -111,10 +109,10 @@ func getForwardAuth(
 	sourceIP, err := netip.ParseAddr(origin)
 	if err != nil {
 		log.WithFields(log.Fields{
-			FieldRequestDomain: domain,
-			FieldRequestMethod: method,
-			FieldRequestStatus: RequestStatusInvalid,
-			FieldSourceIP:      origin,
+			fieldRequestDomain: domain,
+			fieldRequestMethod: method,
+			fieldRequestStatus: requestStatusInvalid,
+			fieldSourceIP:      origin,
 		}).Error("Invalid source IP")
 		writer.WriteHeader(http.StatusBadRequest)
 		metrics.IncInvalid()
@@ -131,14 +129,14 @@ func getForwardAuth(
 	})
 
 	logFields := log.Fields{
-		FieldRequestDomain: domain,
-		FieldRequestMethod: method,
-		FieldRequestStatus: IsAllowedStatus[isAllowed],
-		FieldSourceIP:      sourceIP,
-		FieldSourceIsLocal: isLocalIP(sourceIP),
-		FieldSourceCountry: resolved.CountryCode,
-		FieldSourceASN:     resolved.ASN,
-		FieldSourceOrg:     resolved.Organization,
+		fieldRequestDomain: domain,
+		fieldRequestMethod: method,
+		fieldRequestStatus: isAllowedStatus[isAllowed],
+		fieldSourceIP:      sourceIP,
+		fieldSourceIsLocal: isLocalIP(sourceIP),
+		fieldSourceCountry: resolved.CountryCode,
+		fieldSourceASN:     resolved.ASN,
+		fieldSourceOrg:     resolved.Organization,
 	}
 
 	if isAllowed {
@@ -195,8 +193,8 @@ func NewServer(
 	return &http.Server{
 		Addr:         address,
 		Handler:      mux,
-		ReadTimeout:  HTTPTimeoutRead,
-		WriteTimeout: HTTPTimeoutWrite,
-		IdleTimeout:  HTTPTimeoutIdle,
+		ReadTimeout:  httpTimeoutRead,
+		WriteTimeout: httpTimeoutWrite,
+		IdleTimeout:  httpTimeoutIdle,
 	}
 }
