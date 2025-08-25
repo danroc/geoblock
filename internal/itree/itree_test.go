@@ -133,3 +133,166 @@ func TestQueryDuplicate(t *testing.T) {
 		})
 	}
 }
+
+// Benchmark tests
+
+func BenchmarkInsert(b *testing.B) {
+	sizes := []int{10, 100, 1000}
+
+	for _, size := range sizes {
+		b.Run(fmt.Sprintf("size_%d", size), func(b *testing.B) {
+			// Setup tree once outside the benchmark loop
+			tree := itree.NewITree[ComparableInt, int]()
+			for j := range size {
+				low := ComparableInt(j * 2)
+				high := ComparableInt(j*2 + 10)
+				tree.Insert(itree.NewInterval(low, high), 0)
+			}
+
+			b.ResetTimer()
+			for i := range b.N {
+				// Benchmark single insert with varying intervals
+				low := ComparableInt(size*2 + i)
+				high := ComparableInt(size*2 + i + 10)
+				tree.Insert(itree.NewInterval(low, high), 0)
+			}
+		})
+	}
+}
+
+func BenchmarkInsertSequential(b *testing.B) {
+	b.Run("sequential_inserts", func(b *testing.B) {
+		for b.Loop() {
+			tree := itree.NewITree[ComparableInt, int]()
+			for j := range 100 {
+				low := ComparableInt(j)
+				high := ComparableInt(j + 1)
+				tree.Insert(itree.NewInterval(low, high), j)
+			}
+		}
+	})
+}
+
+func BenchmarkInsertSameLow(b *testing.B) {
+	b.Run("same_low_inserts", func(b *testing.B) {
+		for b.Loop() {
+			tree := itree.NewITree[ComparableInt, int]()
+			for j := range 50 {
+				low := ComparableInt(1)
+				high := ComparableInt(j + 1)
+				tree.Insert(itree.NewInterval(low, high), 0)
+			}
+		}
+	})
+}
+
+func BenchmarkInsertSameHigh(b *testing.B) {
+	b.Run("same_high_inserts", func(b *testing.B) {
+		for b.Loop() {
+			tree := itree.NewITree[ComparableInt, int]()
+			for j := range 50 {
+				low := ComparableInt(j)
+				high := ComparableInt(100)
+				tree.Insert(itree.NewInterval(low, high), 0)
+			}
+		}
+	})
+}
+
+func BenchmarkQuery(b *testing.B) {
+	sizes := []int{10, 100, 1000}
+
+	for _, size := range sizes {
+		b.Run(fmt.Sprintf("size_%d", size), func(b *testing.B) {
+			// Setup
+			tree := itree.NewITree[ComparableInt, int]()
+			for j := range size {
+				low := ComparableInt(j * 2)
+				high := ComparableInt(j*2 + 10)
+				tree.Insert(itree.NewInterval(low, high), j)
+			}
+
+			b.ResetTimer()
+			for b.Loop() {
+				// Query a key that will hit many intervals
+				key := ComparableInt(size)
+				_ = tree.Query(key)
+			}
+		})
+	}
+}
+
+func BenchmarkQueryHitRate(b *testing.B) {
+	tree := itree.NewITree[ComparableInt, int]()
+	const treeSize = 100
+
+	// Setup tree with overlapping intervals
+	for j := 0; j < treeSize; j++ {
+		low := ComparableInt(j)
+		high := ComparableInt(j + 50)
+		tree.Insert(itree.NewInterval(low, high), j)
+	}
+
+	b.Run("high_hit_rate", func(b *testing.B) {
+		for b.Loop() {
+			// Query keys that will match many intervals
+			key := ComparableInt(50)
+			_ = tree.Query(key)
+		}
+	})
+
+	b.Run("low_hit_rate", func(b *testing.B) {
+		for b.Loop() {
+			// Query keys that will match few or no intervals
+			key := ComparableInt(treeSize + 1000)
+			_ = tree.Query(key)
+		}
+	})
+}
+
+func BenchmarkQueryEmpty(b *testing.B) {
+	tree := itree.NewITree[ComparableInt, int]()
+
+	b.ResetTimer()
+	for b.Loop() {
+		_ = tree.Query(ComparableInt(1))
+	}
+}
+
+func BenchmarkMixedWorkload(b *testing.B) {
+	b.Run("mixed_insert_query", func(b *testing.B) {
+		for b.Loop() {
+			tree := itree.NewITree[ComparableInt, int]()
+
+			// Mixed workload: 70% queries, 30% inserts
+			for j := 0; j < 100; j++ {
+				if j%10 < 3 { // 30% inserts
+					low := ComparableInt(j)
+					high := ComparableInt(j + 10)
+					tree.Insert(itree.NewInterval(low, high), j)
+				} else { // 70% queries
+					key := ComparableInt(j / 2)
+					_ = tree.Query(key)
+				}
+			}
+		}
+	})
+}
+
+func BenchmarkLargeIntervals(b *testing.B) {
+	b.Run("large_overlapping_intervals", func(b *testing.B) {
+		for b.Loop() {
+			tree := itree.NewITree[ComparableInt, int]()
+
+			// Insert large overlapping intervals
+			for j := 0; j < 50; j++ {
+				low := ComparableInt(j)
+				high := ComparableInt(j + 200) // Large intervals
+				tree.Insert(itree.NewInterval(low, high), j)
+			}
+
+			// Query in the middle where all intervals overlap
+			_ = tree.Query(ComparableInt(100))
+		}
+	})
+}
