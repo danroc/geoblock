@@ -105,14 +105,18 @@ func hasChanged(a, b os.FileInfo) bool {
 func autoReload(engine *rules.Engine, path string) {
 	prevStat, err := os.Stat(path)
 	if err != nil {
-		log.WithError(err).Error("Cannot watch configuration file")
+		log.WithError(err).WithField("path", path).Error(
+			"Cannot watch configuration file",
+		)
 		return
 	}
 
 	for range time.Tick(autoReloadInterval) {
 		stat, err := os.Stat(path)
 		if err != nil {
-			log.WithError(err).Error("Cannot watch configuration file")
+			log.WithError(err).WithField("path", path).Error(
+				"Cannot watch configuration file",
+			)
 			continue
 		}
 
@@ -125,7 +129,9 @@ func autoReload(engine *rules.Engine, path string) {
 
 		cfg, err := loadConfig(path)
 		if err != nil {
-			log.WithError(err).Error("Cannot read configuration file")
+			log.WithError(err).WithField("path", path).Error(
+				"Cannot read configuration file",
+			)
 			continue
 		}
 
@@ -151,7 +157,7 @@ func configureLogger(logFormat string, level string) {
 		log.SetFormatter(&log.TextFormatter{
 			FullTimestamp: true,
 		})
-		log.WithField("logFormat", logFormat).Warn("Invalid log format")
+		log.WithField("format", logFormat).Warn("Invalid log format")
 	}
 
 	if parsedLevel, err := log.ParseLevel(level); err != nil {
@@ -169,7 +175,9 @@ func main() {
 	log.Info("Loading configuration file")
 	cfg, err := loadConfig(options.configPath)
 	if err != nil {
-		log.WithError(err).Fatal("Cannot read configuration file")
+		log.WithError(err).WithField("path", options.configPath).Fatal(
+			"Cannot read configuration file",
+		)
 	}
 
 	log.Info("Initializing database resolver")
