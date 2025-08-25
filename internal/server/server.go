@@ -14,6 +14,13 @@ import (
 	"github.com/danroc/geoblock/internal/rules"
 )
 
+// HTTP server timeout constants
+const (
+	HTTPTimeoutRead  = 10 * time.Second
+	HTTPTimeoutWrite = 30 * time.Second
+	HTTPTimeoutIdle  = 30 * time.Second
+)
+
 // HTTP headers used by reverse proxies to identify the original request.
 const (
 	HeaderXForwardedMethod = "X-Forwarded-Method"
@@ -188,8 +195,8 @@ func NewServer(
 	return &http.Server{
 		Addr:         address,
 		Handler:      mux,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 30 * time.Second,
-		IdleTimeout:  30 * time.Second,
+		ReadTimeout:  HTTPTimeoutRead,
+		WriteTimeout: HTTPTimeoutWrite,
+		IdleTimeout:  HTTPTimeoutIdle,
 	}
 }
