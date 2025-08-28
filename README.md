@@ -71,9 +71,9 @@ flowchart TD
 
 **Examples:**
 
-- [Example using Traefik](./examples/traefik/README.md)
-- [Example using Caddy](./examples/caddy/README.md)
-- [Example using NGINX](./examples/nginx/README.md)
+- [Example using Traefik](./examples/traefik/)
+- [Example using Caddy](./examples/caddy/)
+- [Example using NGINX](./examples/nginx/)
 
 ## Configuration
 
@@ -208,7 +208,7 @@ Returns metrics in JSON format.
 
   ```json
   {
-    "version": "0.2.0",
+    "version": "0.3.0",
     "requests": {
       "allowed": 3,
       "denied": 2,
