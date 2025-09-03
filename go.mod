@@ -2,7 +2,7 @@ module github.com/danroc/geoblock
 
 go 1.24.0
 
-toolchain go1.25.0
+toolchain go1.25.1
 
 require (
 	github.com/go-playground/validator/v10 v10.27.0
