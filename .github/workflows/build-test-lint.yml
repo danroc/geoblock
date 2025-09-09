@@ -1,5 +1,7 @@
 ---
 name: Build, test and lint
+permissions:
+  contents: read
 
 on:
   push:
