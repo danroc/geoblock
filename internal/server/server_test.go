@@ -229,10 +229,11 @@ func TestGetHealth(t *testing.T) {
 	assertStatus(t, w.Code, http.StatusNoContent)
 }
 
-func TestGetMetrics(t *testing.T) {
+func TestGetJSONMetrics(t *testing.T) {
 	req := httptest.NewRequest("GET", "/v1/metrics", nil)
 	w := httptest.NewRecorder()
-	getMetrics(w, req)
+
+	getJSONMetrics(w, req)
 
 	assertStatus(t, w.Code, http.StatusOK)
 	assertContentType(t, w.Header().Get("Content-Type"), "application/json")
@@ -246,12 +247,53 @@ func TestGetMetrics(t *testing.T) {
 	}
 }
 
+func TestGetPrometheusMetrics(t *testing.T) {
+	req := httptest.NewRequest("GET", "/metrics", nil)
+	w := httptest.NewRecorder()
+
+	getPrometheusMetrics(w, req)
+
+	assertStatus(t, w.Code, http.StatusOK)
+	assertContentType(
+		t,
+		w.Header().Get("Content-Type"),
+		"text/plain; version=0.0.4; charset=utf-8",
+	)
+
+	body := w.Body.Bytes()
+	if !bytes.Contains(body, []byte("geoblock_version_info")) {
+		t.Error(
+			"Prometheus output should contain geoblock_version_info metric",
+		)
+	}
+	if !bytes.Contains(body, []byte("geoblock_requests_total")) {
+		t.Error(
+			"Prometheus output should contain geoblock_requests_total metric",
+		)
+	}
+	if !bytes.Contains(body, []byte("# HELP")) {
+		t.Error("Prometheus output should contain HELP comments")
+	}
+	if !bytes.Contains(body, []byte("# TYPE")) {
+		t.Error("Prometheus output should contain TYPE comments")
+	}
+}
+
 func TestGetMetricsJSONError(t *testing.T) {
 	brokenWriter := &brokenResponseWriter{
 		header: make(http.Header),
 	}
 	req := httptest.NewRequest("GET", "/v1/metrics", nil)
-	getMetrics(brokenWriter, req)
+	getJSONMetrics(brokenWriter, req)
+	assertStatus(t, brokenWriter.statusCode, http.StatusOK)
+}
+
+func TestGetMetricsPrometheusError(t *testing.T) {
+	brokenWriter := &brokenResponseWriter{
+		header: make(http.Header),
+	}
+	req := httptest.NewRequest("GET", "/metrics", nil)
+	getPrometheusMetrics(brokenWriter, req)
 	assertStatus(t, brokenWriter.statusCode, http.StatusOK)
 }
 
@@ -306,8 +348,11 @@ func TestServerEndpoints(t *testing.T) {
 	}{
 		{"GET", "/v1/health", http.StatusNoContent},
 		{"GET", "/v1/metrics", http.StatusOK},
+		{"GET", "/metrics", http.StatusOK},
 		{"GET", "/nonexistent", http.StatusNotFound},
 		{"POST", "/v1/health", http.StatusMethodNotAllowed},
+		{"POST", "/v1/metrics", http.StatusMethodNotAllowed},
+		{"POST", "/metrics", http.StatusMethodNotAllowed},
 	}
 
 	for _, tt := range tests {

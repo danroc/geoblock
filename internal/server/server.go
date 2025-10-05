@@ -155,12 +155,25 @@ func getHealth(writer http.ResponseWriter, _ *http.Request) {
 	writer.WriteHeader(http.StatusNoContent)
 }
 
-// getMetrics returns the metrics in JSON format.
-func getMetrics(writer http.ResponseWriter, _ *http.Request) {
-	writer.Header().Set("Content-Type", "application/json")
+// getJSONMetrics returns metrics in JSON format.
+func getJSONMetrics(writer http.ResponseWriter, _ *http.Request) {
+	writer.Header().Set(
+		"Content-Type", "application/json",
+	)
 	writer.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(writer).Encode(metrics.Get()); err != nil {
-		log.WithError(err).Error("Cannot write metrics response")
+		log.WithError(err).Error("Cannot write JSON metrics response")
+	}
+}
+
+// getPrometheusMetrics returns metrics in Prometheus format.
+func getPrometheusMetrics(writer http.ResponseWriter, _ *http.Request) {
+	writer.Header().Set(
+		"Content-Type", "text/plain; version=0.0.4; charset=utf-8",
+	)
+	writer.WriteHeader(http.StatusOK)
+	if _, err := writer.Write([]byte(metrics.Prometheus())); err != nil {
+		log.WithError(err).Error("Cannot write Prometheus metrics response")
 	}
 }
 
@@ -186,7 +199,13 @@ func NewServer(
 	mux.HandleFunc(
 		"GET /v1/metrics",
 		func(writer http.ResponseWriter, request *http.Request) {
-			getMetrics(writer, request)
+			getJSONMetrics(writer, request)
+		},
+	)
+	mux.HandleFunc(
+		"GET /metrics",
+		func(writer http.ResponseWriter, request *http.Request) {
+			getPrometheusMetrics(writer, request)
 		},
 	)
 

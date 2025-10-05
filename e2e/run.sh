@@ -70,7 +70,11 @@ test 'allowed local network' 204 \
     -H "X-Forwarded-Host: example.com" \
     -H "X-Forwarded-Method: GET"
 
+curl http://localhost:8080/metrics > metrics.prometheus
 curl http://localhost:8080/v1/metrics > metrics.json
+
+diff <(sed 's/{version="[^"]*"}//' metrics.prometheus) \
+     <(sed 's/{version="[^"]*"}//' e2e/metrics-expected.prometheus)
 
 diff <(sed 's/"version":"[^"]*"//' metrics.json) \
      <(sed 's/"version":"[^"]*"//' e2e/metrics-expected.json)
