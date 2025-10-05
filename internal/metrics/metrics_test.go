@@ -2,6 +2,7 @@ package metrics
 
 import (
 	"encoding/json"
+	"strings"
 	"sync"
 	"testing"
 
@@ -441,4 +442,39 @@ func resetMetrics() {
 	metrics.Denied.Store(0)
 	metrics.Allowed.Store(0)
 	metrics.Invalid.Store(0)
+}
+
+func TestPrometheus(t *testing.T) {
+	// Reset metrics before test
+	resetMetrics()
+
+	// Add some test data
+	IncAllowed()
+	IncAllowed()
+	IncDenied()
+	IncInvalid()
+
+	output := Prometheus()
+
+	// Check that output contains expected Prometheus format elements
+	expectedStrings := []string{
+		"# HELP geoblock_version_info Version information",
+		"# TYPE geoblock_version_info gauge",
+		"geoblock_version_info{version=",
+		"# HELP geoblock_requests_total Total number of requests by status",
+		"# TYPE geoblock_requests_total counter",
+		"geoblock_requests_total{status=\"allowed\"} 2",
+		"geoblock_requests_total{status=\"denied\"} 1",
+		"geoblock_requests_total{status=\"invalid\"} 1",
+	}
+
+	for _, expected := range expectedStrings {
+		if !strings.Contains(output, expected) {
+			t.Errorf(
+				"Expected output to contain %q, but it didn't.\nFull output:\n%s",
+				expected,
+				output,
+			)
+		}
+	}
 }

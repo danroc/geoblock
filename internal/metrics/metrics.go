@@ -2,8 +2,10 @@
 package metrics
 
 import (
+	"strings"
 	"sync/atomic"
 
+	"github.com/danroc/geoblock/internal/prometheus"
 	"github.com/danroc/geoblock/internal/version"
 )
 
@@ -62,4 +64,50 @@ func Get() *Snapshot {
 			Total:   allowed + denied + invalid,
 		},
 	}
+}
+
+// Prometheus returns metrics formatted in Prometheus exposition format.
+func Prometheus() string {
+	snapshot := Get()
+	metrics := []prometheus.Metric{
+		{
+			Name: "geoblock_version_info",
+			Help: "Version information",
+			Type: "gauge",
+			Labels: map[string]string{
+				"version": snapshot.Version,
+			},
+			Value: 1,
+		},
+		{
+			Name: "geoblock_requests_total",
+			Help: "Total number of requests by status",
+			Type: "counter",
+			Labels: map[string]string{
+				"status": "allowed",
+			},
+			Value: float64(snapshot.Requests.Allowed),
+		},
+		{
+			Name: "geoblock_requests_total",
+			Labels: map[string]string{
+				"status": "denied",
+			},
+			Value: float64(snapshot.Requests.Denied),
+		},
+		{
+			Name: "geoblock_requests_total",
+			Labels: map[string]string{
+				"status": "invalid",
+			},
+			Value: float64(snapshot.Requests.Invalid),
+		},
+	}
+
+	var output strings.Builder
+	for _, metric := range metrics {
+		output.WriteString(metric.String())
+	}
+
+	return output.String()
 }

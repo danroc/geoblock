@@ -17,6 +17,7 @@
   - [`GET /v1/forward-auth`](#get-v1forward-auth)
   - [`GET /v1/health`](#get-v1health)
   - [`GET /v1/metrics`](#get-v1metrics)
+  - [`GET /metrics`](#get-metrics)
 - [Attribution](#attribution)
 
 </p>
@@ -217,6 +218,28 @@ Returns metrics in JSON format.
     }
   }
   ```
+
+### `GET /metrics`
+
+Returns metrics in Prometheus format.
+
+**Response:**
+
+- MIME type: `text/plain; version=0.0.4; charset=utf-8`
+
+- Example:
+
+```prometheus
+# HELP geoblock_version_info Geoblock version information
+# TYPE geoblock_version_info gauge
+geoblock_version_info{version="0.3.0"} 1
+
+# HELP geoblock_requests_total Total number of requests
+# TYPE geoblock_requests_total counter
+geoblock_requests_total{status="allowed"} 3
+geoblock_requests_total{status="denied"} 2
+geoblock_requests_total{status="invalid"} 1
+```
 
 ## Attribution
 
