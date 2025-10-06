@@ -230,11 +230,11 @@ Returns metrics in Prometheus format.
 - Example:
 
 ```prometheus
-# HELP geoblock_version_info Geoblock version information
+# HELP geoblock_version_info Version information
 # TYPE geoblock_version_info gauge
 geoblock_version_info{version="0.3.0"} 1
 
-# HELP geoblock_requests_total Total number of requests
+# HELP geoblock_requests_total Total number of requests by status
 # TYPE geoblock_requests_total counter
 geoblock_requests_total{status="allowed"} 3
 geoblock_requests_total{status="denied"} 2
