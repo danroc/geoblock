@@ -3,8 +3,9 @@ package prometheus
 
 import (
 	"fmt"
-	"sort"
 	"strings"
+
+	"github.com/danroc/geoblock/internal/utils/maps"
 )
 
 // Metric represents a single Prometheus metric with its metadata.
@@ -20,26 +21,23 @@ type Metric struct {
 func (m Metric) String() string {
 	var b strings.Builder
 
+	// Help text
 	if m.Help != "" {
 		fmt.Fprintf(&b, "# HELP %s %s\n", m.Name, m.Help)
 	}
+
+	// Type information
 	if m.Type != "" {
 		fmt.Fprintf(&b, "# TYPE %s %s\n", m.Name, m.Type)
 	}
 
+	// Metric name
 	b.WriteString(m.Name)
 
+	// Labels
 	if len(m.Labels) > 0 {
 		b.WriteString("{")
-
-		// Sort labels by key to ensure a deterministic output.
-		keys := make([]string, 0, len(m.Labels))
-		for k := range m.Labels {
-			keys = append(keys, k)
-		}
-		sort.Strings(keys)
-
-		for i, k := range keys {
+		for i, k := range maps.SortedKeys(m.Labels) {
 			if i > 0 {
 				b.WriteString(",")
 			}
@@ -48,6 +46,7 @@ func (m Metric) String() string {
 		b.WriteString("}")
 	}
 
+	// Metric value
 	fmt.Fprintf(&b, " %v\n", m.Value)
 	return b.String()
 }
