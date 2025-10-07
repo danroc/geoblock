@@ -2,7 +2,7 @@
 # E2E Tests
 # -----------------------------------------------------------------------------
 
-FROM golang:1.25.1 AS builder
+FROM golang:1.25.2 AS builder
 
 WORKDIR /app
 COPY . .
