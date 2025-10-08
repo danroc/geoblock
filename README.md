@@ -10,7 +10,7 @@
 
 - [Introduction](#introduction)
 - [Features](#features)
-- [Deployment](#deployment)
+- [Installation](#installation)
 - [Configuration](#configuration)
 - [Environment variables](#environment-variables)
 - [HTTP API](#http-api)
@@ -51,7 +51,7 @@ proxies such as Traefik, NGINX, and Caddy.
 - **Metrics:** Exposes simple metrics to monitor the service and build
   dashboards.
 
-## Deployment
+## Installation
 
 Geoblock should be deployed as a forward authentication service that integrates
 with your existing reverse proxy.
