@@ -8,6 +8,7 @@ import (
 	"github.com/danroc/geoblock/internal/utils/maps"
 )
 
+// Sample represents a single sample of a Prometheus metric.
 type Sample struct {
 	Labels map[string]string
 	Value  float64
