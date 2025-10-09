@@ -8,13 +8,18 @@ import (
 	"github.com/danroc/geoblock/internal/utils/maps"
 )
 
-// Metric represents a single Prometheus metric with its metadata.
-type Metric struct {
-	Name   string
-	Help   string
-	Type   string
+// Sample represents a single sample of a Prometheus metric.
+type Sample struct {
 	Labels map[string]string
 	Value  float64
+}
+
+// Metric represents a single Prometheus metric with its metadata.
+type Metric struct {
+	Name    string
+	Help    string
+	Type    string
+	Samples []Sample
 }
 
 // String formats the metric in Prometheus exposition format.
@@ -31,23 +36,27 @@ func (m Metric) String() string {
 		fmt.Fprintf(&b, "# TYPE %s %s\n", m.Name, m.Type)
 	}
 
-	// Metric name
-	b.WriteString(m.Name)
+	// Write each metric value
+	for _, s := range m.Samples {
+		// Metric name
+		b.WriteString(m.Name)
 
-	// Labels
-	if len(m.Labels) > 0 {
-		b.WriteString("{")
-		for i, k := range maps.SortedKeys(m.Labels) {
-			if i > 0 {
-				b.WriteString(",")
+		// Labels
+		if len(s.Labels) > 0 {
+			b.WriteString("{")
+			for i, k := range maps.SortedKeys(s.Labels) {
+				if i > 0 {
+					b.WriteString(",")
+				}
+				fmt.Fprintf(&b, `%s="%s"`, k, escapeLabel(s.Labels[k]))
 			}
-			fmt.Fprintf(&b, `%s="%s"`, k, escapeLabel(m.Labels[k]))
+			b.WriteString("}")
 		}
-		b.WriteString("}")
+
+		// Value
+		fmt.Fprintf(&b, " %v\n", s.Value)
 	}
 
-	// Metric value
-	fmt.Fprintf(&b, " %v\n", m.Value)
 	return b.String()
 }
 

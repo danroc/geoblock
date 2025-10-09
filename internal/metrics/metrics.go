@@ -74,33 +74,39 @@ func Prometheus() string {
 			Name: "geoblock_version_info",
 			Help: "Version information",
 			Type: "gauge",
-			Labels: map[string]string{
-				"version": snapshot.Version,
+			Samples: []prometheus.Sample{
+				{
+					Labels: map[string]string{
+						"version": snapshot.Version,
+					},
+					Value: 1,
+				},
 			},
-			Value: 1,
 		},
 		{
 			Name: "geoblock_requests_total",
 			Help: "Total number of requests by status",
 			Type: "counter",
-			Labels: map[string]string{
-				"status": "allowed",
+			Samples: []prometheus.Sample{
+				{
+					Labels: map[string]string{
+						"status": "allowed",
+					},
+					Value: float64(snapshot.Requests.Allowed),
+				},
+				{
+					Labels: map[string]string{
+						"status": "denied",
+					},
+					Value: float64(snapshot.Requests.Denied),
+				},
+				{
+					Labels: map[string]string{
+						"status": "invalid",
+					},
+					Value: float64(snapshot.Requests.Invalid),
+				},
 			},
-			Value: float64(snapshot.Requests.Allowed),
-		},
-		{
-			Name: "geoblock_requests_total",
-			Labels: map[string]string{
-				"status": "denied",
-			},
-			Value: float64(snapshot.Requests.Denied),
-		},
-		{
-			Name: "geoblock_requests_total",
-			Labels: map[string]string{
-				"status": "invalid",
-			},
-			Value: float64(snapshot.Requests.Invalid),
 		},
 	}
 
