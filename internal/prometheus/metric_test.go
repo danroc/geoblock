@@ -13,7 +13,7 @@ func TestMetric_String(t *testing.T) {
 			metric: Metric{
 				Name: "test_metric",
 				Help: "This is a test metric",
-				Type: "counter",
+				Type: TypeCounter,
 				Samples: []Sample{
 					{
 						Labels: map[string]string{
@@ -46,7 +46,7 @@ test_metric{label1="value1",label2="value2"} 42
 			metric: Metric{
 				Name: "gauge_metric",
 				Help: "A gauge metric",
-				Type: "gauge",
+				Type: TypeGauge,
 				Samples: []Sample{
 					{
 						Value: 3.14,
@@ -233,7 +233,7 @@ gauge_metric 3.14
 			metric: Metric{
 				Name: "multi_value_metric",
 				Help: "A metric with multiple values",
-				Type: "counter",
+				Type: TypeCounter,
 				Samples: []Sample{
 					{
 						Labels: map[string]string{
@@ -253,6 +253,59 @@ gauge_metric 3.14
 # TYPE multi_value_metric counter
 multi_value_metric{status="success"} 100
 multi_value_metric{status="error"} 5
+`,
+		},
+		{
+			name: "comment only",
+			metric: Metric{
+				Comment: "This is a comment\nspanning multiple lines",
+				Name:    "comment_metric",
+				Samples: []Sample{
+					{
+						Value: 1,
+					},
+				},
+			},
+			expected: `# This is a comment
+# spanning multiple lines
+comment_metric 1
+`,
+		},
+		{
+			name: "comment with help and type",
+			metric: Metric{
+				Comment: "Metric comment",
+				Name:    "full_comment_metric",
+				Help:    "Help text",
+				Type:    TypeGauge,
+				Samples: []Sample{
+					{
+						Value: 1,
+					},
+				},
+			},
+			expected: `# Metric comment
+# HELP full_comment_metric Help text
+# TYPE full_comment_metric gauge
+full_comment_metric 1
+`,
+		},
+		{
+			name: "overloaded sample name",
+			metric: Metric{
+				Name: "base_metric_name",
+				Samples: []Sample{
+					{
+						Name:  "custom_sample_name",
+						Value: 7,
+					},
+					{
+						Value: 3,
+					},
+				},
+			},
+			expected: `custom_sample_name 7
+base_metric_name 3
 `,
 		},
 	}
