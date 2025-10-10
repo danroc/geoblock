@@ -73,7 +73,7 @@ func Prometheus() string {
 		{
 			Name: "geoblock_version_info",
 			Help: "Version information",
-			Type: "gauge",
+			Type: prometheus.TypeGauge,
 			Samples: []prometheus.Sample{
 				{
 					Labels: map[string]string{
@@ -86,7 +86,7 @@ func Prometheus() string {
 		{
 			Name: "geoblock_requests_total",
 			Help: "Total number of requests by status",
-			Type: "counter",
+			Type: prometheus.TypeCounter,
 			Samples: []prometheus.Sample{
 				{
 					Labels: map[string]string{

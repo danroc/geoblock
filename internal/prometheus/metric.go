@@ -8,6 +8,12 @@ import (
 	"github.com/danroc/geoblock/internal/utils/maps"
 )
 
+// Metric types
+const (
+	TypeCounter = "counter"
+	TypeGauge   = "gauge"
+)
+
 // Sample represents a single sample of a Prometheus metric.
 type Sample struct {
 	Labels map[string]string
