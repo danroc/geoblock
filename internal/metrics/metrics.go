@@ -111,7 +111,10 @@ func Prometheus() string {
 	}
 
 	var output strings.Builder
-	for _, metric := range metrics {
+	for i, metric := range metrics {
+		if i > 0 {
+			output.WriteString("\n")
+		}
 		output.WriteString(metric.String())
 	}
 

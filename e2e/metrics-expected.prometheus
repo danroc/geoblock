@@ -1,6 +1,7 @@
 # HELP geoblock_version_info Version information
 # TYPE geoblock_version_info gauge
 geoblock_version_info{version="0.0.0"} 1
+
 # HELP geoblock_requests_total Total number of requests by status
 # TYPE geoblock_requests_total counter
 geoblock_requests_total{status="allowed"} 2
