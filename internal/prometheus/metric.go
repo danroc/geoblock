@@ -16,12 +16,14 @@ const (
 
 // Sample represents a single sample of a Prometheus metric.
 type Sample struct {
+	Name   string
 	Labels map[string]string
 	Value  float64
 }
 
 // Metric represents a single Prometheus metric with its metadata.
 type Metric struct {
+	Comment string
 	Name    string
 	Help    string
 	Type    string
@@ -31,6 +33,13 @@ type Metric struct {
 // String formats the metric in Prometheus exposition format.
 func (m Metric) String() string {
 	var b strings.Builder
+
+	// Comment text
+	if m.Comment != "" {
+		for _, line := range strings.Split(m.Comment, "\n") {
+			fmt.Fprintf(&b, "# %s\n", line)
+		}
+	}
 
 	// Help text
 	if m.Help != "" {
@@ -45,7 +54,11 @@ func (m Metric) String() string {
 	// Write each metric value
 	for _, s := range m.Samples {
 		// Metric name
-		b.WriteString(m.Name)
+		if s.Name != "" {
+			b.WriteString(s.Name)
+		} else {
+			b.WriteString(m.Name)
+		}
 
 		// Labels
 		if len(s.Labels) > 0 {
