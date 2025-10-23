@@ -141,7 +141,7 @@ func autoReload(engine *rules.Engine, path string) {
 }
 
 // configureLogger configures the logger with the given log format and level.
-func configureLogger(logFormat string, level string) {
+func configureLogger(logFormat, level string) {
 	// This should be done first, before any log message is emitted to avoid
 	// inconsistent log messages.
 	switch logFormat {
