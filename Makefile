@@ -36,14 +36,15 @@ RESET   := \033[0m
 # =============================================================================
 
 .PHONY: lint
-lint: lint-vet lint-lines lint-revive lint-sec lint-staticcheck ## Run all linters
+lint: lint-vet lint-format lint-revive lint-sec lint-staticcheck ## Run all linters
 
 .PHONY: lint-vet
 lint-vet: ## Run go-vet linter
 	go vet ./...
 
-.PHONY: lint-lines
-lint-lines: ## Lint lines length
+.PHONY: lint-format
+lint-format: ## Run code formatters
+	go tool gofumpt -w -extra .
 	go tool golines -w -m 79 --base-formatter=gofumpt .
 
 .PHONY: lint-revive
