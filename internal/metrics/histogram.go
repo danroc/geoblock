@@ -1,8 +1,6 @@
 package metrics
 
 import (
-	"sort"
-
 	"github.com/danroc/geoblock/internal/utils/maps"
 )
 
@@ -20,15 +18,10 @@ func NewHistogram(buckets []float64) *Histogram {
 		buckets: maps.NewOrdered[float64, uint64](),
 	}
 
-	// Make a copy of the original slice, and sort it to ensure it is in
-	// ascending order.
-	sorted := make([]float64, len(buckets))
-	copy(sorted, buckets)
-	sort.Sort(sort.Reverse(sort.Float64Slice(sorted)))
-
-	for _, b := range sorted {
+	for _, b := range buckets {
 		h.buckets.Set(b, 0)
 	}
+
 	return h
 }
 
