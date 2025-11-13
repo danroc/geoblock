@@ -9,7 +9,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/danroc/geoblock/internal/ipres"
+	"github.com/danroc/geoblock/internal/ipinfo"
 	"github.com/danroc/geoblock/internal/metrics"
 	"github.com/danroc/geoblock/internal/rules"
 )
@@ -81,7 +81,7 @@ func isLocalIP(ip netip.Addr) bool {
 func getForwardAuth(
 	writer http.ResponseWriter,
 	request *http.Request,
-	resolver *ipres.Resolver,
+	resolver *ipinfo.Resolver,
 	engine *rules.Engine,
 ) {
 	var (
@@ -181,7 +181,7 @@ func getPrometheusMetrics(writer http.ResponseWriter, _ *http.Request) {
 func NewServer(
 	address string,
 	engine *rules.Engine,
-	resolver *ipres.Resolver,
+	resolver *ipinfo.Resolver,
 ) *http.Server {
 	mux := http.NewServeMux()
 	mux.HandleFunc(

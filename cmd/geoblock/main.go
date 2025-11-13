@@ -9,7 +9,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/danroc/geoblock/internal/config"
-	"github.com/danroc/geoblock/internal/ipres"
+	"github.com/danroc/geoblock/internal/ipinfo"
 	"github.com/danroc/geoblock/internal/rules"
 	"github.com/danroc/geoblock/internal/server"
 	"github.com/danroc/geoblock/internal/version"
@@ -75,7 +75,7 @@ func getOptions() *appOptions {
 }
 
 // autoUpdate updates the databases at regular intervals.
-func autoUpdate(resolver *ipres.Resolver) {
+func autoUpdate(resolver *ipinfo.Resolver) {
 	for range time.Tick(autoUpdateInterval) {
 		if err := resolver.Update(); err != nil {
 			log.WithError(err).Error("Cannot update databases")
@@ -181,7 +181,7 @@ func main() {
 	}
 
 	log.Info("Initializing database resolver")
-	resolver := ipres.NewResolver()
+	resolver := ipinfo.NewResolver()
 	if err := resolver.Update(); err != nil {
 		log.WithError(err).Fatal("Cannot initialize database resolver")
 	}
