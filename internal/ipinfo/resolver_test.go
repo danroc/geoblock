@@ -1,4 +1,4 @@
-package ipres_test
+package ipinfo_test
 
 import (
 	"bytes"
@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/danroc/geoblock/internal/ipres"
+	"github.com/danroc/geoblock/internal/ipinfo"
 )
 
 type mockRT struct {
@@ -33,10 +33,10 @@ func newRTWithDBs(dbs map[string]string) http.RoundTripper {
 
 func newDummyRT() http.RoundTripper {
 	dummyDatabases := map[string]string{
-		ipres.CountryIPv4URL: "1.0.0.0,1.0.2.2,US\n1.1.0.0,1.1.2.2,FR\n",
-		ipres.CountryIPv6URL: "1:0::,1:1::,US\n1:2::,1:3::,FR\n",
-		ipres.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1\n1.1.0.0,1.1.2.2,2,Test2\n",
-		ipres.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n1:2::,1:3::,4,Test4\n",
+		ipinfo.CountryIPv4URL: "1.0.0.0,1.0.2.2,US\n1.1.0.0,1.1.2.2,FR\n",
+		ipinfo.CountryIPv6URL: "1:0::,1:1::,US\n1:2::,1:3::,FR\n",
+		ipinfo.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1\n1.1.0.0,1.1.2.2,2,Test2\n",
+		ipinfo.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n1:2::,1:3::,4,Test4\n",
 	}
 	return newRTWithDBs(dummyDatabases)
 }
@@ -58,7 +58,7 @@ func withRT(rt http.RoundTripper, f func()) {
 
 func TestUpdateError(t *testing.T) {
 	withRT(newErrRT(), func() {
-		r := ipres.NewResolver()
+		r := ipinfo.NewResolver()
 		if err := r.Update(); err == nil {
 			t.Fatal("expected an error, got nil")
 		}
@@ -75,12 +75,12 @@ func TestResolve(t *testing.T) {
 		}{
 			{"1.0.1.1", "US", "Test1", 1},
 			{"1.1.1.1", "FR", "Test2", 2},
-			{"1.2.1.1", "", "", ipres.AS0},
+			{"1.2.1.1", "", "", ipinfo.AS0},
 			{"1:0::", "US", "Test3", 3},
 			{"1:2::", "FR", "Test4", 4},
-			{"1:4::", "", "", ipres.AS0},
+			{"1:4::", "", "", ipinfo.AS0},
 		}
-		r := ipres.NewResolver()
+		r := ipinfo.NewResolver()
 		if err := r.Update(); err != nil {
 			t.Fatal(err)
 		}
@@ -108,100 +108,100 @@ func TestUpdateInvalidData(t *testing.T) {
 	}{
 		{
 			map[string]string{
-				ipres.CountryIPv4URL: "invalid,1.0.2.2,US\n",
-				ipres.CountryIPv6URL: "1:0::,1:1::,US\n",
-				ipres.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1\n",
-				ipres.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n",
+				ipinfo.CountryIPv4URL: "invalid,1.0.2.2,US\n",
+				ipinfo.CountryIPv6URL: "1:0::,1:1::,US\n",
+				ipinfo.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1\n",
+				ipinfo.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n",
 			},
 			"unable to parse IP",
 		},
 		{
 			map[string]string{
-				ipres.CountryIPv4URL: "1.0.0.0,invalid,US\n",
-				ipres.CountryIPv6URL: "1:0::,1:1::,US\n",
-				ipres.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1\n",
-				ipres.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n",
+				ipinfo.CountryIPv4URL: "1.0.0.0,invalid,US\n",
+				ipinfo.CountryIPv6URL: "1:0::,1:1::,US\n",
+				ipinfo.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1\n",
+				ipinfo.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n",
 			},
 			"unable to parse IP",
 		},
 		{
 			map[string]string{
-				ipres.CountryIPv4URL: "1.0.0.0,1.0.2.2,US\n",
-				ipres.CountryIPv6URL: "invalid,1:1::,US\n",
-				ipres.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1\n",
-				ipres.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n",
+				ipinfo.CountryIPv4URL: "1.0.0.0,1.0.2.2,US\n",
+				ipinfo.CountryIPv6URL: "invalid,1:1::,US\n",
+				ipinfo.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1\n",
+				ipinfo.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n",
 			},
 			"unable to parse IP",
 		},
 		{
 			map[string]string{
-				ipres.CountryIPv4URL: "1.0.0.0,1.0.2.2,US\n",
-				ipres.CountryIPv6URL: "1:0::,invalid,US\n",
-				ipres.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1\n",
-				ipres.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n",
+				ipinfo.CountryIPv4URL: "1.0.0.0,1.0.2.2,US\n",
+				ipinfo.CountryIPv6URL: "1:0::,invalid,US\n",
+				ipinfo.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1\n",
+				ipinfo.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n",
 			},
 			"unable to parse IP",
 		},
 		{
 			map[string]string{
-				ipres.CountryIPv4URL: "1.0.0.0,1.0.2.2,US\n",
-				ipres.CountryIPv6URL: "1:0::,1:1::,US\n",
-				ipres.ASNIPv4URL:     "invalid,1.0.2.2,1,Test1\n",
-				ipres.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n",
+				ipinfo.CountryIPv4URL: "1.0.0.0,1.0.2.2,US\n",
+				ipinfo.CountryIPv6URL: "1:0::,1:1::,US\n",
+				ipinfo.ASNIPv4URL:     "invalid,1.0.2.2,1,Test1\n",
+				ipinfo.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n",
 			},
 			"unable to parse IP",
 		},
 		{
 			map[string]string{
-				ipres.CountryIPv4URL: "1.0.0.0,1.0.2.2,US\n",
-				ipres.CountryIPv6URL: "1:0::,1:1::,US\n",
-				ipres.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1\n",
-				ipres.ASNIPv6URL:     "1:0::,invalid,3,Test3\n",
+				ipinfo.CountryIPv4URL: "1.0.0.0,1.0.2.2,US\n",
+				ipinfo.CountryIPv6URL: "1:0::,1:1::,US\n",
+				ipinfo.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1\n",
+				ipinfo.ASNIPv6URL:     "1:0::,invalid,3,Test3\n",
 			},
 			"unable to parse IP",
 		},
 		{
 			map[string]string{
-				ipres.CountryIPv4URL: "1.0.0.0,1.0.2.2,US\n",
-				ipres.CountryIPv6URL: "1:0::,1:1::,US\n",
-				ipres.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1,extra\n",
-				ipres.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n",
+				ipinfo.CountryIPv4URL: "1.0.0.0,1.0.2.2,US\n",
+				ipinfo.CountryIPv6URL: "1:0::,1:1::,US\n",
+				ipinfo.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1,extra\n",
+				ipinfo.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n",
 			},
 			"invalid record length",
 		},
 		{
 			map[string]string{
-				ipres.CountryIPv4URL: "1.0.0.0,1.0.2.2,US\n",
-				ipres.CountryIPv6URL: "1:0::,1:1::,US\n",
-				ipres.ASNIPv4URL:     "1.0.0.0,1.0.2.2,missing\n",
-				ipres.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n",
+				ipinfo.CountryIPv4URL: "1.0.0.0,1.0.2.2,US\n",
+				ipinfo.CountryIPv6URL: "1:0::,1:1::,US\n",
+				ipinfo.ASNIPv4URL:     "1.0.0.0,1.0.2.2,missing\n",
+				ipinfo.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n",
 			},
 			"invalid record length",
 		},
 		{
 			map[string]string{
-				ipres.CountryIPv4URL: "1.0.0.0,1.0.2.2,US\n",
-				ipres.CountryIPv6URL: "1:0::,1:1::,US\n",
-				ipres.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1\n",
-				ipres.ASNIPv6URL:     "1:0::,1:1::,invalid,Test3\n",
+				ipinfo.CountryIPv4URL: "1.0.0.0,1.0.2.2,US\n",
+				ipinfo.CountryIPv6URL: "1:0::,1:1::,US\n",
+				ipinfo.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1\n",
+				ipinfo.ASNIPv6URL:     "1:0::,1:1::,invalid,Test3\n",
 			},
 			"invalid ASN",
 		},
 		{
 			map[string]string{
-				ipres.CountryIPv4URL: "1.0.0.0,1.0.2.2\n",
-				ipres.CountryIPv6URL: "1:0::,1:1::,US\n",
-				ipres.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1\n",
-				ipres.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n",
+				ipinfo.CountryIPv4URL: "1.0.0.0,1.0.2.2\n",
+				ipinfo.CountryIPv6URL: "1:0::,1:1::,US\n",
+				ipinfo.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1\n",
+				ipinfo.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n",
 			},
 			"invalid record length",
 		},
 		{
 			map[string]string{
-				ipres.CountryIPv4URL: "1.0.0.0,1.0.2.2,US\n",
-				ipres.CountryIPv6URL: "1:0::,1:1::,US,FR\n",
-				ipres.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1\n",
-				ipres.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n",
+				ipinfo.CountryIPv4URL: "1.0.0.0,1.0.2.2,US\n",
+				ipinfo.CountryIPv6URL: "1:0::,1:1::,US,FR\n",
+				ipinfo.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1\n",
+				ipinfo.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n",
 			},
 			"invalid record length",
 		},
@@ -209,7 +209,7 @@ func TestUpdateInvalidData(t *testing.T) {
 
 	for _, tt := range tests {
 		withRT(newRTWithDBs(tt.dbs), func() {
-			r := ipres.NewResolver()
+			r := ipinfo.NewResolver()
 			err := r.Update()
 			if err == nil || !strings.Contains(err.Error(), tt.errMsg) {
 				t.Errorf("got %v, want %v", err, tt.errMsg)

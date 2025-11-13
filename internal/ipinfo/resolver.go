@@ -1,6 +1,6 @@
-// Package ipres provides an IP resolver that returns information about an IP
+// Package ipinfo provides an IP resolver that returns information about an IP
 // address.
-package ipres
+package ipinfo
 
 import (
 	"encoding/csv"

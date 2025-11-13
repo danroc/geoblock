@@ -1,10 +1,10 @@
 {
-    "cSpell.words": [
-        "geoblock",
-        "iprange",
-        "ipres",
-        "iputils",
-        "itree",
-        "nosec"
-    ]
+  "cSpell.words": [
+    "geoblock",
+    "iprange",
+    "ipinfo",
+    "iputils",
+    "itree",
+    "nosec"
+  ]
 }

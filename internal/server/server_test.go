@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/danroc/geoblock/internal/config"
-	"github.com/danroc/geoblock/internal/ipres"
+	"github.com/danroc/geoblock/internal/ipinfo"
 	"github.com/danroc/geoblock/internal/metrics"
 	"github.com/danroc/geoblock/internal/rules"
 )
@@ -84,17 +84,17 @@ func withTestTransport(testData map[string]string, fn func()) {
 }
 
 // createTestResolver creates a resolver with mocked HTTP responses.
-func createTestResolver(testData map[string]string) *ipres.Resolver {
-	var resolver *ipres.Resolver
+func createTestResolver(testData map[string]string) *ipinfo.Resolver {
+	var resolver *ipinfo.Resolver
 	withTestTransport(testData, func() {
-		resolver = ipres.NewResolver()
+		resolver = ipinfo.NewResolver()
 		resolver.Update()
 	})
 	return resolver
 }
 
 func TestGetForwardAuth(t *testing.T) {
-	resolver := ipres.NewResolver()
+	resolver := ipinfo.NewResolver()
 	engine := newAllowEngine()
 	tests := []struct {
 		name    string
@@ -158,10 +158,10 @@ func TestGetForwardAuth(t *testing.T) {
 
 func TestGetForwardAuthWithSpecificRules(t *testing.T) {
 	testData := map[string]string{
-		ipres.CountryIPv4URL: "8.8.8.8,8.8.8.8,US\n",
-		ipres.CountryIPv6URL: "",
-		ipres.ASNIPv4URL:     "8.8.8.8,8.8.8.8,15169,Google LLC\n",
-		ipres.ASNIPv6URL:     "",
+		ipinfo.CountryIPv4URL: "8.8.8.8,8.8.8.8,US\n",
+		ipinfo.CountryIPv6URL: "",
+		ipinfo.ASNIPv4URL:     "8.8.8.8,8.8.8.8,15169,Google LLC\n",
+		ipinfo.ASNIPv6URL:     "",
 	}
 	engine := rules.NewEngine(&config.AccessControl{
 		DefaultPolicy: config.PolicyDeny,
@@ -316,7 +316,7 @@ func (w *brokenResponseWriter) WriteHeader(statusCode int) {
 }
 
 func TestNewServer(t *testing.T) {
-	resolver := ipres.NewResolver()
+	resolver := ipinfo.NewResolver()
 	engine := newAllowEngine()
 	server := NewServer(":8080", engine, resolver)
 
@@ -338,7 +338,7 @@ func TestNewServer(t *testing.T) {
 }
 
 func TestServerEndpoints(t *testing.T) {
-	resolver := ipres.NewResolver()
+	resolver := ipinfo.NewResolver()
 	engine := newAllowEngine()
 	server := NewServer(":8080", engine, resolver)
 	tests := []struct {
@@ -433,10 +433,10 @@ func TestIsLocalIP(t *testing.T) {
 
 func TestGetForwardAuthValidRequests(t *testing.T) {
 	testData := map[string]string{
-		ipres.CountryIPv4URL: "8.8.8.8,8.8.8.8,US\n",
-		ipres.CountryIPv6URL: "",
-		ipres.ASNIPv4URL:     "8.8.8.8,8.8.8.8,15169,Google LLC\n",
-		ipres.ASNIPv6URL:     "",
+		ipinfo.CountryIPv4URL: "8.8.8.8,8.8.8.8,US\n",
+		ipinfo.CountryIPv6URL: "",
+		ipinfo.ASNIPv4URL:     "8.8.8.8,8.8.8.8,15169,Google LLC\n",
+		ipinfo.ASNIPv6URL:     "",
 	}
 	resolver := createTestResolver(testData)
 	engine := newAllowEngine()
@@ -453,7 +453,7 @@ func TestGetForwardAuthValidRequests(t *testing.T) {
 }
 
 func TestServerHandlerSetup(t *testing.T) {
-	resolver := ipres.NewResolver()
+	resolver := ipinfo.NewResolver()
 	engine := newAllowEngine()
 	server := NewServer(":8080", engine, resolver)
 
