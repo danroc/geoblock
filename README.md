@@ -203,7 +203,6 @@ Returns metrics in JSON format.
     - `allowed`: Number of allowed requests
     - `denied`: Number of denied requests
     - `invalid`: Number of invalid requests
-    - `total`: Total number of requests
 
 - Example:
 
@@ -214,7 +213,6 @@ Returns metrics in JSON format.
       "allowed": 3,
       "denied": 2,
       "invalid": 1,
-      "total": 6
     }
   }
   ```
