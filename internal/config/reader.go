@@ -7,7 +7,7 @@ import (
 	"regexp"
 
 	"github.com/go-playground/validator/v10"
-	"gopkg.in/yaml.v3"
+	"github.com/goccy/go-yaml"
 )
 
 // DomainNameRegex matches a valid domain name as per RFC 1035. It also allows
