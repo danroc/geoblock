@@ -6,7 +6,8 @@ import (
 	"os"
 	"time"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 
 	"github.com/danroc/geoblock/internal/config"
 	"github.com/danroc/geoblock/internal/ipinfo"
@@ -78,10 +79,10 @@ func getOptions() *appOptions {
 func autoUpdate(resolver *ipinfo.Resolver) {
 	for range time.Tick(autoUpdateInterval) {
 		if err := resolver.Update(); err != nil {
-			log.WithError(err).Error("Cannot update databases")
+			log.Error().Err(err).Msg("Cannot update databases")
 			continue
 		}
-		log.Info("Databases updated")
+		log.Info().Msg("Databases updated")
 	}
 }
 
@@ -105,18 +106,20 @@ func hasChanged(a, b os.FileInfo) bool {
 func autoReload(engine *rules.Engine, path string) {
 	prevStat, err := os.Stat(path)
 	if err != nil {
-		log.WithError(err).WithField("path", path).Error(
-			"Cannot watch configuration file",
-		)
+		log.Error().
+			Err(err).
+			Str("path", path).
+			Msg("Cannot watch configuration file")
 		return
 	}
 
 	for range time.Tick(autoReloadInterval) {
 		stat, err := os.Stat(path)
 		if err != nil {
-			log.WithError(err).WithField("path", path).Error(
-				"Cannot watch configuration file",
-			)
+			log.Error().
+				Err(err).
+				Str("path", path).
+				Msg("Cannot watch configuration file")
 			continue
 		}
 
@@ -129,41 +132,52 @@ func autoReload(engine *rules.Engine, path string) {
 
 		cfg, err := loadConfig(path)
 		if err != nil {
-			log.WithError(err).WithField("path", path).Error(
-				"Cannot read configuration file",
-			)
+			log.Error().
+				Err(err).
+				Str("path", path).
+				Msg("Cannot read configuration file")
 			continue
 		}
 
 		engine.UpdateConfig(&cfg.AccessControl)
-		log.Info("Configuration reloaded")
+		log.Info().Msg("Configuration reloaded")
 	}
 }
 
 // configureLogger configures the logger with the given log format and level.
 func configureLogger(logFormat, level string) {
-	// This should be done first, before any log message is emitted to avoid
-	// inconsistent log messages.
+	// Configure log format
 	switch logFormat {
 	case "json":
-		log.SetFormatter(&log.JSONFormatter{
-			TimestampFormat: time.RFC3339Nano,
-		})
+		zerolog.TimeFieldFormat = time.RFC3339Nano
 	case "text":
-		log.SetFormatter(&log.TextFormatter{
-			FullTimestamp: true,
-		})
+		log.Logger = log.Output(
+			zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339},
+		)
 	default:
-		log.SetFormatter(&log.TextFormatter{
-			FullTimestamp: true,
-		})
-		log.WithField("format", logFormat).Warn("Invalid log format")
+		log.Logger = log.Output(
+			zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339},
+		)
+		log.Warn().Str("format", logFormat).Msg("Invalid log format")
 	}
 
-	if parsedLevel, err := log.ParseLevel(level); err != nil {
-		log.WithField("level", level).Warn("Invalid log level")
-	} else {
-		log.SetLevel(parsedLevel)
+	// Configure log level
+	switch level {
+	case "trace":
+		zerolog.SetGlobalLevel(zerolog.TraceLevel)
+	case "debug":
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	case "info":
+		zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	case "warn":
+		zerolog.SetGlobalLevel(zerolog.WarnLevel)
+	case "error":
+		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+	case "fatal":
+		zerolog.SetGlobalLevel(zerolog.FatalLevel)
+	default:
+		zerolog.SetGlobalLevel(zerolog.InfoLevel)
+		log.Warn().Str("level", level).Msg("Invalid log level")
 	}
 }
 
@@ -171,19 +185,20 @@ func main() {
 	options := getOptions()
 	configureLogger(options.logFormat, options.logLevel)
 
-	log.Infof("Starting Geoblock version %s", version.Get())
-	log.Info("Loading configuration file")
+	log.Info().Str("version", version.Get()).Msg("Starting Geoblock")
+	log.Debug().Msg("Loading configuration file")
 	cfg, err := loadConfig(options.configPath)
 	if err != nil {
-		log.WithError(err).WithField("path", options.configPath).Fatal(
-			"Cannot read configuration file",
-		)
+		log.Fatal().
+			Err(err).
+			Str("path", options.configPath).
+			Msg("Cannot read configuration file")
 	}
 
-	log.Info("Initializing database resolver")
+	log.Debug().Msg("Initializing database resolver")
 	resolver := ipinfo.NewResolver()
 	if err := resolver.Update(); err != nil {
-		log.WithError(err).Fatal("Cannot initialize database resolver")
+		log.Fatal().Err(err).Msg("Cannot initialize database resolver")
 	}
 
 	var (
@@ -195,6 +210,6 @@ func main() {
 	go autoUpdate(resolver)
 	go autoReload(engine, options.configPath)
 
-	log.Infof("Starting server at %s", server.Addr)
-	log.Fatal(server.ListenAndServe())
+	log.Info().Str("address", server.Addr).Msg("Starting server")
+	log.Fatal().Err(server.ListenAndServe()).Msg("Server stopped")
 }
