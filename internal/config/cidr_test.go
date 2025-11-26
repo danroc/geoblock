@@ -2,10 +2,11 @@
 package config
 
 import (
+	"errors"
 	"net/netip"
 	"testing"
 
-	"gopkg.in/yaml.v3"
+	"github.com/goccy/go-yaml"
 )
 
 func equalCIDR(a, b netip.Prefix) bool {
@@ -65,10 +66,9 @@ func TestUnmarshalYAML(t *testing.T) {
 // TestUnmarshalYAMLErrorHandling tests error handling in UnmarshalYAML
 func TestUnmarshalYAMLErrorHandling(t *testing.T) {
 	var cidr CIDR
-
 	// Create a custom unmarshaler that always fails
 	failingUnmarshal := func(interface{}) error {
-		return &yaml.TypeError{Errors: []string{"test unmarshal error"}}
+		return errors.New("test unmarshal error")
 	}
 
 	err := cidr.UnmarshalYAML(failingUnmarshal)
