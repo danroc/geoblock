@@ -1,6 +1,6 @@
 {"level":"info","version":"0.3.3-dev.g2e031c8","time":"2025-11-27T08:23:39.837Z","message":"Starting Geoblock"}
-{"level":"debug","time":"2025-11-27T08:23:39.837Z","message":"Loading configuration file"}
-{"level":"debug","time":"2025-11-27T08:23:39.837Z","message":"Initializing database resolver"}
+{"level":"info","time":"2025-11-27T08:23:39.837Z","message":"Loading configuration file"}
+{"level":"info","time":"2025-11-27T08:23:39.837Z","message":"Initializing database resolver"}
 {"level":"info","address":":8080","time":"2025-11-27T08:23:41.743Z","message":"Starting server"}
 {"level":"error","request_domain":"","request_method":"GET","request_status":"invalid","source_ip":"127.0.0.1","time":"2025-11-27T08:23:41.858Z","message":"Missing required headers"}
 {"level":"error","request_domain":"example.org","request_method":"GET","request_status":"invalid","source_ip":"invalid-ip","time":"2025-11-27T08:23:41.862Z","message":"Invalid source IP"}

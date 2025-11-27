@@ -190,7 +190,7 @@ func main() {
 	configureLogger(options.logFormat, options.logLevel)
 
 	log.Info().Str("version", version.Get()).Msg("Starting Geoblock")
-	log.Debug().Msg("Loading configuration file")
+	log.Info().Msg("Loading configuration file")
 	cfg, err := loadConfig(options.configPath)
 	if err != nil {
 		log.Fatal().
@@ -199,7 +199,7 @@ func main() {
 			Msg("Cannot read configuration file")
 	}
 
-	log.Debug().Msg("Initializing database resolver")
+	log.Info().Msg("Initializing database resolver")
 	resolver := ipinfo.NewResolver()
 	if err := resolver.Update(); err != nil {
 		log.Fatal().Err(err).Msg("Cannot initialize database resolver")
