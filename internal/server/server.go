@@ -7,6 +7,7 @@ import (
 	"net/netip"
 	"time"
 
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
 	"github.com/danroc/geoblock/internal/ipinfo"
@@ -129,10 +130,13 @@ func getForwardAuth(
 	})
 
 	// Prepare a zerolog event for structured logging
-	event := log.Info()
-	if !isAllowed {
+	var event *zerolog.Event
+	if isAllowed {
+		event = log.Info()
+	} else {
 		event = log.Warn()
 	}
+
 	event.Str(fieldRequestDomain, domain).
 		Str(fieldRequestMethod, method).
 		Str(fieldRequestStatus, isAllowedStatus[isAllowed]).
