@@ -3,6 +3,7 @@ package server
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -308,7 +309,7 @@ func (w *brokenResponseWriter) Header() http.Header {
 }
 
 func (w *brokenResponseWriter) Write([]byte) (int, error) {
-	return 0, &json.UnsupportedTypeError{}
+	return 0, errors.New("write error")
 }
 
 func (w *brokenResponseWriter) WriteHeader(statusCode int) {
