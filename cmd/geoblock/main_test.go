@@ -5,6 +5,8 @@ import (
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/rs/zerolog"
 )
 
 func TestGetEnv(t *testing.T) {
@@ -144,6 +146,44 @@ func TestHasChanged(t *testing.T) {
 				)
 			}
 		})
+	}
+}
+
+func TestParseLogLevel(t *testing.T) {
+	cases := []struct {
+		input    string
+		expected zerolog.Level
+		wantErr  bool
+	}{
+		{"trace", zerolog.TraceLevel, false},
+		{"debug", zerolog.DebugLevel, false},
+		{"info", zerolog.InfoLevel, false},
+		{"warn", zerolog.WarnLevel, false},
+		{"error", zerolog.ErrorLevel, false},
+		{"fatal", zerolog.FatalLevel, false},
+		{"panic", zerolog.PanicLevel, false},
+		{"invalid", zerolog.InfoLevel, true},
+		{"", zerolog.InfoLevel, true},
+	}
+
+	for _, c := range cases {
+		parsed, err := parseLogLevel(c.input)
+		if parsed != c.expected {
+			t.Errorf(
+				"parseLogLevel(%q) = %v, want %v",
+				c.input,
+				parsed,
+				c.expected,
+			)
+		}
+		if (err != nil) != c.wantErr {
+			t.Errorf(
+				"parseLogLevel(%q) error = %v, wantErr %v",
+				c.input,
+				err,
+				c.wantErr,
+			)
+		}
 	}
 }
 

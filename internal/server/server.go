@@ -7,7 +7,8 @@ import (
 	"net/netip"
 	"time"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 
 	"github.com/danroc/geoblock/internal/ipinfo"
 	"github.com/danroc/geoblock/internal/metrics"
@@ -93,12 +94,12 @@ func getForwardAuth(
 	// Block the request if one or more of the required headers are missing. It
 	// probably means that the request didn't come from the reverse proxy.
 	if origin == "" || domain == "" || method == "" {
-		log.WithFields(log.Fields{
-			fieldRequestDomain: domain,
-			fieldRequestMethod: method,
-			fieldRequestStatus: requestStatusInvalid,
-			fieldSourceIP:      origin,
-		}).Error("Missing required headers")
+		log.Error().
+			Str(fieldRequestDomain, domain).
+			Str(fieldRequestMethod, method).
+			Str(fieldRequestStatus, requestStatusInvalid).
+			Str(fieldSourceIP, origin).
+			Msg("Missing required headers")
 		writer.WriteHeader(http.StatusBadRequest)
 		metrics.IncInvalid()
 		return
@@ -108,12 +109,12 @@ func getForwardAuth(
 	// is invalid, we deny the request regardless of the default policy.
 	sourceIP, err := netip.ParseAddr(origin)
 	if err != nil {
-		log.WithFields(log.Fields{
-			fieldRequestDomain: domain,
-			fieldRequestMethod: method,
-			fieldRequestStatus: requestStatusInvalid,
-			fieldSourceIP:      origin,
-		}).Error("Invalid source IP")
+		log.Error().
+			Str(fieldRequestDomain, domain).
+			Str(fieldRequestMethod, method).
+			Str(fieldRequestStatus, requestStatusInvalid).
+			Str(fieldSourceIP, origin).
+			Msg("Invalid source IP")
 		writer.WriteHeader(http.StatusBadRequest)
 		metrics.IncInvalid()
 		return
@@ -128,23 +129,29 @@ func getForwardAuth(
 		SourceASN:       resolved.ASN,
 	})
 
-	logFields := log.Fields{
-		fieldRequestDomain: domain,
-		fieldRequestMethod: method,
-		fieldRequestStatus: isAllowedStatus[isAllowed],
-		fieldSourceIP:      sourceIP,
-		fieldSourceIsLocal: isLocalIP(sourceIP),
-		fieldSourceCountry: resolved.CountryCode,
-		fieldSourceASN:     resolved.ASN,
-		fieldSourceOrg:     resolved.Organization,
+	// Prepare a zerolog event for structured logging
+	var event *zerolog.Event
+	if isAllowed {
+		event = log.Info()
+	} else {
+		event = log.Warn()
 	}
 
+	event.Str(fieldRequestDomain, domain).
+		Str(fieldRequestMethod, method).
+		Str(fieldRequestStatus, isAllowedStatus[isAllowed]).
+		Str(fieldSourceIP, sourceIP.String()).
+		Bool(fieldSourceIsLocal, isLocalIP(sourceIP)).
+		Str(fieldSourceCountry, resolved.CountryCode).
+		Uint32(fieldSourceASN, resolved.ASN).
+		Str(fieldSourceOrg, resolved.Organization)
+
 	if isAllowed {
-		log.WithFields(logFields).Info("Request allowed")
+		event.Msg("Request allowed")
 		writer.WriteHeader(http.StatusNoContent)
 		metrics.IncAllowed()
 	} else {
-		log.WithFields(logFields).Warn("Request denied")
+		event.Msg("Request denied")
 		writer.WriteHeader(http.StatusForbidden)
 		metrics.IncDenied()
 	}
@@ -162,7 +169,7 @@ func getJSONMetrics(writer http.ResponseWriter, _ *http.Request) {
 	)
 	writer.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(writer).Encode(metrics.Get()); err != nil {
-		log.WithError(err).Error("Cannot write JSON metrics response")
+		log.Error().Err(err).Msg("Cannot write JSON metrics response")
 	}
 }
 
@@ -173,7 +180,7 @@ func getPrometheusMetrics(writer http.ResponseWriter, _ *http.Request) {
 	)
 	writer.WriteHeader(http.StatusOK)
 	if _, err := writer.Write([]byte(metrics.Prometheus())); err != nil {
-		log.WithError(err).Error("Cannot write Prometheus metrics response")
+		log.Error().Err(err).Msg("Cannot write Prometheus metrics response")
 	}
 }
 

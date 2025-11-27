@@ -3,10 +3,12 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"os"
 	"time"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 
 	"github.com/danroc/geoblock/internal/config"
 	"github.com/danroc/geoblock/internal/ipinfo"
@@ -15,6 +17,10 @@ import (
 	"github.com/danroc/geoblock/internal/version"
 )
 
+// RFC3339Milli is the RFC3339 format with milliseconds precision.
+const RFC3339Milli = "2006-01-02T15:04:05.000Z07:00"
+
+// Auto-update and auto-reload intervals.
 const (
 	autoUpdateInterval = 24 * time.Hour
 	autoReloadInterval = 5 * time.Second
@@ -22,8 +28,13 @@ const (
 
 // Log levels.
 const (
-	LogLevelInfo  = "info"
+	LogLevelTrace = "trace"
 	LogLevelDebug = "debug"
+	LogLevelInfo  = "info"
+	LogLevelWarn  = "warn"
+	LogLevelError = "error"
+	LogLevelFatal = "fatal"
+	LogLevelPanic = "panic"
 )
 
 // Log formats.
@@ -78,10 +89,10 @@ func getOptions() *appOptions {
 func autoUpdate(resolver *ipinfo.Resolver) {
 	for range time.Tick(autoUpdateInterval) {
 		if err := resolver.Update(); err != nil {
-			log.WithError(err).Error("Cannot update databases")
+			log.Error().Err(err).Msg("Cannot update databases")
 			continue
 		}
-		log.Info("Databases updated")
+		log.Info().Msg("Databases updated")
 	}
 }
 
@@ -105,7 +116,7 @@ func hasChanged(a, b os.FileInfo) bool {
 func autoReload(engine *rules.Engine, path string) {
 	prevStat, err := os.Stat(path)
 	if err != nil {
-		log.WithError(err).WithField("path", path).Error(
+		log.Error().Err(err).Str("path", path).Msg(
 			"Cannot watch configuration file",
 		)
 		return
@@ -114,7 +125,7 @@ func autoReload(engine *rules.Engine, path string) {
 	for range time.Tick(autoReloadInterval) {
 		stat, err := os.Stat(path)
 		if err != nil {
-			log.WithError(err).WithField("path", path).Error(
+			log.Error().Err(err).Str("path", path).Msg(
 				"Cannot watch configuration file",
 			)
 			continue
@@ -129,14 +140,37 @@ func autoReload(engine *rules.Engine, path string) {
 
 		cfg, err := loadConfig(path)
 		if err != nil {
-			log.WithError(err).WithField("path", path).Error(
+			log.Error().Err(err).Str("path", path).Msg(
 				"Cannot read configuration file",
 			)
 			continue
 		}
 
 		engine.UpdateConfig(&cfg.AccessControl)
-		log.Info("Configuration reloaded")
+		log.Info().Msg("Configuration reloaded")
+	}
+}
+
+// parseLogLevel parses the log level from string to zerolog.Level. It defaults
+// to info level if the provided level is invalid.
+func parseLogLevel(level string) (zerolog.Level, error) {
+	switch level {
+	case LogLevelTrace:
+		return zerolog.TraceLevel, nil
+	case LogLevelDebug:
+		return zerolog.DebugLevel, nil
+	case LogLevelInfo:
+		return zerolog.InfoLevel, nil
+	case LogLevelWarn:
+		return zerolog.WarnLevel, nil
+	case LogLevelError:
+		return zerolog.ErrorLevel, nil
+	case LogLevelFatal:
+		return zerolog.FatalLevel, nil
+	case LogLevelPanic:
+		return zerolog.PanicLevel, nil
+	default:
+		return zerolog.InfoLevel, errors.New("invalid log level")
 	}
 }
 
@@ -146,24 +180,23 @@ func configureLogger(logFormat, level string) {
 	// inconsistent log messages.
 	switch logFormat {
 	case "json":
-		log.SetFormatter(&log.JSONFormatter{
-			TimestampFormat: time.RFC3339Nano,
-		})
+		zerolog.TimeFieldFormat = RFC3339Milli
 	case "text":
-		log.SetFormatter(&log.TextFormatter{
-			FullTimestamp: true,
-		})
+		log.Logger = log.Output(
+			zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339},
+		)
 	default:
-		log.SetFormatter(&log.TextFormatter{
-			FullTimestamp: true,
-		})
-		log.WithField("format", logFormat).Warn("Invalid log format")
+		log.Logger = log.Output(
+			zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339},
+		)
+		log.Warn().Str("format", logFormat).Msg("Invalid log format")
 	}
 
-	if parsedLevel, err := log.ParseLevel(level); err != nil {
-		log.WithField("level", level).Warn("Invalid log level")
+	if parsedLevel, err := parseLogLevel(level); err != nil {
+		zerolog.SetGlobalLevel(zerolog.InfoLevel)
+		log.Warn().Str("level", level).Msg("Invalid log level")
 	} else {
-		log.SetLevel(parsedLevel)
+		zerolog.SetGlobalLevel(parsedLevel)
 	}
 }
 
@@ -171,19 +204,19 @@ func main() {
 	options := getOptions()
 	configureLogger(options.logFormat, options.logLevel)
 
-	log.Infof("Starting Geoblock version %s", version.Get())
-	log.Info("Loading configuration file")
+	log.Info().Str("version", version.Get()).Msg("Starting Geoblock")
+	log.Info().Msg("Loading configuration file")
 	cfg, err := loadConfig(options.configPath)
 	if err != nil {
-		log.WithError(err).WithField("path", options.configPath).Fatal(
+		log.Fatal().Err(err).Str("path", options.configPath).Msg(
 			"Cannot read configuration file",
 		)
 	}
 
-	log.Info("Initializing database resolver")
+	log.Info().Msg("Initializing database resolver")
 	resolver := ipinfo.NewResolver()
 	if err := resolver.Update(); err != nil {
-		log.WithError(err).Fatal("Cannot initialize database resolver")
+		log.Fatal().Err(err).Msg("Cannot initialize database resolver")
 	}
 
 	var (
@@ -195,6 +228,6 @@ func main() {
 	go autoUpdate(resolver)
 	go autoReload(engine, options.configPath)
 
-	log.Infof("Starting server at %s", server.Addr)
-	log.Fatal(server.ListenAndServe())
+	log.Info().Str("address", server.Addr).Msg("Starting server")
+	log.Fatal().Err(server.ListenAndServe()).Msg("Server stopped")
 }

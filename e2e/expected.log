@@ -1,11 +1,11 @@
-time="2024-12-08T08:54:07Z" level=info msg="Starting Geoblock version 0.0.0-dev.0000000"
-time="2024-12-08T08:54:07Z" level=info msg="Loading configuration file"
-time="2024-12-08T08:54:07Z" level=info msg="Initializing database resolver"
-time="2024-12-08T08:54:09Z" level=info msg="Starting server at :8080"
-time="2024-12-08T08:54:09Z" level=error msg="Missing required headers" request_domain= request_method=GET request_status=invalid source_ip=127.0.0.1
-time="2024-12-08T08:54:10Z" level=error msg="Invalid source IP" request_domain=example.org request_method=GET request_status=invalid source_ip=invalid-ip
-time="2024-12-08T08:54:10Z" level=error msg="Missing required headers" request_domain=example.com request_method=GET request_status=invalid source_ip=
-time="2024-12-08T08:54:10Z" level=error msg="Missing required headers" request_domain=example.com request_method= request_status=invalid source_ip=8.8.8.8
-time="2024-12-08T08:54:10Z" level=warning msg="Request denied" request_domain=example.org request_method=GET request_status=denied source_asn=15169 source_country=US source_ip=8.8.8.8 source_is_local=false source_org=GOOGLE
-time="2024-12-08T08:54:10Z" level=info msg="Request allowed" request_domain=example.com request_method=GET request_status=allowed source_asn=15169 source_country=US source_ip=8.8.8.8 source_is_local=false source_org=GOOGLE
-time="2024-12-08T08:54:10Z" level=info msg="Request allowed" request_domain=example.com request_method=GET request_status=allowed source_asn=0 source_country= source_ip=127.0.0.1 source_is_local=true source_org=
+{"level":"info","version":"0.3.3-dev.g2e031c8","time":"2025-11-27T08:23:39.837Z","message":"Starting Geoblock"}
+{"level":"info","time":"2025-11-27T08:23:39.837Z","message":"Loading configuration file"}
+{"level":"info","time":"2025-11-27T08:23:39.837Z","message":"Initializing database resolver"}
+{"level":"info","address":":8080","time":"2025-11-27T08:23:41.743Z","message":"Starting server"}
+{"level":"error","request_domain":"","request_method":"GET","request_status":"invalid","source_ip":"127.0.0.1","time":"2025-11-27T08:23:41.858Z","message":"Missing required headers"}
+{"level":"error","request_domain":"example.org","request_method":"GET","request_status":"invalid","source_ip":"invalid-ip","time":"2025-11-27T08:23:41.862Z","message":"Invalid source IP"}
+{"level":"error","request_domain":"example.com","request_method":"GET","request_status":"invalid","source_ip":"","time":"2025-11-27T08:23:41.866Z","message":"Missing required headers"}
+{"level":"error","request_domain":"example.com","request_method":"","request_status":"invalid","source_ip":"8.8.8.8","time":"2025-11-27T08:23:41.870Z","message":"Missing required headers"}
+{"level":"warn","request_domain":"example.org","request_method":"GET","request_status":"denied","source_ip":"8.8.8.8","source_is_local":false,"source_country":"US","source_asn":15169,"source_org":"GOOGLE","time":"2025-11-27T08:23:41.873Z","message":"Request denied"}
+{"level":"info","request_domain":"example.com","request_method":"GET","request_status":"allowed","source_ip":"8.8.8.8","source_is_local":false,"source_country":"US","source_asn":15169,"source_org":"GOOGLE","time":"2025-11-27T08:23:41.876Z","message":"Request allowed"}
+{"level":"info","request_domain":"example.com","request_method":"GET","request_status":"allowed","source_ip":"127.0.0.1","source_is_local":true,"source_country":"","source_asn":0,"source_org":"","time":"2025-11-27T08:23:41.880Z","message":"Request allowed"}
