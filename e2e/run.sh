@@ -2,12 +2,20 @@
 
 set -euo pipefail
 
+# Check for required commands
+for cmd in jq curl; do
+    if ! command -v "$cmd" >/dev/null 2>&1; then
+        echo ":: $cmd is required but not installed."
+        exit 1
+    fi
+done
+
 CGO_ENABLED=0 make build
 
 export GEOBLOCK_CONFIG=/app/examples/config.yaml
 export GEOBLOCK_PORT=8080
 export GEOBLOCK_LOG_LEVEL=debug
-export GEOBLOCK_LOG_FORMAT=text
+export GEOBLOCK_LOG_FORMAT=json
 
 ./dist/geoblock &> geoblock.log &
 
@@ -76,10 +84,10 @@ curl http://localhost:8080/v1/metrics > metrics.json
 diff <(sed 's/{version="[^"]*"}//' metrics.prometheus) \
      <(sed 's/{version="[^"]*"}//' e2e/metrics-expected.prometheus)
 
-diff <(sed 's/"version":"[^"]*"//' metrics.json) \
-     <(sed 's/"version":"[^"]*"//' e2e/metrics-expected.json)
+diff <(jq 'del(.version)' metrics.json) \
+     <(jq 'del(.version)' e2e/metrics-expected.json)
 
-diff <(sed 's/^time="[^"]*"//; s/msg="Starting Geoblock version [^"]*"//' e2e/expected.log) \
-     <(sed 's/^time="[^"]*"//; s/msg="Starting Geoblock version [^"]*"//' geoblock.log)
+diff <(jq 'del(.time, .version)' e2e/expected.log) \
+     <(jq 'del(.time, .version)' geoblock.log)
 
 echo ":: ALL E2E TESTS PASSED"
