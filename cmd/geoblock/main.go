@@ -3,6 +3,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"os"
 	"time"
 
@@ -27,8 +28,12 @@ const (
 
 // Log levels.
 const (
-	LogLevelInfo  = "info"
+	LogLevelTrace = "trace"
 	LogLevelDebug = "debug"
+	LogLevelInfo  = "info"
+	LogLevelWarn  = "warn"
+	LogLevelError = "error"
+	LogLevelFatal = "fatal"
 )
 
 // Log formats.
@@ -148,9 +153,31 @@ func autoReload(engine *rules.Engine, path string) {
 	}
 }
 
+// parseLogLevel parses the log level from string to zerolog.Level. It defaults
+// to info level if the provided level is invalid.
+func parseLogLevel(level string) (zerolog.Level, error) {
+	switch level {
+	case LogLevelTrace:
+		return zerolog.TraceLevel, nil
+	case LogLevelDebug:
+		return zerolog.DebugLevel, nil
+	case LogLevelInfo:
+		return zerolog.InfoLevel, nil
+	case LogLevelWarn:
+		return zerolog.WarnLevel, nil
+	case LogLevelError:
+		return zerolog.ErrorLevel, nil
+	case LogLevelFatal:
+		return zerolog.FatalLevel, nil
+	default:
+		return zerolog.InfoLevel, errors.New("invalid log level")
+	}
+}
+
 // configureLogger configures the logger with the given log format and level.
 func configureLogger(logFormat, level string) {
-	// Configure log format
+	// This should be done first, before any log message is emitted to avoid
+	// inconsistent log messages.
 	switch logFormat {
 	case "json":
 		zerolog.TimeFieldFormat = RFC3339Milli
@@ -165,23 +192,11 @@ func configureLogger(logFormat, level string) {
 		log.Warn().Str("format", logFormat).Msg("Invalid log format")
 	}
 
-	// Configure log level
-	switch level {
-	case "trace":
-		zerolog.SetGlobalLevel(zerolog.TraceLevel)
-	case "debug":
-		zerolog.SetGlobalLevel(zerolog.DebugLevel)
-	case "info":
-		zerolog.SetGlobalLevel(zerolog.InfoLevel)
-	case "warn":
-		zerolog.SetGlobalLevel(zerolog.WarnLevel)
-	case "error":
-		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
-	case "fatal":
-		zerolog.SetGlobalLevel(zerolog.FatalLevel)
-	default:
+	if parsedLevel, err := parseLogLevel(level); err != nil {
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 		log.Warn().Str("level", level).Msg("Invalid log level")
+	} else {
+		zerolog.SetGlobalLevel(parsedLevel)
 	}
 }
 
