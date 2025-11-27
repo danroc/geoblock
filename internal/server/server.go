@@ -165,8 +165,7 @@ func getJSONMetrics(writer http.ResponseWriter, _ *http.Request) {
 	)
 	writer.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(writer).Encode(metrics.Get()); err != nil {
-		// Avoid panic for nil pointer in UnsupportedTypeError
-		log.Error().Msgf("Cannot write JSON metrics response: %v", err)
+		log.Error().Err(err).Msg("Cannot write JSON metrics response")
 	}
 }
 
@@ -177,7 +176,7 @@ func getPrometheusMetrics(writer http.ResponseWriter, _ *http.Request) {
 	)
 	writer.WriteHeader(http.StatusOK)
 	if _, err := writer.Write([]byte(metrics.Prometheus())); err != nil {
-		log.Error().Msgf("Cannot write Prometheus metrics response: %v", err)
+		log.Error().Err(err).Msg("Cannot write Prometheus metrics response")
 	}
 }
 
