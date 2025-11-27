@@ -18,7 +18,7 @@ import (
 )
 
 // RFC3339Milli is the RFC3339 format with milliseconds precision.
-const RFC3339Milli = "2006-01-02T15:04:05.999Z07:00"
+const RFC3339Milli = "2006-01-02T15:04:05.000Z07:00"
 
 // Auto-update and auto-reload intervals.
 const (
