@@ -16,6 +16,10 @@ import (
 	"github.com/danroc/geoblock/internal/version"
 )
 
+// RFC3339Milli is the RFC3339 format with milliseconds precision.
+const RFC3339Milli = "2006-01-02T15:04:05.999Z07:00"
+
+// Auto-update and auto-reload intervals.
 const (
 	autoUpdateInterval = 24 * time.Hour
 	autoReloadInterval = 5 * time.Second
@@ -149,7 +153,7 @@ func configureLogger(logFormat, level string) {
 	// Configure log format
 	switch logFormat {
 	case "json":
-		zerolog.TimeFieldFormat = time.RFC3339Nano
+		zerolog.TimeFieldFormat = RFC3339Milli
 	case "text":
 		log.Logger = log.Output(
 			zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339},
