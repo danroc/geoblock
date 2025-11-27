@@ -115,20 +115,18 @@ func hasChanged(a, b os.FileInfo) bool {
 func autoReload(engine *rules.Engine, path string) {
 	prevStat, err := os.Stat(path)
 	if err != nil {
-		log.Error().
-			Err(err).
-			Str("path", path).
-			Msg("Cannot watch configuration file")
+		log.Error().Err(err).Str("path", path).Msg(
+			"Cannot watch configuration file",
+		)
 		return
 	}
 
 	for range time.Tick(autoReloadInterval) {
 		stat, err := os.Stat(path)
 		if err != nil {
-			log.Error().
-				Err(err).
-				Str("path", path).
-				Msg("Cannot watch configuration file")
+			log.Error().Err(err).Str("path", path).Msg(
+				"Cannot watch configuration file",
+			)
 			continue
 		}
 
@@ -141,10 +139,9 @@ func autoReload(engine *rules.Engine, path string) {
 
 		cfg, err := loadConfig(path)
 		if err != nil {
-			log.Error().
-				Err(err).
-				Str("path", path).
-				Msg("Cannot read configuration file")
+			log.Error().Err(err).Str("path", path).Msg(
+				"Cannot read configuration file",
+			)
 			continue
 		}
 
@@ -208,10 +205,9 @@ func main() {
 	log.Info().Msg("Loading configuration file")
 	cfg, err := loadConfig(options.configPath)
 	if err != nil {
-		log.Fatal().
-			Err(err).
-			Str("path", options.configPath).
-			Msg("Cannot read configuration file")
+		log.Fatal().Err(err).Str("path", options.configPath).Msg(
+			"Cannot read configuration file",
+		)
 	}
 
 	log.Info().Msg("Initializing database resolver")
