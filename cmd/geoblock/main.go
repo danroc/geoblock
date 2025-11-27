@@ -34,6 +34,7 @@ const (
 	LogLevelWarn  = "warn"
 	LogLevelError = "error"
 	LogLevelFatal = "fatal"
+	LogLevelPanic = "panic"
 )
 
 // Log formats.
@@ -166,6 +167,8 @@ func parseLogLevel(level string) (zerolog.Level, error) {
 		return zerolog.ErrorLevel, nil
 	case LogLevelFatal:
 		return zerolog.FatalLevel, nil
+	case LogLevelPanic:
+		return zerolog.PanicLevel, nil
 	default:
 		return zerolog.InfoLevel, errors.New("invalid log level")
 	}

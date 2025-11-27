@@ -161,6 +161,7 @@ func TestParseLogLevel(t *testing.T) {
 		{"warn", zerolog.WarnLevel, false},
 		{"error", zerolog.ErrorLevel, false},
 		{"fatal", zerolog.FatalLevel, false},
+		{"panic", zerolog.PanicLevel, false},
 		{"invalid", zerolog.InfoLevel, true},
 		{"", zerolog.InfoLevel, true},
 	}
