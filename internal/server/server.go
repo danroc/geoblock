@@ -2,7 +2,6 @@
 package server
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/netip"
 	"time"
@@ -162,17 +161,6 @@ func getHealth(writer http.ResponseWriter, _ *http.Request) {
 	writer.WriteHeader(http.StatusNoContent)
 }
 
-// getJSONMetrics returns metrics in JSON format.
-func getJSONMetrics(writer http.ResponseWriter, _ *http.Request) {
-	writer.Header().Set(
-		"Content-Type", "application/json",
-	)
-	writer.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(writer).Encode(metrics.Get()); err != nil {
-		log.Error().Err(err).Msg("Cannot write JSON metrics response")
-	}
-}
-
 // getPrometheusMetrics returns metrics in Prometheus format.
 func getPrometheusMetrics(writer http.ResponseWriter, _ *http.Request) {
 	writer.Header().Set(
@@ -201,12 +189,6 @@ func NewServer(
 		"GET /v1/health",
 		func(writer http.ResponseWriter, request *http.Request) {
 			getHealth(writer, request)
-		},
-	)
-	mux.HandleFunc(
-		"GET /v1/metrics",
-		func(writer http.ResponseWriter, request *http.Request) {
-			getJSONMetrics(writer, request)
 		},
 	)
 	mux.HandleFunc(

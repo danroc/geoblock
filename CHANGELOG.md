@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- **BREAKING:** Remove `/v1/metrics` endpoint (JSON format). Use `/metrics` (Prometheus format) instead.
+
 ## [0.3.3] - 2025-10-05
 
 ### Added

@@ -16,7 +16,6 @@
 - [HTTP API](#http-api)
   - [`GET /v1/forward-auth`](#get-v1forward-auth)
   - [`GET /v1/health`](#get-v1health)
-  - [`GET /v1/metrics`](#get-v1metrics)
   - [`GET /metrics`](#get-metrics)
 - [Attribution](#attribution)
 
@@ -187,37 +186,6 @@ Check if the service is healthy.
 | Status | Description |
 | :----- | :---------- |
 | `204`  | Healthy     |
-
-### `GET /v1/metrics`
-
-Returns metrics in JSON format.
-
-**Response:**
-
-- MIME type: `application/json`
-
-- Properties:
-
-  - `version`: Application version string
-  - `requests`: Object containing request count metrics
-    - `allowed`: Number of allowed requests
-    - `denied`: Number of denied requests
-    - `invalid`: Number of invalid requests
-    - `total`: Total number of requests
-
-- Example:
-
-  ```json
-  {
-    "version": "0.3.0",
-    "requests": {
-      "allowed": 3,
-      "denied": 2,
-      "invalid": 1,
-      "total": 6
-    }
-  }
-  ```
 
 ### `GET /metrics`
 
