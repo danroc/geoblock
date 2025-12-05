@@ -14,7 +14,6 @@ type RequestCountSnapshot struct {
 	Allowed uint64 `json:"allowed"`
 	Denied  uint64 `json:"denied"`
 	Invalid uint64 `json:"invalid"`
-	Total   uint64 `json:"total"`
 }
 
 // Snapshot contains the snapshot of the metrics.
@@ -49,19 +48,12 @@ func IncInvalid() {
 
 // Get returns a snapshot of the metrics.
 func Get() *Snapshot {
-	var (
-		allowed = metrics.Allowed.Load()
-		denied  = metrics.Denied.Load()
-		invalid = metrics.Invalid.Load()
-	)
-
 	return &Snapshot{
 		Version: version.Get(),
 		Requests: RequestCountSnapshot{
-			Denied:  denied,
-			Allowed: allowed,
-			Invalid: invalid,
-			Total:   allowed + denied + invalid,
+			Denied:  metrics.Denied.Load(),
+			Allowed: metrics.Allowed.Load(),
+			Invalid: metrics.Invalid.Load(),
 		},
 	}
 }

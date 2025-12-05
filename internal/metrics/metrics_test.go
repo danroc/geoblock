@@ -22,12 +22,6 @@ func TestIncDenied(t *testing.T) {
 			snapshot.Requests.Denied,
 		)
 	}
-	if snapshot.Requests.Total != 1 {
-		t.Errorf(
-			"Expected total count to be 1, got %d",
-			snapshot.Requests.Total,
-		)
-	}
 }
 
 func TestIncAllowed(t *testing.T) {
@@ -43,12 +37,6 @@ func TestIncAllowed(t *testing.T) {
 			snapshot.Requests.Allowed,
 		)
 	}
-	if snapshot.Requests.Total != 1 {
-		t.Errorf(
-			"Expected total count to be 1, got %d",
-			snapshot.Requests.Total,
-		)
-	}
 }
 
 func TestIncInvalid(t *testing.T) {
@@ -62,12 +50,6 @@ func TestIncInvalid(t *testing.T) {
 		t.Errorf(
 			"Expected invalid count to be 1, got %d",
 			snapshot.Requests.Invalid,
-		)
-	}
-	if snapshot.Requests.Total != 1 {
-		t.Errorf(
-			"Expected total count to be 1, got %d",
-			snapshot.Requests.Total,
 		)
 	}
 }
@@ -105,12 +87,6 @@ func TestMultipleIncrements(t *testing.T) {
 		t.Errorf(
 			"Expected invalid count to be 2, got %d",
 			snapshot.Requests.Invalid,
-		)
-	}
-	if snapshot.Requests.Total != 10 {
-		t.Errorf(
-			"Expected total count to be 10, got %d",
-			snapshot.Requests.Total,
 		)
 	}
 }
@@ -183,13 +159,6 @@ func TestConcurrentIncrements(t *testing.T) {
 			snapshot.Requests.Invalid,
 		)
 	}
-	if snapshot.Requests.Total != expected*3 {
-		t.Errorf(
-			"Expected total count to be %d, got %d",
-			expected*3,
-			snapshot.Requests.Total,
-		)
-	}
 }
 
 func TestGet(t *testing.T) {
@@ -230,12 +199,6 @@ func TestGet(t *testing.T) {
 		t.Errorf(
 			"Expected initial invalid count to be 0, got %d",
 			snapshot.Requests.Invalid,
-		)
-	}
-	if snapshot.Requests.Total != 0 {
-		t.Errorf(
-			"Expected initial total count to be 0, got %d",
-			snapshot.Requests.Total,
 		)
 	}
 }
@@ -293,13 +256,6 @@ func TestSnapshotJSON(t *testing.T) {
 			unmarshalled.Requests.Invalid,
 		)
 	}
-	if unmarshalled.Requests.Total != snapshot.Requests.Total {
-		t.Errorf(
-			"Expected total %d, got %d",
-			snapshot.Requests.Total,
-			unmarshalled.Requests.Total,
-		)
-	}
 }
 
 func TestRequestCountSnapshotJSON(t *testing.T) {
@@ -307,7 +263,6 @@ func TestRequestCountSnapshotJSON(t *testing.T) {
 		Allowed: 10,
 		Denied:  5,
 		Invalid: 2,
-		Total:   17,
 	}
 
 	// Test JSON marshalling
@@ -364,15 +319,7 @@ func TestTotalCalculation(t *testing.T) {
 			}
 
 			snapshot := Get()
-			expectedTotal := uint64(tc.denied + tc.allowed + tc.invalid)
 
-			if snapshot.Requests.Total != expectedTotal {
-				t.Errorf(
-					"Expected total to be %d, got %d",
-					expectedTotal,
-					snapshot.Requests.Total,
-				)
-			}
 			if snapshot.Requests.Denied != uint64(tc.denied) {
 				t.Errorf(
 					"Expected denied to be %d, got %d",
