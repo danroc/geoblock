@@ -79,13 +79,9 @@ test 'allowed local network' 204 \
     -H "X-Forwarded-Method: GET"
 
 curl http://localhost:8080/metrics > metrics.prometheus
-curl http://localhost:8080/v1/metrics > metrics.json
 
 diff <(sed 's/{version="[^"]*"}//' metrics.prometheus) \
      <(sed 's/{version="[^"]*"}//' e2e/metrics-expected.prometheus)
-
-diff <(jq 'del(.version)' metrics.json) \
-     <(jq 'del(.version)' e2e/metrics-expected.json)
 
 diff <(jq 'del(.time, .version)' e2e/expected.log) \
      <(jq 'del(.time, .version)' geoblock.log)

@@ -2,7 +2,6 @@ package server
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
@@ -12,7 +11,6 @@ import (
 
 	"github.com/danroc/geoblock/internal/config"
 	"github.com/danroc/geoblock/internal/ipinfo"
-	"github.com/danroc/geoblock/internal/metrics"
 	"github.com/danroc/geoblock/internal/rules"
 )
 
@@ -230,24 +228,6 @@ func TestGetHealth(t *testing.T) {
 	assertStatus(t, w.Code, http.StatusNoContent)
 }
 
-func TestGetJSONMetrics(t *testing.T) {
-	req := httptest.NewRequest("GET", "/v1/metrics", nil)
-	w := httptest.NewRecorder()
-
-	getJSONMetrics(w, req)
-
-	assertStatus(t, w.Code, http.StatusOK)
-	assertContentType(t, w.Header().Get("Content-Type"), "application/json")
-
-	var response metrics.Snapshot
-	if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
-		t.Fatalf("failed to parse JSON response: %v", err)
-	}
-	if response.Version == "" {
-		t.Error("version should not be empty")
-	}
-}
-
 func TestGetPrometheusMetrics(t *testing.T) {
 	req := httptest.NewRequest("GET", "/metrics", nil)
 	w := httptest.NewRecorder()
@@ -278,15 +258,6 @@ func TestGetPrometheusMetrics(t *testing.T) {
 	if !bytes.Contains(body, []byte("# TYPE")) {
 		t.Error("Prometheus output should contain TYPE comments")
 	}
-}
-
-func TestGetMetricsJSONError(t *testing.T) {
-	brokenWriter := &brokenResponseWriter{
-		header: make(http.Header),
-	}
-	req := httptest.NewRequest("GET", "/v1/metrics", nil)
-	getJSONMetrics(brokenWriter, req)
-	assertStatus(t, brokenWriter.statusCode, http.StatusOK)
 }
 
 func TestGetMetricsPrometheusError(t *testing.T) {
@@ -348,11 +319,9 @@ func TestServerEndpoints(t *testing.T) {
 		want   int
 	}{
 		{"GET", "/v1/health", http.StatusNoContent},
-		{"GET", "/v1/metrics", http.StatusOK},
 		{"GET", "/metrics", http.StatusOK},
 		{"GET", "/nonexistent", http.StatusNotFound},
 		{"POST", "/v1/health", http.StatusMethodNotAllowed},
-		{"POST", "/v1/metrics", http.StatusMethodNotAllowed},
 		{"POST", "/metrics", http.StatusMethodNotAllowed},
 	}
 
