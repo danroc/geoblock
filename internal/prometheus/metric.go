@@ -10,8 +10,9 @@ import (
 
 // Metric types
 const (
-	TypeCounter = "counter"
-	TypeGauge   = "gauge"
+	TypeCounter   = "counter"
+	TypeGauge     = "gauge"
+	TypeHistogram = "histogram"
 )
 
 // Sample represents a single sample of a Prometheus metric.

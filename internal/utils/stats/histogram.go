@@ -1,4 +1,4 @@
-package metrics
+package stats
 
 import (
 	"math"
@@ -9,7 +9,7 @@ import (
 
 // Histogram represents a histogram metric.
 type Histogram struct {
-	mutex   sync.RWMutex
+	mu      sync.RWMutex
 	buckets maps.OrderedMap[float64, uint64]
 	sum     float64
 	count   uint64
@@ -45,8 +45,8 @@ func NewHistogram(buckets []float64) *Histogram {
 
 // Observe records a new observation in the histogram.
 func (h *Histogram) Observe(value float64) {
-	h.mutex.Lock()
-	defer h.mutex.Unlock()
+	h.mu.Lock()
+	defer h.mu.Unlock()
 
 	h.sum += value
 	h.count++
@@ -61,22 +61,22 @@ func (h *Histogram) Observe(value float64) {
 
 // Sum returns the total of all observed values.
 func (h *Histogram) Sum() float64 {
-	h.mutex.RLock()
-	defer h.mutex.RUnlock()
+	h.mu.RLock()
+	defer h.mu.RUnlock()
 	return h.sum
 }
 
 // Count returns the total number of observations.
 func (h *Histogram) Count() uint64 {
-	h.mutex.RLock()
-	defer h.mutex.RUnlock()
+	h.mu.RLock()
+	defer h.mu.RUnlock()
 	return h.count
 }
 
 // Buckets returns a snapshot of the histogram's buckets.
 func (h *Histogram) Buckets() []Bucket {
-	h.mutex.RLock()
-	defer h.mutex.RUnlock()
+	h.mu.RLock()
+	defer h.mu.RUnlock()
 
 	result := make([]Bucket, 0, h.buckets.Len())
 	h.buckets.Range(func(upper float64, count uint64) bool {

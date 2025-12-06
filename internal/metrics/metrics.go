@@ -2,24 +2,14 @@
 package metrics
 
 import (
+	"fmt"
 	"sync/atomic"
 
 	"github.com/danroc/geoblock/internal/prometheus"
+	"github.com/danroc/geoblock/internal/utils/maps"
+	"github.com/danroc/geoblock/internal/utils/stats"
 	"github.com/danroc/geoblock/internal/version"
 )
-
-// RequestCountSnapshot contains the snapshot of the request count.
-type RequestCountSnapshot struct {
-	Allowed uint64 `json:"allowed"`
-	Denied  uint64 `json:"denied"`
-	Invalid uint64 `json:"invalid"`
-}
-
-// Snapshot contains the snapshot of the metrics.
-type Snapshot struct {
-	Version  string               `json:"version"`
-	Requests RequestCountSnapshot `json:"requests"`
-}
 
 // RequestCount contains the request count.
 type RequestCount struct {
@@ -28,39 +18,112 @@ type RequestCount struct {
 	Invalid atomic.Uint64
 }
 
-var metrics = RequestCount{}
+type HistogramKey struct {
+	Method  string
+	Handler string
+	Status  int
+}
+
+var (
+	durationsHistogram = maps.NewSyncMap[HistogramKey, *stats.Histogram]()
+	requestCount       = RequestCount{}
+)
 
 // IncDenied increments the request denied count.
 func IncDenied() {
-	metrics.Denied.Add(1)
+	requestCount.Denied.Add(1)
 }
 
 // IncAllowed increments the request allowed count.
 func IncAllowed() {
-	metrics.Allowed.Add(1)
+	requestCount.Allowed.Add(1)
 }
 
 // IncInvalid increments the request invalid count.
 func IncInvalid() {
-	metrics.Invalid.Add(1)
+	requestCount.Invalid.Add(1)
+}
+
+// newHistogram creates a new histogram with default buckets.
+func newHistogram() *stats.Histogram {
+	return stats.NewHistogram([]float64{
+		0.001, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0, 10.0,
+	})
+}
+
+// ObserveDuration records a new observation in the durations histogram.
+func ObserveDuration(method, handler string, status int, duration float64) {
+	histogram, _ := durationsHistogram.GetOrSet(
+		HistogramKey{
+			Method:  method,
+			Handler: handler,
+			Status:  status,
+		}, newHistogram(),
+	)
+	histogram.Observe(duration)
+}
+
+// RequestCountSnapshot contains the snapshot of the request count.
+type RequestCountSnapshot struct {
+	Allowed uint64
+	Denied  uint64
+	Invalid uint64
+}
+
+// DurationsSnapshot contains the snapshot of the durations histogram.
+type DurationsSnapshot = map[HistogramKey][]stats.Bucket
+
+// Snapshot contains the snapshot of the metrics.
+type Snapshot struct {
+	Version   string
+	Requests  RequestCountSnapshot
+	Durations DurationsSnapshot
 }
 
 // Get returns a snapshot of the metrics.
 func Get() *Snapshot {
-	return &Snapshot{
-		Version: version.Get(),
-		Requests: RequestCountSnapshot{
-			Denied:  metrics.Denied.Load(),
-			Allowed: metrics.Allowed.Load(),
-			Invalid: metrics.Invalid.Load(),
+	durations := make(DurationsSnapshot)
+	durationsHistogram.Range(
+		func(key HistogramKey, histogram *stats.Histogram) bool {
+			durations[key] = histogram.Buckets()
+			return true
 		},
+	)
+
+	requests := RequestCountSnapshot{
+		Denied:  requestCount.Denied.Load(),
+		Allowed: requestCount.Allowed.Load(),
+		Invalid: requestCount.Invalid.Load(),
+	}
+
+	return &Snapshot{
+		Version:   version.Get(),
+		Requests:  requests,
+		Durations: durations,
 	}
 }
 
 // Prometheus returns metrics formatted in Prometheus exposition format.
 func Prometheus() string {
 	snapshot := Get()
-	return prometheus.Format([]prometheus.Metric{
+
+	samples := make([]prometheus.Sample, 0)
+	for key, buckets := range snapshot.Durations {
+		for bucket := range buckets {
+			samples = append(samples, prometheus.Sample{
+				Name: "http_request_duration_seconds_bucket",
+				Labels: map[string]string{
+					"method":  key.Method,
+					"handler": key.Handler,
+					"status":  fmt.Sprintf("%d", key.Status),
+					"le":      fmt.Sprintf("%g", buckets[bucket].UpperBound),
+				},
+				Value: float64(buckets[bucket].Count),
+			})
+		}
+	}
+
+	metrics := []prometheus.Metric{
 		{
 			Name: "geoblock_version_info",
 			Help: "Version information",
@@ -99,5 +162,13 @@ func Prometheus() string {
 				},
 			},
 		},
-	})
+		{
+			Name:    "http_request_duration_seconds",
+			Help:    "HTTP request duration in seconds",
+			Type:    prometheus.TypeHistogram,
+			Samples: samples,
+		},
+	}
+
+	return prometheus.Format(metrics)
 }
