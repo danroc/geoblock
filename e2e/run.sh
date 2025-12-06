@@ -83,7 +83,7 @@ curl http://localhost:8080/metrics > metrics.prometheus
 diff <(sed 's/{version="[^"]*"}//' metrics.prometheus) \
      <(sed 's/{version="[^"]*"}//' e2e/metrics-expected.prometheus)
 
-diff <(jq 'del(.time, .version)' e2e/expected.log) \
-     <(jq 'del(.time, .version)' geoblock.log)
+diff <(jq --sort-keys 'del(.time, .version)' e2e/expected.log) \
+     <(jq --sort-keys 'del(.time, .version)' geoblock.log)
 
 echo ":: ALL E2E TESTS PASSED"
