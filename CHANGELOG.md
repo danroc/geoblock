@@ -7,9 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2025-12-06
+
+### Changed
+
+- Change logging library and format ([#272](https://github.com/danroc/geoblock/pull/272))
+
 ### Removed
 
-- **BREAKING:** Remove `/v1/metrics` endpoint (JSON format). Use `/metrics` (Prometheus format) instead.
+- **BREAKING:** Remove `/v1/metrics` endpoint (JSON format). Use `/metrics` (Prometheus format) ([#279](https://github.com/danroc/geoblock/pull/279), [#280](https://github.com/danroc/geoblock/pull/280))
 
 ## [0.3.3] - 2025-10-05
 
@@ -217,7 +223,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add CIDR unmarshalling and validation
 - Add autonomous systems to configuration
 
-[Unreleased]: https://github.com/danroc/geoblock/compare/v0.3.3...HEAD
+[Unreleased]: https://github.com/danroc/geoblock/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/danroc/geoblock/compare/v0.3.3...v0.4.0
 [0.3.3]: https://github.com/danroc/geoblock/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/danroc/geoblock/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/danroc/geoblock/compare/v0.3.0...v0.3.1
