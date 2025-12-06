@@ -53,7 +53,7 @@ lint-revive: ## Run revive linter
 
 .PHONY: lint-sec
 lint-sec: ## Run gosec linter
-	go tool gosec --exclude-dir=internal/tools ./...
+	go tool gosec ./...
 
 .PHONY: lint-staticcheck
 lint-staticcheck: ## Run staticcheck linter
