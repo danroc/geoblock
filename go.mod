@@ -7,6 +7,7 @@ toolchain go1.25.5
 require (
 	github.com/go-playground/validator/v10 v10.28.0
 	github.com/goccy/go-yaml v1.19.0
+	github.com/google/go-cmp v0.7.0
 	github.com/rs/zerolog v1.34.0
 )
 
@@ -30,7 +31,6 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
-	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.6 // indirect
