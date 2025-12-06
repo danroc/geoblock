@@ -63,10 +63,9 @@ type Resolution struct {
 	ASN          uint32 // Autonomous System Number
 }
 
-// mergeResolutions merges the given resolutions into a single resolution.
-//
-// The fields of the resulting resolution are the LAST non-zero fields of the
-// input resolutions.
+// mergeResolutions combines multiple Resolution objects by taking the last
+// non-zero value for each field. This implements a "last-write-wins" strategy
+// where later resolutions override earlier ones.
 func mergeResolutions(resolutions []Resolution) Resolution {
 	var merged Resolution
 	for _, r := range resolutions {
