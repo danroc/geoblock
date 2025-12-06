@@ -2,7 +2,6 @@
 package metrics
 
 import (
-	"strings"
 	"sync/atomic"
 
 	"github.com/danroc/geoblock/internal/prometheus"
@@ -61,7 +60,7 @@ func Get() *Snapshot {
 // Prometheus returns metrics formatted in Prometheus exposition format.
 func Prometheus() string {
 	snapshot := Get()
-	metrics := []prometheus.Metric{
+	return prometheus.Format([]prometheus.Metric{
 		{
 			Name: "geoblock_version_info",
 			Help: "Version information",
@@ -100,15 +99,5 @@ func Prometheus() string {
 				},
 			},
 		},
-	}
-
-	var output strings.Builder
-	for i, metric := range metrics {
-		if i > 0 {
-			output.WriteString("\n")
-		}
-		output.WriteString(metric.String())
-	}
-
-	return output.String()
+	})
 }

@@ -87,3 +87,16 @@ func escapeLabel(v string) string {
 	v = strings.ReplaceAll(v, "\n", `\n`)
 	return v
 }
+
+// Format takes multiple metrics and returns them formatted in Prometheus
+// exposition format.
+func Format(metrics []Metric) string {
+	var b strings.Builder
+	for i, metric := range metrics {
+		if i > 0 {
+			b.WriteString("\n")
+		}
+		b.WriteString(metric.String())
+	}
+	return b.String()
+}
