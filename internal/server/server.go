@@ -156,6 +156,47 @@ func getForwardAuth(
 	}
 }
 
+// responseWriter wraps http.ResponseWriter to capture the status code.
+type responseWriter struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+// WriteHeader captures the status code before delegating to the underlying
+// ResponseWriter.
+func (rw *responseWriter) WriteHeader(statusCode int) {
+	rw.statusCode = statusCode
+	rw.ResponseWriter.WriteHeader(statusCode)
+}
+
+// withMetrics wraps a handler function to track request duration metrics.
+func withMetrics(
+	endpoint string,
+	handler func(http.ResponseWriter, *http.Request),
+) http.HandlerFunc {
+	return func(writer http.ResponseWriter, request *http.Request) {
+		start := time.Now()
+
+		// Wrap the ResponseWriter to capture status code
+		rw := &responseWriter{
+			ResponseWriter: writer,
+			statusCode:     http.StatusOK, // Default status
+		}
+
+		// Call the actual handler
+		handler(rw, request)
+
+		// Record the duration with actual status code
+		duration := time.Since(start)
+		metrics.ObserveDuration(
+			request.Method,
+			endpoint,
+			rw.statusCode,
+			duration.Seconds(),
+		)
+	}
+}
+
 // getHealth returns a 204 status code to indicate that the server is running.
 func getHealth(writer http.ResponseWriter, _ *http.Request) {
 	writer.WriteHeader(http.StatusNoContent)
@@ -181,9 +222,12 @@ func NewServer(
 	mux := http.NewServeMux()
 	mux.HandleFunc(
 		"GET /v1/forward-auth",
-		func(writer http.ResponseWriter, request *http.Request) {
-			getForwardAuth(writer, request, resolver, engine)
-		},
+		withMetrics(
+			"/v1/forward-auth",
+			func(writer http.ResponseWriter, request *http.Request) {
+				getForwardAuth(writer, request, resolver, engine)
+			},
+		),
 	)
 	mux.HandleFunc(
 		"GET /v1/health",
