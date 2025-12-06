@@ -2,6 +2,7 @@ package metrics
 
 import (
 	"math"
+	"sync"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -18,27 +19,32 @@ func TestNewHistogram(t *testing.T) {
 		{
 			"empty buckets",
 			[]float64{},
-			[]float64{},
+			[]float64{math.Inf(1)},
 		},
 		{
 			"single bucket",
 			[]float64{1.0},
-			[]float64{1.0},
+			[]float64{1.0, math.Inf(1)},
 		},
 		{
 			"sorted buckets",
 			[]float64{1.0, 2.0, 3.0},
-			[]float64{1.0, 2.0, 3.0},
+			[]float64{1.0, 2.0, 3.0, math.Inf(1)},
 		},
 		{
 			"unsorted buckets",
 			[]float64{3.0, 1.0, 2.0},
-			[]float64{3.0, 1.0, 2.0},
+			[]float64{3.0, 1.0, 2.0, math.Inf(1)},
 		},
 		{
 			"duplicate buckets",
 			[]float64{1.0, 2.0, 1.0},
-			[]float64{1.0, 2.0},
+			[]float64{1.0, 2.0, math.Inf(1)},
+		},
+		{
+			"already has +Inf",
+			[]float64{1.0, 2.0, math.Inf(1)},
+			[]float64{1.0, 2.0, math.Inf(1)},
 		},
 	}
 
@@ -250,7 +256,8 @@ func TestHistogram_DoesNotModifyOriginalBuckets(t *testing.T) {
 		t.Errorf("original buckets modified (-want +got):\n%s", diff)
 	}
 
-	if diff := cmp.Diff(wantOrig, h.buckets.Keys()); diff != "" {
+	wantHistogram := []float64{3.0, 1.0, 2.0, math.Inf(1)}
+	if diff := cmp.Diff(wantHistogram, h.buckets.Keys()); diff != "" {
 		t.Errorf("histogram buckets mismatch (-want +got):\n%s", diff)
 	}
 }
@@ -260,5 +267,53 @@ func BenchmarkHistogramObserve(b *testing.B) {
 
 	for i := 0; b.Loop(); i++ {
 		h.Observe(float64(i % 50))
+	}
+}
+
+func TestHistogram_ConcurrentObserve(t *testing.T) {
+	t.Parallel()
+
+	h := NewHistogram([]float64{1.0, 5.0, 10.0})
+	const numGoroutines = 10
+	const observationsPerGoroutine = 100
+
+	var wg sync.WaitGroup
+	wg.Add(numGoroutines)
+
+	for range numGoroutines {
+		go func() {
+			defer wg.Done()
+			for range observationsPerGoroutine {
+				h.Observe(2.5)
+			}
+		}()
+	}
+
+	wg.Wait()
+
+	expectedCount := uint64(numGoroutines * observationsPerGoroutine)
+	expectedSum := float64(expectedCount) * 2.5
+
+	if got := h.Count(); got != expectedCount {
+		t.Errorf("Count() = %v, want %v", got, expectedCount)
+	}
+
+	if diff := math.Abs(h.Sum() - expectedSum); diff > 1e-9 {
+		t.Errorf("Sum() = %v, want %v", h.Sum(), expectedSum)
+	}
+
+	// All observations (2.5) should be counted in all buckets >= 2.5
+	wantBuckets := map[float64]uint64{
+		1.0:  0,
+		5.0:  expectedCount,
+		10.0: expectedCount,
+	}
+
+	for b, want := range wantBuckets {
+		if got, ok := h.buckets.Get(b); !ok {
+			t.Errorf("bucket %v not found", b)
+		} else if got != want {
+			t.Errorf("bucket %v count = %v, want %v", b, got, want)
+		}
 	}
 }
