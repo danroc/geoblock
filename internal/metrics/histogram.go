@@ -15,6 +15,12 @@ type Histogram struct {
 	count   uint64
 }
 
+// Bucket represents a single bucket in the histogram.
+type Bucket struct {
+	UpperBound float64
+	Count      uint64
+}
+
 // NewHistogram returns a new Histogram with the given bucket upper bounds.
 // A +Inf bucket is automatically added if not present.
 func NewHistogram(buckets []float64) *Histogram {
@@ -65,6 +71,22 @@ func (h *Histogram) Count() uint64 {
 	h.mutex.RLock()
 	defer h.mutex.RUnlock()
 	return h.count
+}
+
+// Buckets returns a snapshot of the histogram's buckets.
+func (h *Histogram) Buckets() []Bucket {
+	h.mutex.RLock()
+	defer h.mutex.RUnlock()
+
+	result := make([]Bucket, 0, h.buckets.Len())
+	h.buckets.Range(func(upper float64, count uint64) bool {
+		result = append(result, Bucket{
+			UpperBound: upper,
+			Count:      count,
+		})
+		return true
+	})
+	return result
 }
 
 // LinearBuckets creates a slice of linearly spaced bucket upper bounds.

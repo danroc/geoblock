@@ -317,3 +317,37 @@ func TestHistogram_ConcurrentObserve(t *testing.T) {
 		}
 	}
 }
+
+func TestHistogramBuckets_ReturnsSlice(t *testing.T) {
+	h := NewHistogram([]float64{1.0, 5.0, 10.0})
+	h.Observe(0.5)
+	h.Observe(3.0)
+	h.Observe(7.0)
+
+	buckets := h.Buckets()
+	expected := []Bucket{
+		{UpperBound: 1.0, Count: 1},
+		{UpperBound: 5.0, Count: 2},
+		{UpperBound: 10.0, Count: 3},
+		{UpperBound: math.Inf(1), Count: 3},
+	}
+
+	if diff := cmp.Diff(expected, buckets); diff != "" {
+		t.Errorf("Buckets() mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestHistogramBuckets_Empty(t *testing.T) {
+	h := NewHistogram([]float64{1.0, 5.0})
+
+	buckets := h.Buckets()
+	expected := []Bucket{
+		{UpperBound: 1.0, Count: 0},
+		{UpperBound: 5.0, Count: 0},
+		{UpperBound: math.Inf(1), Count: 0},
+	}
+
+	if diff := cmp.Diff(expected, buckets); diff != "" {
+		t.Errorf("Buckets() mismatch (-want +got):\n%s", diff)
+	}
+}
