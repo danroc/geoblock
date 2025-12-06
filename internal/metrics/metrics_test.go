@@ -285,8 +285,6 @@ func TestRequestCountSnapshotJSON(t *testing.T) {
 }
 
 func TestTotalCalculation(t *testing.T) {
-	setupTest(t)
-
 	testCases := []struct {
 		name    string
 		denied  int
