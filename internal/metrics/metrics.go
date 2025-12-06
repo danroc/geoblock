@@ -70,8 +70,14 @@ type RequestCountSnapshot struct {
 	Invalid uint64
 }
 
+type HistogramSnapshot struct {
+	Buckets []stats.Bucket
+	Sum     float64
+	Count   uint64
+}
+
 // DurationsSnapshot contains the snapshot of the durations histogram.
-type DurationsSnapshot = map[HistogramKey][]stats.Bucket
+type DurationsSnapshot = map[HistogramKey]HistogramSnapshot
 
 // Snapshot contains the snapshot of the metrics.
 type Snapshot struct {
@@ -85,7 +91,11 @@ func Get() *Snapshot {
 	durations := make(DurationsSnapshot)
 	durationsHistogram.Range(
 		func(key HistogramKey, histogram *stats.Histogram) bool {
-			durations[key] = histogram.Buckets()
+			durations[key] = HistogramSnapshot{
+				Buckets: histogram.Buckets(),
+				Sum:     histogram.Sum(),
+				Count:   histogram.Count(),
+			}
 			return true
 		},
 	)
@@ -108,19 +118,39 @@ func Prometheus() string {
 	snapshot := Get()
 
 	samples := make([]prometheus.Sample, 0)
-	for key, buckets := range snapshot.Durations {
-		for bucket := range buckets {
+	for key, histogram := range snapshot.Durations {
+		for _, bucket := range histogram.Buckets {
 			samples = append(samples, prometheus.Sample{
 				Name: "http_request_duration_seconds_bucket",
 				Labels: map[string]string{
 					"method":  key.Method,
 					"handler": key.Handler,
 					"status":  fmt.Sprintf("%d", key.Status),
-					"le":      fmt.Sprintf("%g", buckets[bucket].UpperBound),
+					"le":      fmt.Sprintf("%g", bucket.UpperBound),
 				},
-				Value: float64(buckets[bucket].Count),
+				Value: float64(bucket.Count),
 			})
 		}
+
+		samples = append(samples, prometheus.Sample{
+			Name: "http_request_duration_seconds_sum",
+			Labels: map[string]string{
+				"method":  key.Method,
+				"handler": key.Handler,
+				"status":  fmt.Sprintf("%d", key.Status),
+			},
+			Value: histogram.Sum,
+		})
+
+		samples = append(samples, prometheus.Sample{
+			Name: "http_request_duration_seconds_count",
+			Labels: map[string]string{
+				"method":  key.Method,
+				"handler": key.Handler,
+				"status":  fmt.Sprintf("%d", key.Status),
+			},
+			Value: float64(histogram.Count),
+		})
 	}
 
 	metrics := []prometheus.Metric{
