@@ -9,9 +9,15 @@ import (
 	"github.com/danroc/geoblock/internal/version"
 )
 
-func TestIncDenied(t *testing.T) {
-	// Reset metrics before test
+// setupTest resets metrics and registers cleanup to reset after test.
+func setupTest(t *testing.T) {
+	t.Helper()
 	resetMetrics()
+	t.Cleanup(resetMetrics)
+}
+
+func TestIncDenied(t *testing.T) {
+	setupTest(t)
 
 	IncDenied()
 
@@ -25,8 +31,7 @@ func TestIncDenied(t *testing.T) {
 }
 
 func TestIncAllowed(t *testing.T) {
-	// Reset metrics before test
-	resetMetrics()
+	setupTest(t)
 
 	IncAllowed()
 
@@ -40,8 +45,7 @@ func TestIncAllowed(t *testing.T) {
 }
 
 func TestIncInvalid(t *testing.T) {
-	// Reset metrics before test
-	resetMetrics()
+	setupTest(t)
 
 	IncInvalid()
 
@@ -55,8 +59,7 @@ func TestIncInvalid(t *testing.T) {
 }
 
 func TestMultipleIncrements(t *testing.T) {
-	// Reset metrics before test
-	resetMetrics()
+	setupTest(t)
 
 	// Test multiple increments
 	for i := 0; i < 5; i++ {
@@ -92,8 +95,7 @@ func TestMultipleIncrements(t *testing.T) {
 }
 
 func TestConcurrentIncrements(t *testing.T) {
-	// Reset metrics before test
-	resetMetrics()
+	setupTest(t)
 
 	const numGoroutines = 100
 	const incrementsPerGoroutine = 10
@@ -162,8 +164,7 @@ func TestConcurrentIncrements(t *testing.T) {
 }
 
 func TestGet(t *testing.T) {
-	// Reset metrics before test
-	resetMetrics()
+	setupTest(t)
 
 	snapshot := Get()
 
@@ -204,8 +205,7 @@ func TestGet(t *testing.T) {
 }
 
 func TestSnapshotJSON(t *testing.T) {
-	// Reset metrics before test
-	resetMetrics()
+	setupTest(t)
 
 	// Add some metrics
 	IncDenied()
@@ -285,8 +285,7 @@ func TestRequestCountSnapshotJSON(t *testing.T) {
 }
 
 func TestTotalCalculation(t *testing.T) {
-	// Reset metrics before test
-	resetMetrics()
+	setupTest(t)
 
 	testCases := []struct {
 		name    string
@@ -304,8 +303,7 @@ func TestTotalCalculation(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			// Reset metrics before each subtest
-			resetMetrics()
+			setupTest(t)
 
 			// Add metrics according to test case
 			for i := 0; i < tc.denied; i++ {
@@ -392,8 +390,7 @@ func resetMetrics() {
 }
 
 func TestPrometheus(t *testing.T) {
-	// Reset metrics before test
-	resetMetrics()
+	setupTest(t)
 
 	// Add some test data
 	IncAllowed()
