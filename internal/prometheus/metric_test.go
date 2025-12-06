@@ -322,3 +322,143 @@ base_metric_name 3
 		})
 	}
 }
+
+func TestFormat(t *testing.T) {
+	tests := []struct {
+		name     string
+		metrics  []Metric
+		expected string
+	}{
+		{
+			name:     "empty metrics",
+			metrics:  []Metric{},
+			expected: "",
+		},
+		{
+			name: "single metric",
+			metrics: []Metric{
+				{
+					Name: "test_metric",
+					Help: "Test metric",
+					Type: TypeCounter,
+					Samples: []Sample{
+						{
+							Labels: map[string]string{
+								"status": "ok",
+							},
+							Value: 1,
+						},
+					},
+				},
+			},
+			expected: `# HELP test_metric Test metric
+# TYPE test_metric counter
+test_metric{status="ok"} 1
+`,
+		},
+		{
+			name: "multiple metrics",
+			metrics: []Metric{
+				{
+					Name: "first_metric",
+					Help: "First metric",
+					Type: TypeGauge,
+					Samples: []Sample{
+						{
+							Value: 42,
+						},
+					},
+				},
+				{
+					Name: "second_metric",
+					Help: "Second metric",
+					Type: TypeCounter,
+					Samples: []Sample{
+						{
+							Labels: map[string]string{
+								"status": "success",
+							},
+							Value: 100,
+						},
+					},
+				},
+			},
+			expected: `# HELP first_metric First metric
+# TYPE first_metric gauge
+first_metric 42
+
+# HELP second_metric Second metric
+# TYPE second_metric counter
+second_metric{status="success"} 100
+`,
+		},
+		{
+			name: "three metrics with various properties",
+			metrics: []Metric{
+				{
+					Name: "version_info",
+					Help: "Version information",
+					Type: TypeGauge,
+					Samples: []Sample{
+						{
+							Labels: map[string]string{
+								"version": "1.0.0",
+							},
+							Value: 1,
+						},
+					},
+				},
+				{
+					Name: "requests_total",
+					Help: "Total number of requests",
+					Type: TypeCounter,
+					Samples: []Sample{
+						{
+							Labels: map[string]string{
+								"status": "allowed",
+							},
+							Value: 10,
+						},
+						{
+							Labels: map[string]string{
+								"status": "denied",
+							},
+							Value: 5,
+						},
+					},
+				},
+				{
+					Name: "simple_metric",
+					Samples: []Sample{
+						{
+							Value: 7,
+						},
+					},
+				},
+			},
+			expected: `# HELP version_info Version information
+# TYPE version_info gauge
+version_info{version="1.0.0"} 1
+
+# HELP requests_total Total number of requests
+# TYPE requests_total counter
+requests_total{status="allowed"} 10
+requests_total{status="denied"} 5
+
+simple_metric 7
+`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := Format(tt.metrics); got != tt.expected {
+				t.Errorf(
+					"unexpected output:\n--- expected ---\n%s--- got ---\n%s",
+					tt.expected,
+					got,
+				)
+			}
+		})
+	}
+}
