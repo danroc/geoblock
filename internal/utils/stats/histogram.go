@@ -15,6 +15,13 @@ type Histogram struct {
 	count   uint64
 }
 
+// HistogramSummary represents a summary of the histogram data.
+type HistogramSummary struct {
+	Sum     float64
+	Count   uint64
+	Buckets []Bucket
+}
+
 // Bucket represents a single bucket in the histogram.
 type Bucket struct {
 	UpperBound float64
@@ -73,20 +80,24 @@ func (h *Histogram) Count() uint64 {
 	return h.count
 }
 
-// Buckets returns a snapshot of the histogram's buckets.
-func (h *Histogram) Buckets() []Bucket {
+func (h *Histogram) Summary() HistogramSummary {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
-	result := make([]Bucket, 0, h.buckets.Len())
+	buckets := make([]Bucket, 0, h.buckets.Len())
 	h.buckets.Range(func(upper float64, count uint64) bool {
-		result = append(result, Bucket{
+		buckets = append(buckets, Bucket{
 			UpperBound: upper,
 			Count:      count,
 		})
 		return true
 	})
-	return result
+
+	return HistogramSummary{
+		Sum:     h.sum,
+		Count:   h.count,
+		Buckets: buckets,
+	}
 }
 
 // LinearBuckets creates a slice of linearly spaced bucket upper bounds.

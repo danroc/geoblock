@@ -324,7 +324,7 @@ func TestHistogramBuckets_ReturnsSlice(t *testing.T) {
 	h.Observe(3.0)
 	h.Observe(7.0)
 
-	buckets := h.Buckets()
+	buckets := h.Summary().Buckets
 	expected := []Bucket{
 		{UpperBound: 1.0, Count: 1},
 		{UpperBound: 5.0, Count: 2},
@@ -340,7 +340,7 @@ func TestHistogramBuckets_ReturnsSlice(t *testing.T) {
 func TestHistogramBuckets_Empty(t *testing.T) {
 	h := NewHistogram([]float64{1.0, 5.0})
 
-	buckets := h.Buckets()
+	buckets := h.Summary().Buckets
 	expected := []Bucket{
 		{UpperBound: 1.0, Count: 0},
 		{UpperBound: 5.0, Count: 0},

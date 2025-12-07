@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/danroc/geoblock/internal/utils/maps"
+	"github.com/danroc/geoblock/internal/utils/stats"
 )
 
 // Metric types
@@ -100,4 +101,45 @@ func Format(metrics []Metric) string {
 		b.WriteString(metric.String())
 	}
 	return b.String()
+}
+
+// FromHistogram converts a stats.Histogram into a Prometheus Metric.
+func FromHistogram(
+	name, help, comment string,
+	labels map[string]string,
+	histogram stats.HistogramSummary,
+) Metric {
+	buckets := histogram.Buckets
+	samples := make([]Sample, 0, len(buckets)+2)
+
+	for _, bucket := range buckets {
+		sampleLabels := maps.Merge(labels, map[string]string{
+			"le": fmt.Sprintf("%g", bucket.UpperBound),
+		})
+		samples = append(samples, Sample{
+			Name:   name + "_bucket",
+			Labels: sampleLabels,
+			Value:  float64(bucket.Count),
+		})
+	}
+
+	samples = append(samples, Sample{
+		Name:   name + "_sum",
+		Labels: labels,
+		Value:  histogram.Sum,
+	})
+
+	samples = append(samples, Sample{
+		Name:   name + "_count",
+		Labels: labels,
+		Value:  float64(histogram.Count),
+	})
+
+	return Metric{
+		Comment: comment,
+		Name:    name,
+		Help:    help,
+		Type:    TypeHistogram,
+		Samples: samples,
+	}
 }
