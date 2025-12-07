@@ -108,8 +108,8 @@ func Prometheus() string {
 
 	durationsHistogram.Range(func(key HistogramKey, histogram *stats.Histogram) bool {
 		metrics = append(metrics, prometheus.FromHistogram(
-			"http_request_duration_seconds",
-			"HTTP request duration in seconds",
+			"geoblock_request_duration_seconds",
+			"Geoblock request duration in seconds",
 			"",
 			map[string]string{
 				"method":  key.Method,
