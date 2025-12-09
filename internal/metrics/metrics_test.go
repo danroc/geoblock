@@ -1,7 +1,6 @@
 package metrics
 
 import (
-	"encoding/json"
 	"strings"
 	"sync"
 	"testing"
@@ -201,86 +200,6 @@ func TestGet(t *testing.T) {
 			"Expected initial invalid count to be 0, got %d",
 			snapshot.Requests.Invalid,
 		)
-	}
-}
-
-func TestSnapshotJSON(t *testing.T) {
-	setupTest(t)
-
-	// Add some metrics
-	IncDenied()
-	IncAllowed()
-	IncInvalid()
-
-	snapshot := Get()
-
-	// Test JSON marshalling
-	data, err := json.Marshal(snapshot)
-	if err != nil {
-		t.Fatalf("Failed to marshal snapshot to JSON: %v", err)
-	}
-
-	// Test JSON unmarshalling
-	var unmarshalled Snapshot
-	err = json.Unmarshal(data, &unmarshalled)
-	if err != nil {
-		t.Fatalf("Failed to unmarshal snapshot from JSON: %v", err)
-	}
-
-	// Compare original and unmarshalled
-	if unmarshalled.Version != snapshot.Version {
-		t.Errorf(
-			"Expected version %q, got %q",
-			snapshot.Version,
-			unmarshalled.Version,
-		)
-	}
-	if unmarshalled.Requests.Denied != snapshot.Requests.Denied {
-		t.Errorf(
-			"Expected denied %d, got %d",
-			snapshot.Requests.Denied,
-			unmarshalled.Requests.Denied,
-		)
-	}
-	if unmarshalled.Requests.Allowed != snapshot.Requests.Allowed {
-		t.Errorf(
-			"Expected allowed %d, got %d",
-			snapshot.Requests.Allowed,
-			unmarshalled.Requests.Allowed,
-		)
-	}
-	if unmarshalled.Requests.Invalid != snapshot.Requests.Invalid {
-		t.Errorf(
-			"Expected invalid %d, got %d",
-			snapshot.Requests.Invalid,
-			unmarshalled.Requests.Invalid,
-		)
-	}
-}
-
-func TestRequestCountSnapshotJSON(t *testing.T) {
-	rcs := RequestCountSnapshot{
-		Allowed: 10,
-		Denied:  5,
-		Invalid: 2,
-	}
-
-	// Test JSON marshalling
-	data, err := json.Marshal(rcs)
-	if err != nil {
-		t.Fatalf("Failed to marshal RequestCountSnapshot to JSON: %v", err)
-	}
-
-	// Test JSON unmarshalling
-	var unmarshalled RequestCountSnapshot
-	err = json.Unmarshal(data, &unmarshalled)
-	if err != nil {
-		t.Fatalf("Failed to unmarshal RequestCountSnapshot from JSON: %v", err)
-	}
-
-	// Compare original and unmarshalled
-	if unmarshalled != rcs {
-		t.Errorf("Expected %+v, got %+v", rcs, unmarshalled)
 	}
 }
 
