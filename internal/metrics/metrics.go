@@ -10,15 +10,15 @@ import (
 
 // RequestCountSnapshot contains the snapshot of the request count.
 type RequestCountSnapshot struct {
-	Allowed uint64 `json:"allowed"`
-	Denied  uint64 `json:"denied"`
-	Invalid uint64 `json:"invalid"`
+	Allowed uint64
+	Denied  uint64
+	Invalid uint64
 }
 
 // Snapshot contains the snapshot of the metrics.
 type Snapshot struct {
-	Version  string               `json:"version"`
-	Requests RequestCountSnapshot `json:"requests"`
+	Version  string
+	Requests RequestCountSnapshot
 }
 
 // RequestCount contains the request count.
