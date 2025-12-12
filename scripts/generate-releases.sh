@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
 CHANGELOG="CHANGELOG.md"
 DRY_RUN="${DRY_RUN:-true}"
