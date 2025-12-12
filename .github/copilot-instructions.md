@@ -166,6 +166,26 @@ Run `make lint-format` before committing to ensure consistent formatting.
 5. **Automated**: GitHub Actions workflow triggers on `v*.*.*` tags
 6. **Automated**: Docker image built and pushed to `ghcr.io/danroc/geoblock`
 
+### Generating GitHub Releases
+
+Use `scripts/generate-releases.sh` to create GitHub releases from changelog and git tags:
+
+```bash
+# Dry run (preview what would be created)
+bash scripts/generate-releases.sh
+
+# Actually create releases
+DRY_RUN=false bash scripts/generate-releases.sh
+```
+
+The script:
+- Extracts release notes from `CHANGELOG.md` for each git tag
+- Skips releases that already exist
+- Creates releases in chronological order (oldest to newest)
+- Preserves markdown formatting and internal blank lines (strips leading/trailing blank lines)
+
+To regenerate the entire changelog from git history, use the prompt at `.github/prompts/generate-changelog.prompt.md` with GitHub Copilot.
+
 ### CI/CD Workflows
 
 - **`build-test-lint.yml`**: Runs on push/PR to main
