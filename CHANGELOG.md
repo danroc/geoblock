@@ -41,7 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **BREAKING:** Log in JSON format by default ([#195](https://github.com/danroc/geoblock/pull/195))
 
-## [0.2.1] - 2025-08-14
+## [0.2.1] - 2025-08-13
 
 ### Changed
 
@@ -53,7 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **BREAKING:** Change the object returned by the `/metrics` endpoint ([#181](https://github.com/danroc/geoblock/pull/181))
 
-## [0.1.23] - 2025-07-28
+## [0.1.23] - 2025-07-29
 
 ### Added
 
@@ -135,16 +135,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Rename `requested_*` to `request_*` in logs ([#39](https://github.com/danroc/geoblock/pull/39))
+- **BREAKING:** Rename `requested_*` to `request_*` in logs ([#39](https://github.com/danroc/geoblock/pull/39))
 
-## [0.1.11]
+## [0.1.11] - 2024-11-20
 
 ### Changed
 
 - Increase healthcheck timeouts ([#25](https://github.com/danroc/geoblock/pull/25))
 - Change default configuration path ([#29](https://github.com/danroc/geoblock/pull/29))
 
-## [0.1.10] - 2024-11-17
+## [0.1.10] - 2024-11-16
 
 ### Added
 
