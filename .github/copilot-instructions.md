@@ -182,7 +182,7 @@ The script:
 - Extracts release notes from `CHANGELOG.md` for each git tag
 - Skips releases that already exist
 - Creates releases in chronological order (oldest to newest)
-- Preserves markdown formatting and blank lines
+- Preserves markdown formatting and internal blank lines (strips leading/trailing blank lines)
 
 To regenerate the entire changelog from git history, use the prompt at `.github/prompts/generate-changelog.prompt.md` with GitHub Copilot.
 
