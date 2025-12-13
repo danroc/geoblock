@@ -1,14 +1,49 @@
 #!/bin/bash
+#
+# Generate GitHub releases from git tags and CHANGELOG.md
+#
+# This script extracts release notes from CHANGELOG.md for each git tag and
+# creates corresponding GitHub releases using the GitHub CLI (gh).
+#
+# Requirements:
+#   - GitHub CLI (gh) installed and authenticated
+#   - CHANGELOG.md in Keep a Changelog format
+#   - Git tags in format: vX.Y.Z
+#
+# Usage:
+#   # Dry run (preview what would be created, default)
+#   ./scripts/generate-releases.sh
+#
+#   # Actually create releases
+#   DRY_RUN=false ./scripts/generate-releases.sh
+#
+#   # Use a different changelog file
+#   CHANGELOG=HISTORY.md ./scripts/generate-releases.sh
+#
+# Environment variables:
+#   CHANGELOG - Path to changelog file (default: "CHANGELOG.md")
+#   DRY_RUN   - Set to "false" to actually create releases (default: "true")
 
 set -euo pipefail
 
-CHANGELOG="CHANGELOG.md"
-DRY_RUN="${DRY_RUN:-true}"
+# Check for required dependencies
+if ! command -v gh >/dev/null 2>&1; then
+    echo "Error: GitHub CLI (gh) is required but not installed or not in PATH." >&2
+    echo "Install it from https://cli.github.com/ and try again." >&2
+    exit 1
+fi
 
-# Get all tags sorted by version
-tags=$(git tag -l 'v*' | sort -V)
+: "${CHANGELOG:=CHANGELOG.md}"
+: "${DRY_RUN:=true}"
 
-for tag in $tags; do
+# Check that the changelog file exists
+if [ ! -f "$CHANGELOG" ]; then
+    echo "Error: $CHANGELOG not found"
+    exit 1
+fi
+
+# Get all tags sorted by version and process each tag safely
+git tag -l 'v*' | sort -V | while read -r tag; do
     # Check if release already exists
     if gh release view "$tag" &>/dev/null; then
         echo -e "⏭️  \033[90m$tag already exists, skipping...\033[0m"
