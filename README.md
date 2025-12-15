@@ -86,7 +86,7 @@ A rule matches if all specified conditions are met. Rules can include one or
 more of the following criteria:
 
 - `countries`: List of country codes ([ISO 3166-1 alpha-2](https://www.iban.com/country-codes))
-- `domains`: List of domain names
+- `domains`: List of domain names (supports `*` wildcard, e.g., `*.example.com`)
 - `methods`: List of HTTP methods
 - `networks`: List of IP ranges in CIDR notation
 - `autonomous_systems`: List of ASNs
@@ -135,6 +135,11 @@ access_control:
       methods:
         - GET
         - POST
+      policy: allow
+
+    # Allow access to all subdomains of example.com using wildcard.
+    - domains:
+        - "*.example.com"
       policy: allow
 ```
 
