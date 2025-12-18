@@ -537,10 +537,10 @@ func TestGetForwardAuthMultipleForwardedIPs(t *testing.T) {
 		},
 	}
 
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			headers := map[string]string{
-				headerForwardedFor:    test.forwardedFor,
+				headerForwardedFor:    tt.forwardedFor,
 				headerForwardedHost:   "example.com",
 				headerForwardedMethod: "GET",
 			}
@@ -548,7 +548,7 @@ func TestGetForwardAuthMultipleForwardedIPs(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			getForwardAuth(w, req, resolver, engine)
-			assertStatus(t, w.Code, test.expectedStatus)
+			assertStatus(t, w.Code, tt.expectedStatus)
 		})
 	}
 }
