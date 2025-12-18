@@ -469,15 +469,15 @@ func TestParseForwardedFor(t *testing.T) {
 		},
 	}
 
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			got := parseForwardedFor(test.header)
-			if got != test.want {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := parseForwardedFor(tt.header)
+			if got != tt.want {
 				t.Errorf(
 					"parseForwardedFor(%q) = %q, want %q",
-					test.header,
+					tt.header,
 					got,
-					test.want,
+					tt.want,
 				)
 			}
 		})
