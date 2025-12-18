@@ -401,6 +401,89 @@ func TestIsLocalIP(t *testing.T) {
 	}
 }
 
+func TestParseForwardedFor(t *testing.T) {
+	tests := []struct {
+		name   string
+		header string
+		want   string
+	}{
+		{
+			name:   "empty header",
+			header: "",
+			want:   "",
+		},
+		{
+			name:   "single IP",
+			header: "192.168.1.1",
+			want:   "192.168.1.1",
+		},
+		{
+			name:   "single IP with spaces",
+			header: "  192.168.1.1  ",
+			want:   "192.168.1.1",
+		},
+		{
+			name:   "multiple IPs",
+			header: "203.0.113.195,70.41.3.18,150.172.238.178",
+			want:   "203.0.113.195",
+		},
+		{
+			name:   "multiple IPs with spaces",
+			header: "203.0.113.195, 70.41.3.18, 150.172.238.178",
+			want:   "203.0.113.195",
+		},
+		{
+			name:   "multiple IPs with extra spaces",
+			header: "  203.0.113.195  ,  70.41.3.18  ,  150.172.238.178  ",
+			want:   "203.0.113.195",
+		},
+		{
+			name:   "IPv6 single",
+			header: "2001:db8::1",
+			want:   "2001:db8::1",
+		},
+		{
+			name:   "IPv6 multiple",
+			header: "2001:db8::1, 192.168.1.1",
+			want:   "2001:db8::1",
+		},
+		{
+			name:   "real-world example",
+			header: "129.78.138.66, 129.78.64.103",
+			want:   "129.78.138.66",
+		},
+		{
+			name:   "only commas",
+			header: ",,,",
+			want:   "",
+		},
+		{
+			name:   "single comma",
+			header: ",",
+			want:   "",
+		},
+		{
+			name:   "empty string after split",
+			header: ",192.168.1.1",
+			want:   "",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got := parseForwardedFor(test.header)
+			if got != test.want {
+				t.Errorf(
+					"parseForwardedFor(%q) = %q, want %q",
+					test.header,
+					got,
+					test.want,
+				)
+			}
+		})
+	}
+}
+
 func TestGetForwardAuthValidRequests(t *testing.T) {
 	testData := map[string]string{
 		ipinfo.CountryIPv4URL: "8.8.8.8,8.8.8.8,US\n",
@@ -420,6 +503,54 @@ func TestGetForwardAuthValidRequests(t *testing.T) {
 
 	getForwardAuth(w, req, resolver, engine)
 	assertStatus(t, w.Code, http.StatusNoContent)
+}
+
+func TestGetForwardAuthMultipleForwardedIPs(t *testing.T) {
+	testData := map[string]string{
+		ipinfo.CountryIPv4URL: "8.8.8.8,8.8.8.8,US\n",
+		ipinfo.CountryIPv6URL: "",
+		ipinfo.ASNIPv4URL:     "8.8.8.8,8.8.8.8,15169,Google LLC\n",
+		ipinfo.ASNIPv6URL:     "",
+	}
+	resolver := createTestResolver(testData)
+	engine := newAllowEngine()
+
+	tests := []struct {
+		name           string
+		forwardedFor   string
+		expectedStatus int
+	}{
+		{
+			name:           "multiple IPs - client IP first",
+			forwardedFor:   "8.8.8.8, 192.168.1.1, 10.0.0.1",
+			expectedStatus: http.StatusNoContent,
+		},
+		{
+			name:           "multiple IPs with extra spaces",
+			forwardedFor:   "  8.8.8.8  ,  192.168.1.1  ",
+			expectedStatus: http.StatusNoContent,
+		},
+		{
+			name:           "single IP with spaces",
+			forwardedFor:   "  8.8.8.8  ",
+			expectedStatus: http.StatusNoContent,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			headers := map[string]string{
+				headerForwardedFor:    test.forwardedFor,
+				headerForwardedHost:   "example.com",
+				headerForwardedMethod: "GET",
+			}
+			req := newTestRequest("GET", "/v1/forward-auth", headers)
+			w := httptest.NewRecorder()
+
+			getForwardAuth(w, req, resolver, engine)
+			assertStatus(t, w.Code, test.expectedStatus)
+		})
+	}
 }
 
 func TestServerHandlerSetup(t *testing.T) {

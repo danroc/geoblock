@@ -4,6 +4,7 @@ package server
 import (
 	"net/http"
 	"net/netip"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -75,6 +76,15 @@ func isLocalIP(ip netip.Addr) bool {
 	return false
 }
 
+// parseForwardedFor extracts the client IP from the X-Forwarded-For header.
+//
+// The header can contain a comma-separated list of IPs, where the first IP
+// is typically the original client IP.
+func parseForwardedFor(header string) string {
+	ips := strings.Split(header, ",")
+	return strings.TrimSpace(ips[0])
+}
+
 // getForwardAuth checks if the request is authorized to access the requested
 // resource. It uses the reverse proxy headers to determine the source IP and
 // requested domain.
@@ -85,7 +95,7 @@ func getForwardAuth(
 	engine *rules.Engine,
 ) {
 	var (
-		origin = request.Header.Get(headerForwardedFor)
+		origin = parseForwardedFor(request.Header.Get(headerForwardedFor))
 		domain = request.Header.Get(headerForwardedHost)
 		method = request.Header.Get(headerForwardedMethod)
 	)
