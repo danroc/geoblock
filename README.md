@@ -17,6 +17,7 @@
   - [`GET /v1/forward-auth`](#get-v1forward-auth)
   - [`GET /v1/health`](#get-v1health)
   - [`GET /metrics`](#get-metrics)
+- [Monitoring](#monitoring)
 - [Attribution](#attribution)
 
 </p>
@@ -213,6 +214,15 @@ geoblock_requests_total{status="allowed"} 3
 geoblock_requests_total{status="denied"} 2
 geoblock_requests_total{status="invalid"} 1
 ```
+
+## Monitoring
+
+Geoblock exposes Prometheus metrics and structured logs that can be used to
+monitor the service and create dashboards.
+
+**Dashboard:** [grafana/dashboard.json](./grafana/dashboard.json)
+
+![Grafana Dashboard Example](./grafana/example.png)
 
 ## Attribution
 
