@@ -101,7 +101,7 @@ Run `make lint-format` before committing to ensure consistent formatting.
 
 ### Environment Variables
 
-- `GEOBLOCK_CONFIG`: Config path (default: `/etc/geoblock/config.yaml`)
+- `GEOBLOCK_CONFIG_FILE`: Config path (default: `/etc/geoblock/config.yaml`)
 - `GEOBLOCK_PORT`: Server port (default: `8080`)
 - `GEOBLOCK_LOG_LEVEL`: `trace|debug|info|warn|error|fatal|panic` (default: `info`)
 - `GEOBLOCK_LOG_FORMAT`: `json|text` (default: `json`)
