@@ -53,7 +53,7 @@ const (
 
 // Environment variable names.
 const (
-	OptionConfigPath = "GEOBLOCK_CONFIG"
+	OptionConfigPath = "GEOBLOCK_CONFIG_FILE"
 	OptionServerPort = "GEOBLOCK_PORT"
 	OptionLogLevel   = "GEOBLOCK_LOG_LEVEL"
 	OptionLogFormat  = "GEOBLOCK_LOG_FORMAT"
