@@ -85,6 +85,14 @@ func parseForwardedFor(header string) string {
 	return strings.TrimSpace(ips[0])
 }
 
+// getLogEvent returns a zerolog event based on the authorization result.
+func getLogEvent(isAllowed bool) *zerolog.Event {
+	if isAllowed {
+		return log.Info()
+	}
+	return log.Warn()
+}
+
 // getForwardAuth checks if the request is authorized to access the requested
 // resource. It uses the reverse proxy headers to determine the source IP and
 // requested domain.
@@ -139,14 +147,8 @@ func getForwardAuth(
 	})
 
 	// Prepare a zerolog event for structured logging
-	var event *zerolog.Event
-	if isAllowed {
-		event = log.Info()
-	} else {
-		event = log.Warn()
-	}
-
-	event.Str(fieldRequestDomain, domain).
+	event := getLogEvent(isAllowed).
+		Str(fieldRequestDomain, domain).
 		Str(fieldRequestMethod, method).
 		Str(fieldRequestStatus, isAllowedStatus[isAllowed]).
 		Str(fieldSourceIP, sourceIP.String()).
