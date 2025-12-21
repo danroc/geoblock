@@ -85,6 +85,7 @@ func parseForwardedFor(header string) string {
 	return strings.TrimSpace(ips[0])
 }
 
+// getLogEvent returns a zerolog event based on the authorization result.
 func getLogEvent(isAllowed bool) *zerolog.Event {
 	if isAllowed {
 		return log.Info()
