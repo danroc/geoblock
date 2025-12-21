@@ -5,7 +5,7 @@ go 1.24.0
 toolchain go1.25.5
 
 require (
-	github.com/go-playground/validator/v10 v10.29.0
+	github.com/go-playground/validator/v10 v10.30.0
 	github.com/goccy/go-yaml v1.19.1
 	github.com/rs/zerolog v1.34.0
 )
