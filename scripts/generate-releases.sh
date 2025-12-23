@@ -42,6 +42,16 @@ if [ ! -f "$CHANGELOG" ]; then
     exit 1
 fi
 
+# Print mode indication
+if [ "$DRY_RUN" = "true" ]; then
+    echo "🔍 Running in DRY RUN mode (no releases will be created)"
+    echo "   Set DRY_RUN=false to actually create releases"
+    echo ""
+else
+    echo "✨ Creating releases..."
+    echo ""
+fi
+
 # Get all tags sorted by version and process each tag safely
 git tag -l 'v*' | sort -V | while read -r tag; do
     # Check if release already exists
