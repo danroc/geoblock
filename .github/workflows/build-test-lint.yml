@@ -34,9 +34,6 @@ jobs:
       - name: Lint
         run: make lint
 
-      - name: Tidy up dependencies
-        run: make tidy
-
       - name: Run tests
         run: make test
 
