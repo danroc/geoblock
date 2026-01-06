@@ -26,7 +26,7 @@ jobs:
           go-version: '1.25.5'
 
       - name: Install tools
-        run: make deps-tools
+        run: make tools
 
       - name: Build
         run: make build
@@ -34,8 +34,8 @@ jobs:
       - name: Lint
         run: make lint
 
-      - name: Tidy dependencies
-        run: make deps-tidy
+      - name: Tidy up dependencies
+        run: make tidy
 
       - name: Run tests
         run: make test
