@@ -43,20 +43,20 @@ make test-coverage      # Generate coverage.xml (Cobertura)
 
 ```bash
 make lint               # Run all linters
-make lint-format        # gofumpt + golines (79 char limit)
+make format             # gofumpt + golines (79 char limit)
 make lint-revive        # Custom rules in revive.toml
 make lint-sec           # gosec security scanner
 make lint-staticcheck   # staticcheck
 ```
 
-Run `make lint-format` before committing to ensure consistent formatting.
+Run `make format` before committing to ensure consistent formatting.
 
 ## Code Conventions
 
 ### Line Length & Formatting
 
 - **79 characters max** enforced by `golines` with `gofumpt` base formatter
-- Always run `make lint-format` to auto-fix
+- Always run `make format` to auto-fix
 
 ### Concurrency Patterns
 
@@ -189,7 +189,7 @@ To regenerate the entire changelog from git history, use the prompt at `.github/
 ### CI/CD Workflows
 
 - **`build-test-lint.yml`**: Runs on push/PR to main
-  - Installs Go 1.25.5, runs `make deps-tools`, `make build`, `make lint`, `make test`
+  - Installs Go 1.25.5, runs `make tools`, `make build`, `make lint`, `make test`
   - Fails if working directory is dirty after job (enforces generated code committed)
 - **`publish-docker.yml`**: Runs on version tags (`v*.*.*`)
   - Builds multi-arch Docker image

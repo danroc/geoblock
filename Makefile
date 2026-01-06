@@ -36,16 +36,20 @@ RESET   := \033[0m
 # =============================================================================
 
 .PHONY: lint
-lint: lint-vet lint-format lint-revive lint-sec lint-staticcheck ## Run all linters
+lint: tidy format lint-vet lint-revive lint-sec lint-staticcheck ## Run all linters
+
+.PHONY: tidy
+tidy: ## Tidy up dependencies
+	go mod tidy
+
+.PHONY: format
+format: ## Run code formatters
+	go tool gofumpt -w -extra .
+	go tool golines -w -m 79 --base-formatter=gofumpt .
 
 .PHONY: lint-vet
 lint-vet: ## Run go-vet linter
 	go vet ./...
-
-.PHONY: lint-format
-lint-format: ## Run code formatters
-	go tool gofumpt -w -extra .
-	go tool golines -w -m 79 --base-formatter=gofumpt .
 
 .PHONY: lint-revive
 lint-revive: ## Run revive linter
@@ -63,16 +67,12 @@ lint-staticcheck: ## Run staticcheck linter
 # @Dependencies
 # =============================================================================
 
-.PHONY: deps-tidy
-deps-tidy: ## Tidy up dependencies
-	go mod tidy
-
-.PHONY: deps-update
-deps-update: ## Update dependencies
+.PHONY: update
+update: ## Update dependencies
 	go get -u ./...
 
-.PHONY: deps-tools
-deps-tools: ## Install development dependencies
+.PHONY: tools
+tools: ## Install development tools
 	go install tool
 
 # =============================================================================
@@ -85,6 +85,9 @@ $(DIST_DIR):
 # =============================================================================
 # @Build
 # =============================================================================
+
+.PHONY: all
+all: lint test build ## Run all checks and build
 
 .PHONY: run
 run: ## Run the main program
