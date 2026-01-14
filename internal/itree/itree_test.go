@@ -133,3 +133,95 @@ func TestQueryDuplicate(t *testing.T) {
 		})
 	}
 }
+
+func TestRotations(t *testing.T) {
+	t.Run("LeftRotation", func(t *testing.T) {
+		// Insert in ascending order to trigger left rotations
+		tree := itree.NewITree[ComparableInt, int]()
+		tree.Insert(itree.NewInterval[ComparableInt](1, 1), 1)
+		tree.Insert(itree.NewInterval[ComparableInt](2, 2), 2)
+		tree.Insert(itree.NewInterval[ComparableInt](3, 3), 3)
+
+		var values []int
+		tree.Traverse(func(interval itree.Interval[ComparableInt], value int) {
+			values = append(values, value)
+		})
+
+		expected := []int{2, 1, 3}
+		if !slices.Equal(expected, values) {
+			t.Errorf("expected pre-order %v, got %v", expected, values)
+		}
+	})
+
+	t.Run("RightRotation", func(t *testing.T) {
+		// Insert in descending order to trigger right rotations
+		tree := itree.NewITree[ComparableInt, int]()
+		tree.Insert(itree.NewInterval[ComparableInt](3, 3), 3)
+		tree.Insert(itree.NewInterval[ComparableInt](2, 2), 2)
+		tree.Insert(itree.NewInterval[ComparableInt](1, 1), 1)
+
+		var values []int
+		tree.Traverse(func(interval itree.Interval[ComparableInt], value int) {
+			values = append(values, value)
+		})
+
+		expected := []int{2, 1, 3}
+		if !slices.Equal(expected, values) {
+			t.Errorf("expected pre-order %v, got %v", expected, values)
+		}
+	})
+
+	t.Run("LeftRightRotation", func(t *testing.T) {
+		// Insert to trigger left-right rotation
+		tree := itree.NewITree[ComparableInt, int]()
+		tree.Insert(itree.NewInterval[ComparableInt](3, 3), 3)
+		tree.Insert(itree.NewInterval[ComparableInt](1, 1), 1)
+		tree.Insert(itree.NewInterval[ComparableInt](2, 2), 2)
+
+		var values []int
+		tree.Traverse(func(interval itree.Interval[ComparableInt], value int) {
+			values = append(values, value)
+		})
+
+		expected := []int{2, 1, 3}
+		if !slices.Equal(expected, values) {
+			t.Errorf("expected pre-order %v, got %v", expected, values)
+		}
+	})
+
+	t.Run("RightLeftRotation", func(t *testing.T) {
+		// Insert to trigger right-left rotation
+		tree := itree.NewITree[ComparableInt, int]()
+		tree.Insert(itree.NewInterval[ComparableInt](1, 1), 1)
+		tree.Insert(itree.NewInterval[ComparableInt](3, 3), 3)
+		tree.Insert(itree.NewInterval[ComparableInt](2, 2), 2)
+
+		var values []int
+		tree.Traverse(func(interval itree.Interval[ComparableInt], value int) {
+			values = append(values, value)
+		})
+
+		expected := []int{2, 1, 3}
+		if !slices.Equal(expected, values) {
+			t.Errorf("expected pre-order %v, got %v", expected, values)
+		}
+	})
+
+	t.Run("SameLowValueDifferentHigh", func(t *testing.T) {
+		// Insert 3 intervals with the same low value
+		tree := itree.NewITree[ComparableInt, int]()
+		tree.Insert(itree.NewInterval[ComparableInt](1, 1), 1)
+		tree.Insert(itree.NewInterval[ComparableInt](1, 2), 2)
+		tree.Insert(itree.NewInterval[ComparableInt](1, 3), 3)
+
+		var values []int
+		tree.Traverse(func(interval itree.Interval[ComparableInt], value int) {
+			values = append(values, value)
+		})
+
+		expected := []int{2, 3, 1}
+		if !slices.Equal(expected, values) {
+			t.Errorf("expected pre-order %v, got %v", expected, values)
+		}
+	})
+}
