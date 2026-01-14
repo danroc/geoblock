@@ -143,7 +143,7 @@ func TestRotations(t *testing.T) {
 		tree.Insert(itree.NewInterval[ComparableInt](3, 3), 3)
 
 		var values []int
-		tree.Traverse(func(interval itree.Interval[ComparableInt], value int) {
+		tree.Traverse(func(_ itree.Interval[ComparableInt], value int) {
 			values = append(values, value)
 		})
 
@@ -161,7 +161,7 @@ func TestRotations(t *testing.T) {
 		tree.Insert(itree.NewInterval[ComparableInt](1, 1), 1)
 
 		var values []int
-		tree.Traverse(func(interval itree.Interval[ComparableInt], value int) {
+		tree.Traverse(func(_ itree.Interval[ComparableInt], value int) {
 			values = append(values, value)
 		})
 
@@ -179,7 +179,7 @@ func TestRotations(t *testing.T) {
 		tree.Insert(itree.NewInterval[ComparableInt](2, 2), 2)
 
 		var values []int
-		tree.Traverse(func(interval itree.Interval[ComparableInt], value int) {
+		tree.Traverse(func(_ itree.Interval[ComparableInt], value int) {
 			values = append(values, value)
 		})
 
@@ -197,7 +197,7 @@ func TestRotations(t *testing.T) {
 		tree.Insert(itree.NewInterval[ComparableInt](2, 2), 2)
 
 		var values []int
-		tree.Traverse(func(interval itree.Interval[ComparableInt], value int) {
+		tree.Traverse(func(_ itree.Interval[ComparableInt], value int) {
 			values = append(values, value)
 		})
 
@@ -215,7 +215,7 @@ func TestRotations(t *testing.T) {
 		tree.Insert(itree.NewInterval[ComparableInt](1, 3), 3)
 
 		var values []int
-		tree.Traverse(func(interval itree.Interval[ComparableInt], value int) {
+		tree.Traverse(func(_ itree.Interval[ComparableInt], value int) {
 			values = append(values, value)
 		})
 
