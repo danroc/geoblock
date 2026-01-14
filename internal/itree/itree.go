@@ -152,6 +152,26 @@ func (t *ITree[K, V]) Query(key K) []V {
 	return query(t.root, key)
 }
 
+// Traverse walks the tree in pre-order (root, left, right) and calls the
+// provided function for each node with its interval and value.
+func (t *ITree[K, V]) Traverse(fn func(interval Interval[K], value V)) {
+	traverse(t.root, fn)
+}
+
+// traverse is a helper function that performs pre-order traversal of the tree.
+func traverse[K Comparable[K], V any](
+	node *Node[K, V],
+	fn func(interval Interval[K], value V),
+) {
+	if node == nil {
+		return
+	}
+
+	fn(node.interval, node.value)
+	traverse(node.left, fn)
+	traverse(node.right, fn)
+}
+
 func query[K Comparable[K], V any](
 	node *Node[K, V],
 	key K,
