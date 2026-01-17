@@ -78,8 +78,8 @@ func isLocalIP(ip netip.Addr) bool {
 
 // parseForwardedFor extracts the client IP from the X-Forwarded-For header.
 //
-// The header can contain a comma-separated list of IPs, where the first IP
-// is typically the original client IP.
+// The header can contain a comma-separated list of IPs, where the first IP is typically the
+// original client IP.
 func parseForwardedFor(header string) string {
 	ips := strings.Split(header, ",")
 	return strings.TrimSpace(ips[0])
@@ -93,9 +93,8 @@ func getLogEvent(isAllowed bool) *zerolog.Event {
 	return log.Warn()
 }
 
-// getForwardAuth checks if the request is authorized to access the requested
-// resource. It uses the reverse proxy headers to determine the source IP and
-// requested domain.
+// getForwardAuth checks if the request is authorized to access the requested resource. It uses the
+// reverse proxy headers to determine the source IP and requested domain.
 func getForwardAuth(
 	writer http.ResponseWriter,
 	request *http.Request,

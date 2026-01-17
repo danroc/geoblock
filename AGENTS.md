@@ -43,7 +43,7 @@ make test-coverage      # Generate coverage.xml (Cobertura)
 
 ```bash
 make lint               # Run all linters
-make format             # gofumpt + golines (79 char limit)
+make format             # gofumpt + golines (100 char limit)
 make lint-revive        # Custom rules in revive.toml
 make lint-sec           # gosec security scanner
 make lint-staticcheck   # staticcheck
@@ -55,7 +55,7 @@ Run `make format` before committing to ensure consistent formatting.
 
 ### Line Length & Formatting
 
-- **79 characters max** enforced by `golines` with `gofumpt` base formatter
+- **100 characters max** enforced by `golines` with `gofumpt` base formatter
 - Always run `make format` to auto-fix
 
 ### Concurrency Patterns

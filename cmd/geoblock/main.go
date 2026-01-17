@@ -59,8 +59,8 @@ const (
 	OptionLogFormat  = "GEOBLOCK_LOG_FORMAT"
 )
 
-// getEnv retrieves the value of the environment variable `key`. If it is not
-// set, it returns the `fallback` value.
+// getEnv retrieves the value of the environment variable `key`. If it is not set, it returns the
+// `fallback` value.
 func getEnv(key, fallback string) string {
 	if value := os.Getenv(key); value != "" {
 		return value
@@ -105,14 +105,13 @@ func loadConfig(path string) (*config.Configuration, error) {
 	return config.ReadConfig(bytes.NewReader(file))
 }
 
-// hasChanged returns true if the two file infos are different. It only checks
-// the size and the modification time.
+// hasChanged returns true if the two file infos are different. It only checks the size and the
+// modification time.
 func hasChanged(a, b os.FileInfo) bool {
 	return a.Size() != b.Size() || a.ModTime() != b.ModTime()
 }
 
-// autoReload watches the configuration file for changes and updates the engine
-// when it happens.
+// autoReload watches the configuration file for changes and updates the engine when it happens.
 func autoReload(engine *rules.Engine, path string) {
 	prevStat, err := os.Stat(path)
 	if err != nil {
@@ -151,8 +150,8 @@ func autoReload(engine *rules.Engine, path string) {
 	}
 }
 
-// parseLogLevel parses the log level from string to zerolog.Level. It defaults
-// to info level if the provided level is invalid.
+// parseLogLevel parses the log level from string to zerolog.Level. It defaults to info level if the
+// provided level is invalid.
 func parseLogLevel(level string) (zerolog.Level, error) {
 	switch level {
 	case LogLevelTrace:

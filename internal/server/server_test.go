@@ -68,8 +68,8 @@ func (rt *testRoundTripper) RoundTrip(
 	}, nil
 }
 
-// withTestTransport temporarily sets http.DefaultTransport to a test transport
-// for the duration of fn.
+// withTestTransport temporarily sets http.DefaultTransport to a test transport for the duration of
+// fn.
 func withTestTransport(testData map[string]string, fn func()) {
 	originalTransport := http.DefaultTransport
 	defer func() {
