@@ -197,18 +197,8 @@ func NewServer(
 			getForwardAuth(writer, request, resolver, engine)
 		},
 	)
-	mux.HandleFunc(
-		"GET /v1/health",
-		func(writer http.ResponseWriter, request *http.Request) {
-			getHealth(writer, request)
-		},
-	)
-	mux.HandleFunc(
-		"GET /metrics",
-		func(writer http.ResponseWriter, request *http.Request) {
-			getPrometheusMetrics(writer, request)
-		},
-	)
+	mux.HandleFunc("GET /v1/health", getHealth)
+	mux.HandleFunc("GET /metrics", getPrometheusMetrics)
 
 	return &http.Server{
 		Addr:         address,
