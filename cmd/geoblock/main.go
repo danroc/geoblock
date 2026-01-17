@@ -205,6 +205,13 @@ func parseLogLevel(level string) (zerolog.Level, error) {
 	}
 }
 
+// configureConsoleWriter sets up the console writer for text-based logging.
+func configureConsoleWriter() {
+	log.Logger = log.Output(
+		zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339},
+	)
+}
+
 // configureLogger configures the logger with the given log format and level.
 func configureLogger(logFormat, level string) {
 	// Configure log format before emitting any log messages.
@@ -212,13 +219,11 @@ func configureLogger(logFormat, level string) {
 	case LogFormatJSON:
 		zerolog.TimeFieldFormat = RFC3339Milli
 	case LogFormatText:
-		log.Logger = log.Output(
-			zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339},
-		)
+		// Valid text format - configure console writer
+		configureConsoleWriter()
 	default:
-		log.Logger = log.Output(
-			zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339},
-		)
+		// Invalid format - configure console writer and warn
+		configureConsoleWriter()
 		log.Warn().Str("format", logFormat).Msg("Invalid log format")
 	}
 
