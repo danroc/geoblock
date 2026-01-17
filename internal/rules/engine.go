@@ -10,12 +10,14 @@ import (
 	"github.com/danroc/geoblock/internal/utils/glob"
 )
 
-// Engine is the access control engine that checks if a given query is allowed by the rules.
+// Engine is the access control engine that checks if a given query is allowed by the
+// rules.
 type Engine struct {
 	config atomic.Pointer[config.AccessControl]
 }
 
-// NewEngine creates a new access control engine for the given access control configuration.
+// NewEngine creates a new access control engine for the given access control
+// configuration.
 func NewEngine(config *config.AccessControl) *Engine {
 	e := &Engine{}
 	e.config.Store(config)
@@ -41,11 +43,11 @@ func match[T any](conditions []T, matchFunc func(T) bool) bool {
 	return len(conditions) == 0
 }
 
-// ruleApplies checks if the given query is allowed or denied by the given rule. For a rule to be
-// applicable, the query must match all of the rule's conditions.
+// ruleApplies checks if the given query is allowed or denied by the given rule. For a
+// rule to be applicable, the query must match all of the rule's conditions.
 //
-// Empty conditions are considered as "match all". For example, if a rule has no domains, it will
-// match all domains.
+// Empty conditions are considered as "match all". For example, if a rule has no
+// domains, it will match all domains.
 //
 // Domains, methods and countries are case-insensitive.
 func ruleApplies(rule *config.AccessControlRule, query *Query) bool {
@@ -75,13 +77,14 @@ func ruleApplies(rule *config.AccessControlRule, query *Query) bool {
 	return matchDomain && matchMethod && matchIP && matchCountry && matchASN
 }
 
-// UpdateConfig updates the engine's configuration with the given access control configuration.
+// UpdateConfig updates the engine's configuration with the given access control
+// configuration.
 func (e *Engine) UpdateConfig(config *config.AccessControl) {
 	e.config.Store(config)
 }
 
-// Authorize checks if the given query is allowed by the engine's rules. The engine will return
-// true if the query is allowed, false otherwise.
+// Authorize checks if the given query is allowed by the engine's rules. The engine will
+// return true if the query is allowed, false otherwise.
 func (e *Engine) Authorize(query *Query) bool {
 	cfg := e.config.Load()
 	for _, rule := range cfg.Rules {

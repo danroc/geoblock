@@ -60,8 +60,8 @@ const (
 	OptionLogFormat  = "GEOBLOCK_LOG_FORMAT"
 )
 
-// getEnv retrieves the value of the environment variable `key`. If it is not set, it returns the
-// `fallback` value.
+// getEnv retrieves the value of the environment variable `key`. If it is not set, it
+// returns the `fallback` value.
 func getEnv(key, fallback string) string {
 	if value := os.Getenv(key); value != "" {
 		return value
@@ -120,8 +120,8 @@ type ConfigUpdater interface {
 type configReloader struct {
 	path     string
 	prevStat os.FileInfo
-	// Swappable for testing: stat retrieves file metadata for the config file, and load parses and
-	// returns the configuration from the given path.
+	// Swappable for testing: stat retrieves file metadata for the config file, and load
+	// parses and returns the configuration from the given path.
 	stat func(string) (os.FileInfo, error)
 	load func(string) (*config.Configuration, error)
 }
@@ -149,8 +149,8 @@ func (r *configReloader) hasChanged(stat os.FileInfo) bool {
 	return sizeChanged || modTimeChanged
 }
 
-// reloadIfChanged checks if the config file changed and updates the engine if so. Returns (true,
-// nil) if reloaded, (false, nil) if unchanged, (false, err) on error.
+// reloadIfChanged checks if the config file changed and updates the engine if so.
+// Returns (true, nil) if reloaded, (false, nil) if unchanged, (false, err) on error.
 func (r *configReloader) reloadIfChanged(engine ConfigUpdater) (bool, error) {
 	stat, err := r.stat(r.path)
 	if err != nil {
@@ -173,7 +173,8 @@ func (r *configReloader) reloadIfChanged(engine ConfigUpdater) (bool, error) {
 	return true, nil
 }
 
-// autoReload watches the configuration file for changes and updates the engine when it happens.
+// autoReload watches the configuration file for changes and updates the engine when it
+// happens.
 func autoReload(engine ConfigUpdater, path string) {
 	reloader, err := newConfigReloader(path)
 	if err != nil {
@@ -193,8 +194,8 @@ func autoReload(engine ConfigUpdater, path string) {
 	}
 }
 
-// parseLogLevel parses the log level from string to zerolog.Level. It defaults to info level if the
-// provided level is invalid.
+// parseLogLevel parses the log level from string to zerolog.Level. It defaults to info
+// level if the provided level is invalid.
 func parseLogLevel(level string) (zerolog.Level, error) {
 	switch level {
 	case LogLevelTrace:

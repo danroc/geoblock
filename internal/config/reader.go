@@ -1,4 +1,5 @@
-// Package config contains the schema and helper functions to work with the configuration file.
+// Package config contains the schema and helper functions to work with the
+// configuration file.
 package config
 
 import (
@@ -9,14 +10,14 @@ import (
 	"github.com/goccy/go-yaml"
 )
 
-// DomainNameRegex matches a valid domain name as per RFC 1035. It also allows labels to be a
-// single `*` wildcard.
+// DomainNameRegex matches a valid domain name as per RFC 1035. It also allows labels to
+// be a single `*` wildcard.
 var domainNameRegex = regexp.MustCompile(
 	`^(\*|[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)(\.(\*|[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?))*$`,
 )
 
-// isDomainNameField checks if the value of the given field is a valid domain name. It also allows
-// labels to be a single `*` wildcard.
+// isDomainNameField checks if the value of the given field is a valid domain name. It
+// also allows labels to be a single `*` wildcard.
 func isDomainNameField(field validator.FieldLevel) bool {
 	domain, ok := field.Field().Interface().(string)
 	return ok && domainNameRegex.MatchString(domain)
