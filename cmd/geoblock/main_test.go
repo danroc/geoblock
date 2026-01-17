@@ -1,13 +1,40 @@
 package main
 
 import (
+	"errors"
 	"os"
 	"reflect"
 	"testing"
 	"time"
 
+	"github.com/danroc/geoblock/internal/config"
 	"github.com/rs/zerolog"
 )
+
+// Test doubles
+
+type fakeFileInfo struct {
+	name string
+	size int64
+	mod  time.Time
+}
+
+func (f fakeFileInfo) Name() string       { return f.name }
+func (f fakeFileInfo) Size() int64        { return f.size }
+func (f fakeFileInfo) Mode() os.FileMode  { return 0 }
+func (f fakeFileInfo) ModTime() time.Time { return f.mod }
+func (f fakeFileInfo) IsDir() bool        { return false }
+func (f fakeFileInfo) Sys() any           { return nil }
+
+type mockConfigUpdater struct {
+	called bool
+}
+
+func (m *mockConfigUpdater) UpdateConfig(*config.AccessControl) {
+	m.called = true
+}
+
+// Tests
 
 func TestGetEnv(t *testing.T) {
 	tests := []struct {
@@ -109,93 +136,246 @@ func TestGetOptions(t *testing.T) {
 	}
 }
 
-func TestHasChanged(t *testing.T) {
-	now := time.Now()
-	cases := []struct {
-		name string
-		a, b fakeFileInfo
-		want bool
+func TestParseLogLevel(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected zerolog.Level
+		wantErr  bool
+	}{
+		{"trace", "trace", zerolog.TraceLevel, false},
+		{"debug", "debug", zerolog.DebugLevel, false},
+		{"info", "info", zerolog.InfoLevel, false},
+		{"warn", "warn", zerolog.WarnLevel, false},
+		{"error", "error", zerolog.ErrorLevel, false},
+		{"fatal", "fatal", zerolog.FatalLevel, false},
+		{"panic", "panic", zerolog.PanicLevel, false},
+		{"invalid", "invalid", zerolog.InfoLevel, true},
+		{"empty", "", zerolog.InfoLevel, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			parsed, err := parseLogLevel(tt.input)
+			if parsed != tt.expected {
+				t.Errorf("parseLogLevel(%q) = %v, want %v", tt.input, parsed, tt.expected)
+			}
+			if (err != nil) != tt.wantErr {
+				t.Errorf("parseLogLevel(%q) error = %v, wantErr %v", tt.input, err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestConfigureLogger(t *testing.T) {
+	tests := []struct {
+		name      string
+		format    string
+		level     string
+		wantLevel zerolog.Level
 	}{
 		{
-			name: "identical",
-			a:    fakeFileInfo{name: "a", size: 10, mod: now},
-			b:    fakeFileInfo{name: "a", size: 10, mod: now},
-			want: false,
+			name:      "json format with valid level",
+			format:    LogFormatJSON,
+			level:     LogLevelDebug,
+			wantLevel: zerolog.DebugLevel,
 		},
 		{
-			name: "different size",
-			a:    fakeFileInfo{name: "a", size: 10, mod: now},
-			b:    fakeFileInfo{name: "a", size: 20, mod: now},
-			want: true,
+			name:      "text format with valid level",
+			format:    LogFormatText,
+			level:     LogLevelWarn,
+			wantLevel: zerolog.WarnLevel,
 		},
 		{
-			name: "different mod",
-			a:    fakeFileInfo{name: "a", size: 10, mod: now},
-			b:    fakeFileInfo{name: "a", size: 10, mod: now.Add(time.Second)},
-			want: true,
+			name:      "invalid format defaults to text",
+			format:    "invalid",
+			level:     LogLevelError,
+			wantLevel: zerolog.ErrorLevel,
+		},
+		{
+			name:      "invalid level defaults to info",
+			format:    LogFormatJSON,
+			level:     "invalid",
+			wantLevel: zerolog.InfoLevel,
+		},
+		{
+			name:      "trace level",
+			format:    LogFormatJSON,
+			level:     LogLevelTrace,
+			wantLevel: zerolog.TraceLevel,
+		},
+		{
+			name:      "info level",
+			format:    LogFormatJSON,
+			level:     LogLevelInfo,
+			wantLevel: zerolog.InfoLevel,
+		},
+		{
+			name:      "fatal level",
+			format:    LogFormatJSON,
+			level:     LogLevelFatal,
+			wantLevel: zerolog.FatalLevel,
+		},
+		{
+			name:      "panic level",
+			format:    LogFormatJSON,
+			level:     LogLevelPanic,
+			wantLevel: zerolog.PanicLevel,
 		},
 	}
 
-	for _, tt := range cases {
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := hasChanged(tt.a, tt.b)
-			if got != tt.want {
+			// Save and restore global level to prevent test pollution
+			originalLevel := zerolog.GlobalLevel()
+			t.Cleanup(func() {
+				zerolog.SetGlobalLevel(originalLevel)
+			})
+
+			configureLogger(tt.format, tt.level)
+			if zerolog.GlobalLevel() != tt.wantLevel {
 				t.Errorf(
-					"hasChanged(%v, %v) = %v, want %v",
-					tt.a, tt.b, got, tt.want,
+					"configureLogger(%q, %q) set level to %v, want %v",
+					tt.format, tt.level, zerolog.GlobalLevel(), tt.wantLevel,
 				)
 			}
 		})
 	}
 }
 
-func TestParseLogLevel(t *testing.T) {
-	cases := []struct {
-		input    string
-		expected zerolog.Level
-		wantErr  bool
-	}{
-		{"trace", zerolog.TraceLevel, false},
-		{"debug", zerolog.DebugLevel, false},
-		{"info", zerolog.InfoLevel, false},
-		{"warn", zerolog.WarnLevel, false},
-		{"error", zerolog.ErrorLevel, false},
-		{"fatal", zerolog.FatalLevel, false},
-		{"panic", zerolog.PanicLevel, false},
-		{"invalid", zerolog.InfoLevel, true},
-		{"", zerolog.InfoLevel, true},
+func TestConfigReloader_ReloadIfChanged(t *testing.T) {
+	now := time.Now()
+	prevStat := fakeFileInfo{name: "config.yaml", size: 100, mod: now}
+	newStat := fakeFileInfo{name: "config.yaml", size: 200, mod: now.Add(time.Second)}
+	validCfg := &config.Configuration{
+		AccessControl: config.AccessControl{DefaultPolicy: "deny"},
 	}
 
-	for _, c := range cases {
-		parsed, err := parseLogLevel(c.input)
-		if parsed != c.expected {
-			t.Errorf(
-				"parseLogLevel(%q) = %v, want %v",
-				c.input,
-				parsed,
-				c.expected,
-			)
+	t.Run("file not changed", func(t *testing.T) {
+		mock := &mockConfigUpdater{}
+		reloader := &configReloader{
+			path:     "config.yaml",
+			prevStat: prevStat,
+			stat:     func(string) (os.FileInfo, error) { return prevStat, nil },
+			load:     func(string) (*config.Configuration, error) { return validCfg, nil },
 		}
-		if (err != nil) != c.wantErr {
-			t.Errorf(
-				"parseLogLevel(%q) error = %v, wantErr %v",
-				c.input,
-				err,
-				c.wantErr,
-			)
+
+		reloaded, err := reloader.reloadIfChanged(mock)
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
 		}
-	}
-}
+		if reloaded {
+			t.Error("should not report reloaded when file unchanged")
+		}
+		if mock.called {
+			t.Error("UpdateConfig should not be called when file unchanged")
+		}
+	})
 
-type fakeFileInfo struct {
-	name string
-	size int64
-	mod  time.Time
-}
+	t.Run("file changed with valid config", func(t *testing.T) {
+		mock := &mockConfigUpdater{}
+		reloader := &configReloader{
+			path:     "config.yaml",
+			prevStat: prevStat,
+			stat:     func(string) (os.FileInfo, error) { return newStat, nil },
+			load:     func(string) (*config.Configuration, error) { return validCfg, nil },
+		}
 
-func (f fakeFileInfo) Name() string       { return f.name }
-func (f fakeFileInfo) Size() int64        { return f.size }
-func (f fakeFileInfo) Mode() os.FileMode  { return 0 }
-func (f fakeFileInfo) ModTime() time.Time { return f.mod }
-func (f fakeFileInfo) IsDir() bool        { return false }
-func (f fakeFileInfo) Sys() interface{}   { return nil }
+		reloaded, err := reloader.reloadIfChanged(mock)
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
+		if !reloaded {
+			t.Error("should report reloaded when file changed")
+		}
+		if !mock.called {
+			t.Error("UpdateConfig should be called when file changed")
+		}
+	})
+
+	t.Run("file changed with invalid config", func(t *testing.T) {
+		mock := &mockConfigUpdater{}
+		reloader := &configReloader{
+			path:     "config.yaml",
+			prevStat: prevStat,
+			stat:     func(string) (os.FileInfo, error) { return newStat, nil },
+			load: func(string) (*config.Configuration, error) {
+				return nil, errors.New("invalid config")
+			},
+		}
+
+		reloaded, err := reloader.reloadIfChanged(mock)
+
+		if err == nil {
+			t.Error("expected error for invalid config")
+		}
+		if reloaded {
+			t.Error("should not report reloaded on error")
+		}
+		if mock.called {
+			t.Error("UpdateConfig should not be called with invalid config")
+		}
+	})
+
+	t.Run("stat error", func(t *testing.T) {
+		mock := &mockConfigUpdater{}
+		reloader := &configReloader{
+			path:     "config.yaml",
+			prevStat: prevStat,
+			stat: func(string) (os.FileInfo, error) {
+				return nil, errors.New("stat error")
+			},
+			load: func(string) (*config.Configuration, error) { return validCfg, nil },
+		}
+
+		reloaded, err := reloader.reloadIfChanged(mock)
+
+		if err == nil {
+			t.Error("expected error for stat failure")
+		}
+		if reloaded {
+			t.Error("should not report reloaded on error")
+		}
+		if mock.called {
+			t.Error("UpdateConfig should not be called when stat fails")
+		}
+	})
+
+	t.Run("failed load can be retried", func(t *testing.T) {
+		mock := &mockConfigUpdater{}
+		loadAttempts := 0
+		reloader := &configReloader{
+			path:     "config.yaml",
+			prevStat: prevStat,
+			stat:     func(string) (os.FileInfo, error) { return newStat, nil },
+			load: func(string) (*config.Configuration, error) {
+				loadAttempts++
+				if loadAttempts == 1 {
+					return nil, errors.New("transient error")
+				}
+				return validCfg, nil
+			},
+		}
+
+		// First attempt fails
+		reloaded, err := reloader.reloadIfChanged(mock)
+		if err == nil {
+			t.Error("expected error on first attempt")
+		}
+		if reloaded || mock.called {
+			t.Error("should not reload on error")
+		}
+
+		// Second attempt succeeds (prevStat was not updated after failure)
+		reloaded, err = reloader.reloadIfChanged(mock)
+		if err != nil {
+			t.Errorf("unexpected error on retry: %v", err)
+		}
+		if !reloaded {
+			t.Error("should report reloaded on successful retry")
+		}
+		if !mock.called {
+			t.Error("UpdateConfig should be called on successful retry")
+		}
+	})
+}
