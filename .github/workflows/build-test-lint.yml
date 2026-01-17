@@ -35,8 +35,11 @@ jobs:
       - name: Lint
         run: make lint
 
-      - name: Run tests with coverage
+      - name: Run unit tests with coverage
         run: make test-coverage
+
+      - name: Run e2e tests
+        run: make test-e2e
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673 # v5
