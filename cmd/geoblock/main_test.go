@@ -226,6 +226,12 @@ func TestConfigureLogger(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// Save the current global level to restore after the test.
+			originalLevel := zerolog.GlobalLevel()
+			t.Cleanup(func() {
+				zerolog.SetGlobalLevel(originalLevel)
+			})
+
 			configureLogger(tt.format, tt.level)
 			if zerolog.GlobalLevel() != tt.wantLevel {
 				t.Errorf(
