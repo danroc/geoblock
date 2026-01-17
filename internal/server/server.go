@@ -193,8 +193,8 @@ func NewServer(
 	mux := http.NewServeMux()
 	mux.HandleFunc(
 		"GET /v1/forward-auth",
-		func(w http.ResponseWriter, r *http.Request) {
-			getForwardAuth(w, r, resolver, engine)
+		func(writer http.ResponseWriter, request *http.Request) {
+			getForwardAuth(writer, request, resolver, engine)
 		},
 	)
 	mux.HandleFunc("GET /v1/health", getHealth)
