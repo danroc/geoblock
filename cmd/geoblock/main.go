@@ -120,8 +120,8 @@ type ConfigUpdater interface {
 type configReloader struct {
 	path     string
 	prevStat os.FileInfo
-	// Swappable for testing: stat retrieves file metadata for the config file,
-	// and load parses and returns the configuration from the given path.
+	// Swappable for testing: stat retrieves file metadata for the config file, and load parses and
+	// returns the configuration from the given path.
 	stat func(string) (os.FileInfo, error)
 	load func(string) (*config.Configuration, error)
 }
@@ -140,8 +140,8 @@ func newConfigReloader(path string) (*configReloader, error) {
 	}, nil
 }
 
-// reloadIfChanged checks if the config file changed and updates the engine if so.
-// Returns (true, nil) if reloaded, (false, nil) if unchanged, (false, err) on error.
+// reloadIfChanged checks if the config file changed and updates the engine if so. Returns (true,
+// nil) if reloaded, (false, nil) if unchanged, (false, err) on error.
 func (r *configReloader) reloadIfChanged(engine ConfigUpdater) (bool, error) {
 	stat, err := r.stat(r.path)
 	if err != nil {
