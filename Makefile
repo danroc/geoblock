@@ -125,7 +125,7 @@ test: test-unit test-e2e ## Run all tests
 
 .PHONY: test-unit
 test-unit: ## Run unit tests
-	go test -coverprofile=coverage.out ./...
+	go test -coverprofile=coverage.txt ./...
 
 .PHONY: test-e2e
 test-e2e: ## Run end-to-end tests
@@ -134,7 +134,7 @@ test-e2e: ## Run end-to-end tests
 
 .PHONY: test-coverage
 test-coverage: test-unit ## Generate coverage report
-	gocover-cobertura < coverage.out > coverage.xml
+	gocover-cobertura < coverage.txt > coverage.xml
 
 .PHONY: test-bench
 test-bench: ## Run benchmarks
