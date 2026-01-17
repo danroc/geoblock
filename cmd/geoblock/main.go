@@ -140,6 +140,15 @@ func newConfigReloader(path string) (*configReloader, error) {
 	}, nil
 }
 
+// hasChanged returns true if the file metadata differs from the previous stat.
+func (r *configReloader) hasChanged(stat os.FileInfo) bool {
+	var (
+		sizeChanged    = r.prevStat.Size() != stat.Size()
+		modTimeChanged = !r.prevStat.ModTime().Equal(stat.ModTime())
+	)
+	return sizeChanged || modTimeChanged
+}
+
 // reloadIfChanged checks if the config file changed and updates the engine if so. Returns (true,
 // nil) if reloaded, (false, nil) if unchanged, (false, err) on error.
 func (r *configReloader) reloadIfChanged(engine ConfigUpdater) (bool, error) {
@@ -148,7 +157,7 @@ func (r *configReloader) reloadIfChanged(engine ConfigUpdater) (bool, error) {
 		return false, fmt.Errorf("stat config file: %w", err)
 	}
 
-	if r.prevStat.Size() == stat.Size() && r.prevStat.ModTime().Equal(stat.ModTime()) {
+	if !r.hasChanged(stat) {
 		return false, nil
 	}
 
