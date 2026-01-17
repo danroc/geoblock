@@ -52,7 +52,8 @@ func (n *Node[K, V]) getHeight() int {
 	return n.height
 }
 
-// maxOf returns the maximum value between the `max` property of the receiver and a given value.
+// maxOf returns the maximum value between the `max` property of the receiver and a
+// given value.
 func (n *Node[K, V]) maxOf(other K) K {
 	if n == nil || other.Compare(n.max) > 0 {
 		return other
@@ -150,8 +151,8 @@ func (t *ITree[K, V]) Query(key K) []V {
 	return query(t.root, key)
 }
 
-// Traverse walks the tree in pre-order (root, left, right) and calls the provided function for
-// each node with its interval and value.
+// Traverse walks the tree in pre-order (root, left, right) and calls the provided
+// function for each node with its interval and value.
 func (t *ITree[K, V]) Traverse(fn func(interval Interval[K], value V)) {
 	traverse(t.root, fn)
 }

@@ -158,10 +158,20 @@ func TestParseLogLevel(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			parsed, err := parseLogLevel(tt.input)
 			if parsed != tt.expected {
-				t.Errorf("parseLogLevel(%q) = %v, want %v", tt.input, parsed, tt.expected)
+				t.Errorf(
+					"parseLogLevel(%q) = %v, want %v",
+					tt.input,
+					parsed,
+					tt.expected,
+				)
 			}
 			if (err != nil) != tt.wantErr {
-				t.Errorf("parseLogLevel(%q) error = %v, wantErr %v", tt.input, err, tt.wantErr)
+				t.Errorf(
+					"parseLogLevel(%q) error = %v, wantErr %v",
+					tt.input,
+					err,
+					tt.wantErr,
+				)
 			}
 		})
 	}

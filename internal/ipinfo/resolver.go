@@ -61,9 +61,9 @@ type Resolution struct {
 	ASN          uint32 // Autonomous System Number
 }
 
-// mergeResolutions combines multiple Resolution objects by taking the last non-zero value for each
-// field. This implements a "last-write-wins" strategy where later resolutions override earlier
-// ones.
+// mergeResolutions combines multiple Resolution objects by taking the last non-zero
+// value for each field. This implements a "last-write-wins" strategy where later
+// resolutions override earlier ones.
 func mergeResolutions(resolutions []Resolution) Resolution {
 	var merged Resolution
 	for _, r := range resolutions {
@@ -92,8 +92,8 @@ func NewResolver() *Resolver {
 
 // Update updates the databases used by the resolver.
 //
-// If an error occurs while updating a database, the function proceeds to update the next database
-// and returns all the errors at the end.
+// If an error occurs while updating a database, the function proceeds to update the
+// next database and returns all the errors at the end.
 func (r *Resolver) Update() error {
 	items := []struct {
 		parser ParserFn
@@ -105,8 +105,8 @@ func (r *Resolver) Update() error {
 		{parseASNRecord, ASNIPv6URL},
 	}
 
-	// A new database is created for each update so that it can be atomically swapped with the
-	// current database.
+	// A new database is created for each update so that it can be atomically swapped
+	// with the current database.
 	db := itree.NewITree[netip.Addr, Resolution]()
 
 	var errs []error
@@ -128,11 +128,12 @@ func (r *Resolver) Update() error {
 //
 // It is the caller's responsibility to check if the IP is valid.
 //
-// If the country of the IP is not found, the CountryCode field of the result will be an empty
-// string. If the ASN of the IP is not found, the ASN field of the result will be zero.
+// If the country of the IP is not found, the CountryCode field of the result will be an
+// empty string. If the ASN of the IP is not found, the ASN field of the result will be
+// zero.
 //
-// The Organization field is present for informational purposes only. It is not used by the rules
-// engine.
+// The Organization field is present for informational purposes only. It is not used by
+// the rules engine.
 func (r *Resolver) Resolve(ip netip.Addr) Resolution {
 	return mergeResolutions(r.db.Load().Query(ip))
 }
@@ -161,8 +162,8 @@ func update(db *ResTree, parser ParserFn, url string) error {
 
 // fetchCSV returns the CSV records fetched from the given URL.
 func fetchCSV(url string) ([][]string, error) {
-	// It's important to set a timeout to avoid hanging the program if the remote server doesn't
-	// respond.
+	// It's important to set a timeout to avoid hanging the program if the remote server
+	// doesn't respond.
 	client := &http.Client{
 		Timeout: clientTimeout,
 	}
