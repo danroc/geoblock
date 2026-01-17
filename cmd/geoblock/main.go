@@ -85,8 +85,13 @@ func getOptions() *appOptions {
 	}
 }
 
+// Updater is the interface for types that can update their databases.
+type Updater interface {
+	Update() error
+}
+
 // autoUpdate updates the databases at regular intervals.
-func autoUpdate(resolver *ipinfo.Resolver) {
+func autoUpdate(resolver Updater) {
 	for range time.Tick(autoUpdateInterval) {
 		if err := resolver.Update(); err != nil {
 			log.Error().Err(err).Msg("Cannot update databases")
@@ -105,48 +110,75 @@ func loadConfig(path string) (*config.Configuration, error) {
 	return config.ReadConfig(bytes.NewReader(file))
 }
 
-// hasChanged returns true if the two file infos are different. It only checks the size and the
-// modification time.
-func hasChanged(a, b os.FileInfo) bool {
-	return a.Size() != b.Size() || a.ModTime() != b.ModTime()
+// ConfigUpdater is the interface for types that can update their configuration.
+type ConfigUpdater interface {
+	UpdateConfig(config *config.AccessControl)
+}
+
+// configReloader watches a config file for changes.
+type configReloader struct {
+	path     string
+	prevStat os.FileInfo
+	// Swappable for testing
+	stat func(string) (os.FileInfo, error)
+	load func(string) (*config.Configuration, error)
+}
+
+// newConfigReloader creates a config reloader for the given path.
+func newConfigReloader(path string) (*configReloader, error) {
+	stat, err := os.Stat(path)
+	if err != nil {
+		return nil, err
+	}
+	return &configReloader{
+		path:     path,
+		prevStat: stat,
+		stat:     os.Stat,
+		load:     loadConfig,
+	}, nil
+}
+
+// reloadIfChanged checks if the config file changed and updates the engine if so.
+// Returns (true, nil) if reloaded, (false, nil) if unchanged, (false, err) on error.
+func (r *configReloader) reloadIfChanged(engine ConfigUpdater) (bool, error) {
+	stat, err := r.stat(r.path)
+	if err != nil {
+		return false, err
+	}
+
+	if r.prevStat.Size() == stat.Size() && r.prevStat.ModTime().Equal(stat.ModTime()) {
+		return false, nil
+	}
+
+	// Update prevStat to avoid re-triggering on the same change
+	r.prevStat = stat
+
+	cfg, err := r.load(r.path)
+	if err != nil {
+		return false, err
+	}
+
+	engine.UpdateConfig(&cfg.AccessControl)
+	return true, nil
 }
 
 // autoReload watches the configuration file for changes and updates the engine when it happens.
-func autoReload(engine *rules.Engine, path string) {
-	prevStat, err := os.Stat(path)
+func autoReload(engine ConfigUpdater, path string) {
+	reloader, err := newConfigReloader(path)
 	if err != nil {
-		log.Error().Err(err).Str("path", path).Msg(
-			"Cannot watch configuration file",
-		)
+		log.Error().Err(err).Str("path", path).Msg("Cannot watch configuration file")
 		return
 	}
 
 	for range time.Tick(autoReloadInterval) {
-		stat, err := os.Stat(path)
+		reloaded, err := reloader.reloadIfChanged(engine)
 		if err != nil {
-			log.Error().Err(err).Str("path", path).Msg(
-				"Cannot watch configuration file",
-			)
+			log.Error().Err(err).Str("path", path).Msg("Cannot reload configuration")
 			continue
 		}
-
-		if !hasChanged(prevStat, stat) {
-			continue
+		if reloaded {
+			log.Info().Msg("Configuration reloaded")
 		}
-
-		// Since the file has changed, we update the previous stat.
-		prevStat = stat
-
-		cfg, err := loadConfig(path)
-		if err != nil {
-			log.Error().Err(err).Str("path", path).Msg(
-				"Cannot read configuration file",
-			)
-			continue
-		}
-
-		engine.UpdateConfig(&cfg.AccessControl)
-		log.Info().Msg("Configuration reloaded")
 	}
 }
 
@@ -175,20 +207,17 @@ func parseLogLevel(level string) (zerolog.Level, error) {
 
 // configureLogger configures the logger with the given log format and level.
 func configureLogger(logFormat, level string) {
-	// This should be done first, before any log message is emitted to avoid
-	// inconsistent log messages.
+	// Configure log format before emitting any log messages.
 	switch logFormat {
 	case LogFormatJSON:
 		zerolog.TimeFieldFormat = RFC3339Milli
-	case LogFormatText:
-		log.Logger = log.Output(
-			zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339},
-		)
 	default:
 		log.Logger = log.Output(
 			zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339},
 		)
-		log.Warn().Str("format", logFormat).Msg("Invalid log format")
+		if logFormat != LogFormatText {
+			log.Warn().Str("format", logFormat).Msg("Invalid log format")
+		}
 	}
 
 	if parsedLevel, err := parseLogLevel(level); err != nil {
