@@ -179,9 +179,9 @@ func configureLogger(logFormat, level string) {
 	// This should be done first, before any log message is emitted to avoid
 	// inconsistent log messages.
 	switch logFormat {
-	case "json":
+	case LogFormatJSON:
 		zerolog.TimeFieldFormat = RFC3339Milli
-	case "text":
+	case LogFormatText:
 		log.Logger = log.Output(
 			zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339},
 		)

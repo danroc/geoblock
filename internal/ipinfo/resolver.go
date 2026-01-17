@@ -178,18 +178,28 @@ func fetchCSV(url string) ([][]string, error) {
 	return csv.NewReader(resp.Body).ReadAll()
 }
 
+// parseIPRange parses the start and end IP addresses from a record.
+func parseIPRange(record []string) (netip.Addr, netip.Addr, error) {
+	startIP, err := netip.ParseAddr(record[0])
+	if err != nil {
+		return netip.Addr{}, netip.Addr{}, err
+	}
+
+	endIP, err := netip.ParseAddr(record[1])
+	if err != nil {
+		return netip.Addr{}, netip.Addr{}, err
+	}
+
+	return startIP, endIP, nil
+}
+
 // parseCountryRecord parses a country database record.
 func parseCountryRecord(record []string) (*DBRecord, error) {
 	if len(record) != countryRecordLength {
 		return nil, ErrRecordLength
 	}
 
-	startIP, err := netip.ParseAddr(record[0])
-	if err != nil {
-		return nil, err
-	}
-
-	endIP, err := netip.ParseAddr(record[1])
+	startIP, endIP, err := parseIPRange(record)
 	if err != nil {
 		return nil, err
 	}
@@ -209,12 +219,7 @@ func parseASNRecord(record []string) (*DBRecord, error) {
 		return nil, ErrRecordLength
 	}
 
-	startIP, err := netip.ParseAddr(record[0])
-	if err != nil {
-		return nil, err
-	}
-
-	endIP, err := netip.ParseAddr(record[1])
+	startIP, endIP, err := parseIPRange(record)
 	if err != nil {
 		return nil, err
 	}
