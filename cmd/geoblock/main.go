@@ -4,6 +4,7 @@ package main
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"os"
 	"time"
 
@@ -115,6 +116,32 @@ type ConfigUpdater interface {
 	UpdateConfig(config *config.AccessControl)
 }
 
+// statError wraps an error from stat operation.
+type statError struct {
+	err error
+}
+
+func (e *statError) Error() string {
+	return fmt.Sprintf("stat error: %v", e.err)
+}
+
+func (e *statError) Unwrap() error {
+	return e.err
+}
+
+// loadError wraps an error from config load operation.
+type loadError struct {
+	err error
+}
+
+func (e *loadError) Error() string {
+	return fmt.Sprintf("load error: %v", e.err)
+}
+
+func (e *loadError) Unwrap() error {
+	return e.err
+}
+
 // configReloader watches a config file for changes.
 type configReloader struct {
 	path     string
@@ -143,7 +170,7 @@ func newConfigReloader(path string) (*configReloader, error) {
 func (r *configReloader) reloadIfChanged(engine ConfigUpdater) (bool, error) {
 	stat, err := r.stat(r.path)
 	if err != nil {
-		return false, err
+		return false, &statError{err: err}
 	}
 
 	if r.prevStat.Size() == stat.Size() && r.prevStat.ModTime().Equal(stat.ModTime()) {
@@ -155,7 +182,7 @@ func (r *configReloader) reloadIfChanged(engine ConfigUpdater) (bool, error) {
 
 	cfg, err := r.load(r.path)
 	if err != nil {
-		return false, err
+		return false, &loadError{err: err}
 	}
 
 	engine.UpdateConfig(&cfg.AccessControl)
@@ -173,7 +200,22 @@ func autoReload(engine ConfigUpdater, path string) {
 	for range time.Tick(autoReloadInterval) {
 		reloaded, err := reloader.reloadIfChanged(engine)
 		if err != nil {
-			log.Error().Err(err).Str("path", path).Msg("Cannot reload configuration")
+			var statErr *statError
+			var loadErr *loadError
+			switch {
+			case errors.As(err, &statErr):
+				log.Error().
+					Err(statErr.Unwrap()).
+					Str("path", path).
+					Msg("Cannot watch configuration file")
+			case errors.As(err, &loadErr):
+				log.Error().
+					Err(loadErr.Unwrap()).
+					Str("path", path).
+					Msg("Cannot read configuration file")
+			default:
+				log.Error().Err(err).Str("path", path).Msg("Cannot reload configuration")
+			}
 			continue
 		}
 		if reloaded {

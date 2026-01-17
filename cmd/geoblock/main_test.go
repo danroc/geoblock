@@ -327,11 +327,43 @@ func TestConfigReloader_ReloadIfChanged(t *testing.T) {
 		if err == nil {
 			t.Error("expected error for stat failure")
 		}
+		var statErr *statError
+		if !errors.As(err, &statErr) {
+			t.Errorf("expected statError, got %T", err)
+		}
 		if reloaded {
 			t.Error("should not report reloaded on error")
 		}
 		if mock.called {
 			t.Error("UpdateConfig should not be called when stat fails")
+		}
+	})
+
+	t.Run("load error returns loadError type", func(t *testing.T) {
+		mock := &mockConfigUpdater{}
+		reloader := &configReloader{
+			path:     "config.yaml",
+			prevStat: prevStat,
+			stat:     func(string) (os.FileInfo, error) { return newStat, nil },
+			load: func(string) (*config.Configuration, error) {
+				return nil, errors.New("load error")
+			},
+		}
+
+		reloaded, err := reloader.reloadIfChanged(mock)
+
+		if err == nil {
+			t.Error("expected error for load failure")
+		}
+		var loadErr *loadError
+		if !errors.As(err, &loadErr) {
+			t.Errorf("expected loadError, got %T", err)
+		}
+		if reloaded {
+			t.Error("should not report reloaded on error")
+		}
+		if mock.called {
+			t.Error("UpdateConfig should not be called with invalid config")
 		}
 	})
 }
