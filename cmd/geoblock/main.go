@@ -211,13 +211,15 @@ func configureLogger(logFormat, level string) {
 	switch logFormat {
 	case LogFormatJSON:
 		zerolog.TimeFieldFormat = RFC3339Milli
+	case LogFormatText:
+		log.Logger = log.Output(
+			zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339},
+		)
 	default:
 		log.Logger = log.Output(
 			zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339},
 		)
-		if logFormat != LogFormatText {
-			log.Warn().Str("format", logFormat).Msg("Invalid log format")
-		}
+		log.Warn().Str("format", logFormat).Msg("Invalid log format")
 	}
 
 	if parsedLevel, err := parseLogLevel(level); err != nil {
