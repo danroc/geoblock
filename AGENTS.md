@@ -47,7 +47,7 @@ make format             # Run formatters (gofumpt, goimports, golines)
 make lint-golangci      # Run golangci-lint only
 ```
 
-Linting is handled by [golangci-lint](https://golangci-lint.run/) v2 with configuration in `.golangci.yml`. Enabled linters:
+Linting is handled by [golangci-lint](https://golangci-lint.run/) with configuration in `.golangci.yml`. Enabled linters:
 
 - **Default**: errcheck, gosimple, govet, ineffassign, staticcheck, unused
 - **Additional**: revive (custom rules), gosec (security)
@@ -120,10 +120,10 @@ Run `make format` before committing to ensure consistent formatting.
 - `go-playground/validator`: Config validation
 - No external libraries for interval tree (custom implementation)
 
-**Development (managed via `go tool`):**
+**Development:**
 
-- `golangci-lint`: Linting and formatting (includes revive, gosec, gofumpt, goimports, golines)
-- `gocover-cobertura`: Test coverage reporting
+- [golangci-lint](https://golangci-lint.run/docs/welcome/install/): Linting and formatting
+- `gocover-cobertura`: Test coverage reporting (managed via `go tool`)
 
 ## Common Tasks
 
@@ -205,8 +205,8 @@ To regenerate the entire changelog from git history, use the prompt at `.github/
 ### CI/CD Workflows
 
 - **`build-test-lint.yml`**: Runs on push/PR to main
-  - Installs Go, runs `make tools`, `make build`, `make tidy format`
-  - Uses [golangci-lint-action](https://github.com/golangci/golangci-lint-action) for linting (with caching)
+  - Installs Go, runs `make tools`, `make build`, `make tidy`
+  - Uses [golangci-lint-action](https://github.com/golangci/golangci-lint-action) for formatting and linting (with caching)
   - Runs unit and e2e tests
   - Fails if working directory is dirty after job (enforces generated code committed)
 - **`publish-docker.yml`**: Runs on version tags (`v*.*.*`)

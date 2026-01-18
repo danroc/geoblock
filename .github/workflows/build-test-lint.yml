@@ -9,7 +9,6 @@ on:
   pull_request:
     branches: ['main']
 
-
 jobs:
   build-test-lint:
     runs-on: ubuntu-latest
@@ -29,16 +28,17 @@ jobs:
       - name: Install tools
         run: make tools
 
-      - name: Build
-        run: make build
-
-      - name: Format and tidy
-        run: make tidy format
-
-      - name: Lint
+      - name: Install golangci-lint
         uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20 # v9
         with:
           version: v2.8.0
+          install-only: true
+
+      - name: Lint
+        run: make lint
+
+      - name: Build
+        run: make build
 
       - name: Run unit tests with coverage
         run: make test-coverage
