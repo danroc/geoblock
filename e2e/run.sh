@@ -49,7 +49,7 @@ while ! curl -fs "$HEALTH_URL"; do
     sleep 1
 done
 
-function test() {
+function run_single_test() {
     local test_name=$1
     shift
 
@@ -78,7 +78,7 @@ function test() {
 ANY_FAILED=0
 
 run_test() {
-    test "$@" || ANY_FAILED=1
+    run_single_test "$@" || ANY_FAILED=1
 }
 
 echo ""
