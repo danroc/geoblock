@@ -43,7 +43,7 @@ make test-coverage      # Generate coverage.xml (Cobertura)
 
 ```bash
 make lint               # Run all linters
-make format             # gofumpt + golines (100 char limit)
+make format             # gofumpt + golines (88 char limit)
 make lint-revive        # Custom rules in revive.toml
 make lint-sec           # gosec security scanner
 make lint-staticcheck   # staticcheck
@@ -55,7 +55,7 @@ Run `make format` before committing to ensure consistent formatting.
 
 ### Line Length & Formatting
 
-- **100 characters max** enforced by `golines` with `gofumpt` base formatter
+- **88 characters max** enforced by `golines` with `gofumpt` base formatter
 - Always run `make format` to auto-fix
 
 ### Concurrency Patterns
@@ -142,8 +142,9 @@ Run `make format` before committing to ensure consistent formatting.
 - Uses **semantic versioning** (major.minor.patch) with `v` prefix (e.g., `v0.4.0`)
 - Version embedded at build time via ldflags: `-X 'github.com/danroc/geoblock/internal/version.Version=$(VERSION)'`
 - `VERSION` derived from `git describe --tags --dirty --broken --long`
-- Version string format: `v0.4.0-0-abc1234` (tag-ahead-commit)
-- Parsed by `internal/version` package to extract tag, commit, dirty/broken state
+- Version format: `<tag>-<commits_ahead>-g<short_hash>[-dirty|-broken]` (e.g., `v0.4.0-0-gabc1234`)
+- The `g` prefix before the hash matches git's standard format
+- Parsed by `internal/version` package to extract tag, commits ahead, short hash (without `g`), and dirty/broken state
 
 ### Changelog
 
@@ -185,7 +186,7 @@ The script:
 - Extracts release notes from `CHANGELOG.md` for each git tag
 - Skips releases that already exist
 - Creates releases in chronological order (oldest to newest)
-- Preserves markdown formatting and internal blank lines (strips leading/trailing blank lines)
+- Preserves Markdown formatting and internal blank lines (strips leading/trailing blank lines)
 
 To regenerate the entire changelog from git history, use the prompt at `.github/prompts/generate-changelog.prompt.md` with GitHub Copilot.
 
