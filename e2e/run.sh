@@ -94,43 +94,43 @@ run_test 'missing "X-Forwarded-Host" header' 400 \
 run_test 'invalid source IP address' 400 \
     "$BASE_URL" \
     -H "X-Forwarded-For: invalid-ip" \
-    -H "X-Forwarded-Host: example.org" \
+    -H "X-Forwarded-Host: country-blocked.test" \
     -H "X-Forwarded-Method: GET"
 
 run_test 'missing "X-Forwarded-For" header' 400 \
     "$BASE_URL" \
-    -H "X-Forwarded-Host: example.com" \
+    -H "X-Forwarded-Host: country-allowed.test" \
     -H "X-Forwarded-Method: GET"
 
 run_test 'missing "X-Forwarded-Method" header' 400 \
     "$BASE_URL" \
     -H "X-Forwarded-For: 8.8.8.8" \
-    -H "X-Forwarded-Host: example.com"
+    -H "X-Forwarded-Host: country-allowed.test"
 
 # Domain + country tests
 run_test 'blocked by domain+country' 403 \
     "$BASE_URL" \
     -H "X-Forwarded-For: 8.8.8.8" \
-    -H "X-Forwarded-Host: example.org" \
+    -H "X-Forwarded-Host: country-blocked.test" \
     -H "X-Forwarded-Method: GET"
 
 run_test 'allowed by domain+country' 204 \
     "$BASE_URL" \
     -H "X-Forwarded-For: 8.8.8.8" \
-    -H "X-Forwarded-Host: example.com" \
+    -H "X-Forwarded-Host: country-allowed.test" \
     -H "X-Forwarded-Method: GET"
 
 # Local network tests
 run_test 'allowed local network (IPv4)' 204 \
     "$BASE_URL" \
     -H "X-Forwarded-For: 127.0.0.1" \
-    -H "X-Forwarded-Host: example.com" \
+    -H "X-Forwarded-Host: local.test" \
     -H "X-Forwarded-Method: GET"
 
 run_test 'allowed local network (IPv6)' 204 \
     "$BASE_URL" \
     -H "X-Forwarded-For: ::1" \
-    -H "X-Forwarded-Host: example.com" \
+    -H "X-Forwarded-Host: local.test" \
     -H "X-Forwarded-Method: GET"
 
 # ASN blocking test (8.8.8.8 = AS15169 = Google)
