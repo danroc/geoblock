@@ -32,8 +32,13 @@ jobs:
       - name: Build
         run: make build
 
+      - name: Format and tidy
+        run: make tidy format
+
       - name: Lint
-        run: make lint
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.8.0
 
       - name: Run unit tests with coverage
         run: make test-coverage

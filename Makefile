@@ -36,7 +36,7 @@ RESET   := \033[0m
 # ======================================================================================
 
 .PHONY: lint
-lint: tidy format lint-vet lint-revive lint-sec lint-staticcheck ## Run all linters
+lint: tidy format lint-golangci ## Run all linters
 
 .PHONY: tidy
 tidy: ## Tidy up dependencies
@@ -44,24 +44,11 @@ tidy: ## Tidy up dependencies
 
 .PHONY: format
 format: ## Run code formatters
-	go tool gofumpt -w -extra .
-	go tool golines -w -m 88 --shorten-comments .
+	go tool golangci-lint fmt
 
-.PHONY: lint-vet
-lint-vet: ## Run go-vet linter
-	go vet ./...
-
-.PHONY: lint-revive
-lint-revive: ## Run revive linter
-	go tool revive -config revive.toml  ./...
-
-.PHONY: lint-sec
-lint-sec: ## Run gosec linter
-	go tool gosec ./...
-
-.PHONY: lint-staticcheck
-lint-staticcheck: ## Run staticcheck linter
-	go tool staticcheck ./...
+.PHONY: lint-golangci
+lint-golangci: ## Run golangci-lint
+	go tool golangci-lint run ./...
 
 # ======================================================================================
 # @Dependencies

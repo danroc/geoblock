@@ -37,8 +37,8 @@ func read(data []byte) (*Configuration, error) {
 	}
 
 	validate := validator.New()
-	validate.RegisterValidation("cidr", isCIDRField)         // #nosec G104
-	validate.RegisterValidation("domain", isDomainNameField) // #nosec G104
+	_ = validate.RegisterValidation("cidr", isCIDRField)
+	_ = validate.RegisterValidation("domain", isDomainNameField)
 
 	if err := validate.Struct(config); err != nil {
 		return nil, err
