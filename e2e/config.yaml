@@ -11,16 +11,16 @@ access_control:
         - ::1/128
       policy: allow
 
-    # Rule 2: Block example.org from US (existing)
+    # Rule 2: Block country-blocked.test from US
     - domains:
-        - example.org
+        - country-blocked.test
       countries:
         - US
       policy: deny
 
-    # Rule 3: Allow example.com from US (existing)
+    # Rule 3: Allow country-allowed.test from US
     - domains:
-        - example.com
+        - country-allowed.test
       countries:
         - US
       policy: allow
