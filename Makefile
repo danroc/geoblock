@@ -44,11 +44,11 @@ tidy: ## Tidy up dependencies
 
 .PHONY: format
 format: ## Run code formatters
-	go tool golangci-lint fmt
+	golangci-lint fmt
 
 .PHONY: lint-golangci
 lint-golangci: ## Run golangci-lint
-	go tool golangci-lint run ./...
+	golangci-lint run ./...
 
 # ======================================================================================
 # @Dependencies
