@@ -64,7 +64,7 @@ git tag -l 'v*' | sort -V | while read -r tag; do
     version="${tag#v}"
 
     # Extract changelog section for this version using awk. Start at the version header,
-    # stop before the next `##` header or [links] section
+    # stop before the next `##` header or [links] section.
     notes=$(awk "
         /^## \\[$version\\]/ { found=1; next }
         found && /^## \\[/ { exit }
