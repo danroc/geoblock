@@ -7,8 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/danroc/geoblock/internal/config"
 	"github.com/rs/zerolog"
+
+	"github.com/danroc/geoblock/internal/config"
 )
 
 // Test doubles

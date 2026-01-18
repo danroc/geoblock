@@ -206,9 +206,9 @@ func TestGet(t *testing.T) {
 func TestTotalCalculation(t *testing.T) {
 	testCases := []struct {
 		name    string
-		denied  int
-		allowed int
-		invalid int
+		denied  uint64
+		allowed uint64
+		invalid uint64
 	}{
 		{"zero values", 0, 0, 0},
 		{"only denied", 5, 0, 0},
@@ -223,33 +223,33 @@ func TestTotalCalculation(t *testing.T) {
 			setupTest(t)
 
 			// Add metrics according to test case
-			for i := 0; i < tc.denied; i++ {
+			for range tc.denied {
 				IncDenied()
 			}
-			for i := 0; i < tc.allowed; i++ {
+			for range tc.allowed {
 				IncAllowed()
 			}
-			for i := 0; i < tc.invalid; i++ {
+			for range tc.invalid {
 				IncInvalid()
 			}
 
 			snapshot := Get()
 
-			if snapshot.Requests.Denied != uint64(tc.denied) {
+			if snapshot.Requests.Denied != tc.denied {
 				t.Errorf(
 					"Expected denied to be %d, got %d",
 					tc.denied,
 					snapshot.Requests.Denied,
 				)
 			}
-			if snapshot.Requests.Allowed != uint64(tc.allowed) {
+			if snapshot.Requests.Allowed != tc.allowed {
 				t.Errorf(
 					"Expected allowed to be %d, got %d",
 					tc.allowed,
 					snapshot.Requests.Allowed,
 				)
 			}
-			if snapshot.Requests.Invalid != uint64(tc.invalid) {
+			if snapshot.Requests.Invalid != tc.invalid {
 				t.Errorf(
 					"Expected invalid to be %d, got %d",
 					tc.invalid,

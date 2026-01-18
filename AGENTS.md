@@ -42,12 +42,16 @@ make test-coverage      # Generate coverage.xml (Cobertura)
 ### Linting
 
 ```bash
-make lint               # Run all linters
-make format             # gofumpt + golines (88 char limit)
-make lint-revive        # Custom rules in revive.toml
-make lint-sec           # gosec security scanner
-make lint-staticcheck   # staticcheck
+make lint               # Run all linters (tidy + format + golangci-lint)
+make format             # Run formatters (gofumpt, goimports, golines)
+make lint-golangci      # Run golangci-lint only
 ```
+
+Linting is handled by [golangci-lint](https://golangci-lint.run/) v2 with configuration in `.golangci.yml`. Enabled linters:
+
+- **Default**: errcheck, gosimple, govet, ineffassign, staticcheck, unused
+- **Additional**: revive (custom rules), gosec (security)
+- **Formatters**: gofumpt, goimports, golines (88 char max)
 
 Run `make format` before committing to ensure consistent formatting.
 
@@ -55,7 +59,8 @@ Run `make format` before committing to ensure consistent formatting.
 
 ### Line Length & Formatting
 
-- **88 characters max** enforced by `golines` with `gofumpt` base formatter
+- **88 characters max** enforced by golines (configured in `.golangci.yml`)
+- Formatting handled by golangci-lint: gofumpt (strict fmt) + goimports (import ordering) + golines (line length)
 - Always run `make format` to auto-fix
 
 ### Concurrency Patterns
@@ -108,10 +113,17 @@ Run `make format` before committing to ensure consistent formatting.
 
 ### Dependencies
 
+**Runtime:**
+
 - `zerolog`: Structured logging
 - `goccy/go-yaml`: YAML parsing
 - `go-playground/validator`: Config validation
 - No external libraries for interval tree (custom implementation)
+
+**Development (managed via `go tool`):**
+
+- `golangci-lint`: Linting and formatting (includes revive, gosec, gofumpt, goimports, golines)
+- `gocover-cobertura`: Test coverage reporting
 
 ## Common Tasks
 
@@ -193,7 +205,9 @@ To regenerate the entire changelog from git history, use the prompt at `.github/
 ### CI/CD Workflows
 
 - **`build-test-lint.yml`**: Runs on push/PR to main
-  - Installs Go 1.25.5, runs `make tools`, `make build`, `make lint`, `make test`
+  - Installs Go, runs `make tools`, `make build`, `make tidy format`
+  - Uses [golangci-lint-action](https://github.com/golangci/golangci-lint-action) for linting (with caching)
+  - Runs unit and e2e tests
   - Fails if working directory is dirty after job (enforces generated code committed)
 - **`publish-docker.yml`**: Runs on version tags (`v*.*.*`)
   - Builds multi-arch Docker image
