@@ -1,0 +1,55 @@
+---
+access_control:
+  default_policy: deny
+  rules:
+    # Rule 1: Allow local networks (IPv4 + IPv6)
+    - networks:
+        - 10.0.0.0/8
+        - 127.0.0.0/8
+        - 172.16.0.0/12
+        - 192.168.0.0/16
+        - ::1/128
+      policy: allow
+
+    # Rule 2: Block example.org from US (existing)
+    - domains:
+        - example.org
+      countries:
+        - US
+      policy: deny
+
+    # Rule 3: Allow example.com from US (existing)
+    - domains:
+        - example.com
+      countries:
+        - US
+      policy: allow
+
+    # Rule 4: ASN blocking - block Google ASN for specific domain
+    - domains:
+        - asn-blocked.test
+      autonomous_systems:
+        - 15169
+      policy: deny
+
+    # Rule 5: Method filtering - block dangerous methods
+    - domains:
+        - method-test.test
+      methods:
+        - POST
+        - PUT
+        - DELETE
+      policy: deny
+
+    # Rule 6: Method filtering - allow safe methods
+    - domains:
+        - method-test.test
+      methods:
+        - GET
+        - HEAD
+      policy: allow
+
+    # Rule 7: Wildcard domain matching
+    - domains:
+        - "*.wildcard.test"
+      policy: allow
