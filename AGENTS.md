@@ -156,15 +156,17 @@ Run `make format` before committing to ensure consistent formatting.
 
 ### Creating a Release
 
-1. Update `CHANGELOG.md`:
+1. Create release branch: `git checkout -b release/X.Y.Z`
+2. Update `CHANGELOG.md`:
    - Move `[Unreleased]` changes to new version section
    - Add release date in format: `## [X.Y.Z] - YYYY-MM-DD`
    - Ensure all PRs are linked
-2. Commit changelog: `git commit -m "release: X.Y.Z"`
-3. Create tag: `git tag vX.Y.Z`
-4. Push tag: `git push origin vX.Y.Z`
-5. **Automated**: GitHub Actions workflow triggers on `v*.*.*` tags
-6. **Automated**: Docker image built and pushed to `ghcr.io/danroc/geoblock`
+3. Commit changelog: `git commit -m "release: X.Y.Z"`
+4. Push branch and create PR: `git push -u origin release/X.Y.Z && gh pr create`
+5. Merge PR after approval
+6. Create and push tag: `git tag vX.Y.Z && git push origin vX.Y.Z`
+7. **Automated**: GitHub Actions workflow triggers on `v*.*.*` tags
+8. **Automated**: Docker image built and pushed to `ghcr.io/danroc/geoblock`
 
 ### Generating GitHub Releases
 
@@ -179,6 +181,7 @@ DRY_RUN=false bash scripts/generate-releases.sh
 ```
 
 The script:
+
 - Extracts release notes from `CHANGELOG.md` for each git tag
 - Skips releases that already exist
 - Creates releases in chronological order (oldest to newest)

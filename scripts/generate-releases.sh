@@ -2,8 +2,8 @@
 #
 # Generate GitHub releases from git tags and CHANGELOG.md
 #
-# This script extracts release notes from CHANGELOG.md for each git tag and
-# creates corresponding GitHub releases using the GitHub CLI (gh).
+# This script extracts release notes from CHANGELOG.md for each git tag and creates
+# corresponding GitHub releases using the GitHub CLI (gh).
 #
 # Requirements:
 #   - GitHub CLI (gh) installed and authenticated
@@ -63,8 +63,8 @@ git tag -l 'v*' | sort -V | while read -r tag; do
     # Extract version without 'v' prefix
     version="${tag#v}"
 
-    # Extract changelog section for this version using awk
-    # Start at the version header, stop before the next ## header or [links] section
+    # Extract changelog section for this version using awk. Start at the version header,
+    # stop before the next `##` header or [links] section.
     notes=$(awk "
         /^## \\[$version\\]/ { found=1; next }
         found && /^## \\[/ { exit }
