@@ -18,37 +18,37 @@ func TestGet(t *testing.T) {
 	}{
 		{
 			name:     "clean release with v prefix",
-			version:  "v1.0.0-0-1234567",
+			version:  "v1.0.0-0-g1234567",
 			expected: "1.0.0",
 		},
 		{
 			name:     "clean release without v prefix",
-			version:  "1.0.0-0-1234567",
+			version:  "1.0.0-0-g1234567",
 			expected: "1.0.0",
 		},
 		{
 			name:     "dev build with commits ahead",
-			version:  "v1.0.0-5-abcdef0",
+			version:  "v1.0.0-5-gabcdef0",
 			expected: "1.0.0-dev.abcdef0",
 		},
 		{
 			name:     "dev build with dirty flag",
-			version:  "v1.0.0-0-1234567-dirty",
+			version:  "v1.0.0-0-g1234567-dirty",
 			expected: "1.0.0-dev.1234567",
 		},
 		{
 			name:     "dev build with broken flag",
-			version:  "v1.0.0-0-1234567-broken",
+			version:  "v1.0.0-0-g1234567-broken",
 			expected: "1.0.0-dev.1234567",
 		},
 		{
 			name:     "dev build with commits ahead and dirty flag",
-			version:  "v1.0.0-5-abcdef0-dirty",
+			version:  "v1.0.0-5-gabcdef0-dirty",
 			expected: "1.0.0-dev.abcdef0",
 		},
 		{
 			name:     "dev build with commits ahead and broken flag",
-			version:  "v1.0.0-5-abcdef0-broken",
+			version:  "v1.0.0-5-gabcdef0-broken",
 			expected: "1.0.0-dev.abcdef0",
 		},
 	}

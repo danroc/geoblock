@@ -9,7 +9,7 @@ import (
 )
 
 // Version is set at build time via ldflags
-var Version = "v0.0.0-0-0000000-dirty"
+var Version = "v0.0.0-0-g0000000-dirty"
 
 var prefixRegex = regexp.MustCompile(`^v(\d.*)`)
 
@@ -45,7 +45,7 @@ func parseGitDescribe(version string) GitDescribe {
 	return GitDescribe{
 		Tag:    removePrefix(parts[0]),
 		Ahead:  atoiOrZero(parts[1]),
-		Commit: parts[2],
+		Commit: strings.TrimPrefix(parts[2], "g"),
 		Dirty:  isDirty,
 		Broken: isBroken,
 	}
