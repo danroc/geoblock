@@ -17,19 +17,19 @@ import (
 
 // HTTP server timeout constants
 const (
+	httpTimeoutIdle  = 30 * time.Second
 	httpTimeoutRead  = 10 * time.Second
 	httpTimeoutWrite = 30 * time.Second
-	httpTimeoutIdle  = 30 * time.Second
 )
 
 // HTTP headers used by reverse proxies to identify the original request.
 const (
-	headerForwardedMethod = "X-Forwarded-Method"
-	headerForwardedHost   = "X-Forwarded-Host"
 	headerForwardedFor    = "X-Forwarded-For"
+	headerForwardedHost   = "X-Forwarded-Host"
+	headerForwardedMethod = "X-Forwarded-Method"
 )
 
-// Fields used in the log messages.
+// Fields used in the log messages
 const (
 	fieldRequestDomain = "request_domain"
 	fieldRequestMethod = "request_method"
@@ -41,11 +41,11 @@ const (
 	fieldSourceOrg     = "source_org"
 )
 
-// Possible request statuses.
+// Possible request statuses
 const (
-	requestStatusInvalid = "invalid"
 	requestStatusAllowed = "allowed"
 	requestStatusDenied  = "denied"
+	requestStatusInvalid = "invalid"
 )
 
 // isAllowedStatus maps the boolean authorization result to a string status.

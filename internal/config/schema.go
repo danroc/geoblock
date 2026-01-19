@@ -1,6 +1,6 @@
 package config
 
-// Accepted policy values.
+// Accepted policy values
 const (
 	PolicyAllow = "allow"
 	PolicyDeny  = "deny"
