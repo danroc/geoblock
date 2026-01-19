@@ -13,7 +13,7 @@ import (
 	"github.com/danroc/geoblock/internal/itree"
 )
 
-// URLs of the CSV IP location databases.
+// URLs of the CSV IP location databases
 const (
 	CountryIPv4URL = "https://cdn.jsdelivr.net/npm/@ip-location-db/geolite2-country/geolite2-country-ipv4.csv"
 	CountryIPv6URL = "https://cdn.jsdelivr.net/npm/@ip-location-db/geolite2-country/geolite2-country-ipv6.csv"
@@ -21,10 +21,10 @@ const (
 	ASNIPv6URL     = "https://cdn.jsdelivr.net/npm/@ip-location-db/geolite2-asn/geolite2-asn-ipv6.csv"
 )
 
-// Length of the CSV records (number of fields).
+// Length of the CSV records (number of fields)
 const (
-	countryRecordLength = 3
 	asnRecordLength     = 4
+	countryRecordLength = 3
 )
 
 const (

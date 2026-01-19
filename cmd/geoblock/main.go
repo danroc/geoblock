@@ -18,16 +18,16 @@ import (
 	"github.com/danroc/geoblock/internal/version"
 )
 
-// RFC3339Milli is the RFC3339 format with milliseconds precision.
+// RFC3339Milli is the RFC3339 format with milliseconds precision
 const RFC3339Milli = "2006-01-02T15:04:05.000Z07:00"
 
-// Auto-update and auto-reload intervals.
+// Auto-update and auto-reload intervals
 const (
 	autoUpdateInterval = 24 * time.Hour
 	autoReloadInterval = 5 * time.Second
 )
 
-// Log levels.
+// Log levels
 const (
 	LogLevelTrace = "trace"
 	LogLevelDebug = "debug"
@@ -38,26 +38,26 @@ const (
 	LogLevelPanic = "panic"
 )
 
-// Log formats.
+// Log formats
 const (
 	LogFormatJSON = "json"
 	LogFormatText = "text"
 )
 
-// Default options.
+// Default options
 const (
 	DefaultConfigPath = "/etc/geoblock/config.yaml"
-	DefaultServerPort = "8080"
-	DefaultLogLevel   = LogLevelInfo
 	DefaultLogFormat  = LogFormatJSON
+	DefaultLogLevel   = LogLevelInfo
+	DefaultServerPort = "8080"
 )
 
-// Environment variable names.
+// Environment variable names
 const (
 	OptionConfigPath = "GEOBLOCK_CONFIG_FILE"
-	OptionServerPort = "GEOBLOCK_PORT"
-	OptionLogLevel   = "GEOBLOCK_LOG_LEVEL"
 	OptionLogFormat  = "GEOBLOCK_LOG_FORMAT"
+	OptionLogLevel   = "GEOBLOCK_LOG_LEVEL"
+	OptionServerPort = "GEOBLOCK_PORT"
 )
 
 // getEnv retrieves the value of the environment variable `key`. If it is not set, it
