@@ -370,10 +370,18 @@ func TestConfigReloader_ReloadIfChanged(t *testing.T) {
 				t.Errorf("reloadIfChanged() error = %v, want %v", err, tt.wantErr)
 			}
 			if reloaded != tt.wantReload {
-				t.Errorf("reloadIfChanged() reloaded = %v, want %v", reloaded, tt.wantReload)
+				t.Errorf(
+					"reloadIfChanged() reloaded = %v, want %v",
+					reloaded,
+					tt.wantReload,
+				)
 			}
 			if mock.called != tt.wantCalled {
-				t.Errorf("UpdateConfig() called = %v, want %v", mock.called, tt.wantCalled)
+				t.Errorf(
+					"UpdateConfig() called = %v, want %v",
+					mock.called,
+					tt.wantCalled,
+				)
 			}
 		})
 	}
