@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"os"
 	"reflect"
@@ -33,6 +34,24 @@ type mockConfigUpdater struct {
 
 func (m *mockConfigUpdater) UpdateConfig(*config.AccessControl) {
 	m.called = true
+}
+
+type mockUpdater struct {
+	err error
+}
+
+func (m *mockUpdater) Update() error {
+	return m.err
+}
+
+type mockServer struct {
+	shutdownCalled bool
+	shutdownErr    error
+}
+
+func (m *mockServer) Shutdown(context.Context) error {
+	m.shutdownCalled = true
+	return m.shutdownErr
 }
 
 // Tests
@@ -389,4 +408,92 @@ func TestConfigReloader_ReloadIfChanged(t *testing.T) {
 			t.Error("UpdateConfig should be called on successful retry")
 		}
 	})
+}
+
+func TestStopServer(t *testing.T) {
+	t.Run("shuts down server on context cancellation", func(t *testing.T) {
+		mock := &mockServer{}
+		ctx, cancel := context.WithCancel(context.Background())
+		done := make(chan struct{})
+
+		go func() {
+			stopServer(ctx, mock)
+			close(done)
+		}()
+
+		cancel()
+
+		select {
+		case <-done:
+			if !mock.shutdownCalled {
+				t.Error("Shutdown should be called")
+			}
+		case <-time.After(time.Second):
+			t.Error("stopServer did not return after context cancellation")
+		}
+	})
+
+	t.Run("logs error on shutdown failure", func(t *testing.T) {
+		mock := &mockServer{shutdownErr: errors.New("shutdown error")}
+		ctx, cancel := context.WithCancel(context.Background())
+		done := make(chan struct{})
+
+		go func() {
+			stopServer(ctx, mock)
+			close(done)
+		}()
+
+		cancel()
+
+		select {
+		case <-done:
+			if !mock.shutdownCalled {
+				t.Error("Shutdown should be called even if it returns error")
+			}
+		case <-time.After(time.Second):
+			t.Error("stopServer did not return after context cancellation")
+		}
+	})
+}
+
+func TestAutoUpdate_ContextCancellation(t *testing.T) {
+	mock := &mockUpdater{}
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
+
+	go func() {
+		autoUpdate(ctx, mock)
+		close(done)
+	}()
+
+	cancel()
+
+	select {
+	case <-done:
+		// Success: autoUpdate returned after context cancellation
+	case <-time.After(time.Second):
+		t.Error("autoUpdate did not return after context cancellation")
+	}
+}
+
+func TestAutoReload_ContextCancellation(t *testing.T) {
+	mock := &mockConfigUpdater{}
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
+
+	go func() {
+		// Use a nonexistent filepath so `newConfigReloader` fails early and the
+		// function returns immediately (testing early exit path).
+		autoReload(ctx, mock, "nonexistent-file-for-test")
+		close(done)
+	}()
+
+	cancel()
+
+	select {
+	case <-done:
+		// Success: autoReload returned
+	case <-time.After(time.Second):
+		t.Error("autoReload did not return after context cancellation")
+	}
 }

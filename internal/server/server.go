@@ -183,12 +183,8 @@ func getPrometheusMetrics(writer http.ResponseWriter, _ *http.Request) {
 	}
 }
 
-// NewServer creates a new HTTP server that listens on the given address.
-func NewServer(
-	address string,
-	engine *rules.Engine,
-	resolver *ipinfo.Resolver,
-) *http.Server {
+// New creates a new HTTP server that listens on the given address.
+func New(address string, engine *rules.Engine, resolver *ipinfo.Resolver) *http.Server {
 	mux := http.NewServeMux()
 	mux.HandleFunc(
 		"GET /v1/forward-auth",
