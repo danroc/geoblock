@@ -36,14 +36,6 @@ func (m *mockConfigUpdater) UpdateConfig(*config.AccessControl) {
 	m.called = true
 }
 
-type mockUpdater struct {
-	err error
-}
-
-func (m *mockUpdater) Update() error {
-	return m.err
-}
-
 type mockServer struct {
 	shutdownCalled bool
 	shutdownErr    error
@@ -456,44 +448,49 @@ func TestStopServer(t *testing.T) {
 	})
 }
 
-func TestAutoUpdate_ContextCancellation(t *testing.T) {
-	mock := &mockUpdater{}
-	ctx, cancel := context.WithCancel(context.Background())
-	done := make(chan struct{})
+func TestRunEvery(t *testing.T) {
+	t.Run("executes function on each tick", func(t *testing.T) {
+		callCount := 0
+		ctx, cancel := context.WithCancel(context.Background())
+		done := make(chan struct{})
 
-	go func() {
-		autoUpdate(ctx, mock)
-		close(done)
-	}()
+		go func() {
+			runEvery(ctx, 10*time.Millisecond, func() {
+				callCount++
+				if callCount >= 3 {
+					cancel()
+				}
+			})
+			close(done)
+		}()
 
-	cancel()
+		select {
+		case <-done:
+			if callCount < 3 {
+				t.Errorf("expected at least 3 calls, got %d", callCount)
+			}
+		case <-time.After(time.Second):
+			cancel()
+			t.Error("runEvery did not complete in time")
+		}
+	})
 
-	select {
-	case <-done:
-		// Success: autoUpdate returned after context cancellation
-	case <-time.After(time.Second):
-		t.Error("autoUpdate did not return after context cancellation")
-	}
-}
+	t.Run("stops when context is canceled", func(t *testing.T) {
+		ctx, cancel := context.WithCancel(context.Background())
+		done := make(chan struct{})
 
-func TestAutoReload_ContextCancellation(t *testing.T) {
-	mock := &mockConfigUpdater{}
-	ctx, cancel := context.WithCancel(context.Background())
-	done := make(chan struct{})
+		go func() {
+			runEvery(ctx, time.Hour, func() {})
+			close(done)
+		}()
 
-	go func() {
-		// Use a nonexistent filepath so `newConfigReloader` fails early and the
-		// function returns immediately (testing early exit path).
-		autoReload(ctx, mock, "nonexistent-file-for-test")
-		close(done)
-	}()
+		cancel()
 
-	cancel()
-
-	select {
-	case <-done:
-		// Success: autoReload returned
-	case <-time.After(time.Second):
-		t.Error("autoReload did not return after context cancellation")
-	}
+		select {
+		case <-done:
+			// Success: runEvery returned after context cancellation
+		case <-time.After(time.Second):
+			t.Error("runEvery did not return after context cancellation")
+		}
+	})
 }

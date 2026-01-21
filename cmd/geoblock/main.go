@@ -29,6 +29,7 @@ const RFC3339Milli = "2006-01-02T15:04:05.000Z07:00"
 const (
 	autoUpdateInterval = 24 * time.Hour
 	autoReloadInterval = 5 * time.Second
+	shutdownTimeout    = 30 * time.Second
 )
 
 // Log levels
@@ -222,7 +223,11 @@ type Shutdowner interface {
 func stopServer(ctx context.Context, srv Shutdowner) {
 	<-ctx.Done()
 	log.Info().Msg("Shutting down server")
-	if err := srv.Shutdown(context.Background()); err != nil {
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+	defer cancel()
+
+	if err := srv.Shutdown(shutdownCtx); err != nil {
 		log.Error().Err(err).Msg("Server shutdown error")
 	}
 }
