@@ -16,7 +16,6 @@ import (
 const (
 	testTimeout      = time.Second
 	testTickInterval = 10 * time.Millisecond
-	testSettleTime   = 50 * time.Millisecond
 )
 
 // Test helpers
@@ -77,10 +76,13 @@ func (m *mockServer) Shutdown(context.Context) error {
 	return m.shutdownErr
 }
 
-// mockUpdater implements the updater interface for testing context cancellation.
-type mockUpdater struct{}
+// mockUpdater implements the updater interface for testing.
+type mockUpdater struct {
+	callCount int
+}
 
 func (m *mockUpdater) Update() error {
+	m.callCount++
 	return nil
 }
 
@@ -565,23 +567,19 @@ func TestNewConfigReloader(t *testing.T) {
 func TestAutoReload(t *testing.T) {
 	t.Run("handles non-existent file gracefully", func(t *testing.T) {
 		mock := &mockConfigUpdater{}
-		ctx, cancel := context.WithCancel(context.Background())
 		done := make(chan struct{})
 
 		go func() {
-			autoReload(ctx, mock, "/non/existent/file.yaml")
+			// autoReload returns immediately when newConfigReloader fails
+			autoReload(context.Background(), mock, "/non/existent/file.yaml")
 			close(done)
 		}()
 
-		// Wait briefly to ensure error is logged
-		time.Sleep(testSettleTime)
-		cancel()
-
 		select {
 		case <-done:
-			// Should return without panicking
+			// autoReload returned promptly without panicking
 		case <-time.After(testTimeout):
-			t.Fatal("autoReload did not return after context cancellation")
+			t.Fatal("autoReload did not return promptly for non-existent file")
 		}
 	})
 
