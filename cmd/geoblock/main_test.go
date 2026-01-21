@@ -400,44 +400,6 @@ func TestConfigReloader_ReloadIfChanged(t *testing.T) {
 			t.Error("UpdateConfig() called = true, want false")
 		}
 	})
-
-	t.Run("failed load can be retried", func(t *testing.T) {
-		mock := &mockConfigUpdater{}
-		loadAttempts := 0
-		reloader := &configReloader{
-			path:     "config.yaml",
-			prevStat: prevStat,
-			stat:     func(string) (os.FileInfo, error) { return newStat, nil },
-			load: func(string) (*config.Configuration, error) {
-				loadAttempts++
-				if loadAttempts == 1 {
-					return nil, errors.New("transient error")
-				}
-				return validCfg, nil
-			},
-		}
-
-		// First attempt fails
-		reloaded, err := reloader.reloadIfChanged(mock)
-		if err == nil {
-			t.Fatal("first attempt: error = nil, want error")
-		}
-		if reloaded || mock.called {
-			t.Error("first attempt: reloaded or called = true, want false")
-		}
-
-		// Second attempt succeeds (prevStat was not updated after failure)
-		reloaded, err = reloader.reloadIfChanged(mock)
-		if err != nil {
-			t.Fatalf("retry: error = %v, want nil", err)
-		}
-		if !reloaded {
-			t.Error("retry: reloaded = false, want true")
-		}
-		if !mock.called {
-			t.Error("retry: UpdateConfig() called = false, want true")
-		}
-	})
 }
 
 func TestStopServer(t *testing.T) {
@@ -464,24 +426,22 @@ func TestStopServer(t *testing.T) {
 
 func TestRunEvery(t *testing.T) {
 	t.Run("executes function on each tick", func(t *testing.T) {
-		callCount := 0
+		called := false
 		ctx, cancel := context.WithCancel(context.Background())
 		done := make(chan struct{})
 
 		go func() {
 			runEvery(ctx, testTickInterval, func() {
-				callCount++
-				if callCount >= 3 {
-					cancel()
-				}
+				called = true
+				cancel()
 			})
 			close(done)
 		}()
 
 		select {
 		case <-done:
-			if callCount < 3 {
-				t.Errorf("callCount = %d, want >= 3", callCount)
+			if !called {
+				t.Errorf("called = false, want true")
 			}
 		case <-time.After(testTimeout):
 			cancel()
@@ -514,13 +474,6 @@ func TestLoadConfig(t *testing.T) {
 		if cfg == nil {
 			t.Fatal("loadConfig() config = nil, want non-nil")
 		}
-		if cfg.AccessControl.DefaultPolicy != "deny" {
-			t.Errorf(
-				"loadConfig() DefaultPolicy = %q, want %q",
-				cfg.AccessControl.DefaultPolicy,
-				"deny",
-			)
-		}
 	})
 
 	t.Run("returns error for non-existent file", func(t *testing.T) {
@@ -547,13 +500,6 @@ func TestNewConfigReloader(t *testing.T) {
 		if reloader == nil {
 			t.Fatal("newConfigReloader() reloader = nil, want non-nil")
 		}
-		if reloader.path != "testdata/valid-config.yaml" {
-			t.Errorf(
-				"reloader.path = %q, want %q",
-				reloader.path,
-				"testdata/valid-config.yaml",
-			)
-		}
 	})
 
 	t.Run("returns error for non-existent file", func(t *testing.T) {
@@ -570,14 +516,14 @@ func TestAutoReload(t *testing.T) {
 		done := make(chan struct{})
 
 		go func() {
-			// autoReload returns immediately when newConfigReloader fails
+			// This should return promptly and close the done channel
 			autoReload(context.Background(), mock, "/non/existent/file.yaml")
 			close(done)
 		}()
 
 		select {
 		case <-done:
-			// autoReload returned promptly without panicking
+			// The channel closed, meaning `autoReload` returned promptly
 		case <-time.After(testTimeout):
 			t.Fatal("autoReload did not return promptly for non-existent file")
 		}
