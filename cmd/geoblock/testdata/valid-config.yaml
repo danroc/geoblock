@@ -1,0 +1,4 @@
+access_control:
+  default_policy: deny
+  rules:
+    - policy: allow

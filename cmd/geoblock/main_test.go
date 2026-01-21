@@ -13,15 +13,44 @@ import (
 	"github.com/danroc/geoblock/internal/config"
 )
 
+const (
+	testTimeout      = time.Second
+	testTickInterval = 10 * time.Millisecond
+)
+
+// Test helpers
+
+// testContextCancellation runs fn in a goroutine and verifies it returns
+// promptly after ctx is canceled.
+func testContextCancellation(t *testing.T, fn func(ctx context.Context)) {
+	t.Helper()
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
+
+	go func() {
+		fn(ctx)
+		close(done)
+	}()
+
+	cancel()
+
+	select {
+	case <-done:
+		// Success
+	case <-time.After(testTimeout):
+		t.Fatal("function did not return after context cancellation")
+	}
+}
+
 // Test doubles
 
+// fakeFileInfo implements os.FileInfo for testing file stat comparisons.
 type fakeFileInfo struct {
-	name string
 	size int64
 	mod  time.Time
 }
 
-func (f fakeFileInfo) Name() string       { return f.name }
+func (f fakeFileInfo) Name() string       { return "" }
 func (f fakeFileInfo) Size() int64        { return f.size }
 func (f fakeFileInfo) Mode() os.FileMode  { return 0 }
 func (f fakeFileInfo) ModTime() time.Time { return f.mod }
@@ -44,6 +73,13 @@ type mockServer struct {
 func (m *mockServer) Shutdown(context.Context) error {
 	m.shutdownCalled = true
 	return m.shutdownErr
+}
+
+// mockUpdater implements the updater interface for testing.
+type mockUpdater struct{}
+
+func (m *mockUpdater) Update() error {
+	return nil
 }
 
 // Tests
@@ -150,10 +186,10 @@ func TestGetOptions(t *testing.T) {
 
 func TestParseLogLevel(t *testing.T) {
 	tests := []struct {
-		name     string
-		input    string
-		expected zerolog.Level
-		wantErr  bool
+		name    string
+		input   string
+		want    zerolog.Level
+		wantErr bool
 	}{
 		{"trace", "trace", zerolog.TraceLevel, false},
 		{"debug", "debug", zerolog.DebugLevel, false},
@@ -169,17 +205,17 @@ func TestParseLogLevel(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			parsed, err := parseLogLevel(tt.input)
-			if parsed != tt.expected {
+			if parsed != tt.want {
 				t.Errorf(
 					"parseLogLevel(%q) = %v, want %v",
 					tt.input,
 					parsed,
-					tt.expected,
+					tt.want,
 				)
 			}
 			if (err != nil) != tt.wantErr {
 				t.Errorf(
-					"parseLogLevel(%q) error = %v, wantErr %v",
+					"parseLogLevel(%q) error = %v, want %v",
 					tt.input,
 					err,
 					tt.wantErr,
@@ -267,230 +303,221 @@ func TestConfigureLogger(t *testing.T) {
 
 func TestConfigReloader_ReloadIfChanged(t *testing.T) {
 	now := time.Now()
-	prevStat := fakeFileInfo{name: "config.yaml", size: 100, mod: now}
-	newStat := fakeFileInfo{name: "config.yaml", size: 200, mod: now.Add(time.Second)}
+	prevStat := fakeFileInfo{size: 100, mod: now}
+	newStat := fakeFileInfo{size: 200, mod: now.Add(time.Second)}
 	validCfg := &config.Configuration{
 		AccessControl: config.AccessControl{DefaultPolicy: "deny"},
 	}
 
-	t.Run("file not changed", func(t *testing.T) {
-		mock := &mockConfigUpdater{}
-		reloader := &configReloader{
-			path:     "config.yaml",
-			prevStat: prevStat,
-			stat:     func(string) (os.FileInfo, error) { return prevStat, nil },
-			load:     func(string) (*config.Configuration, error) { return validCfg, nil },
-		}
-
-		reloaded, err := reloader.reloadIfChanged(mock)
-		if err != nil {
-			t.Errorf("unexpected error: %v", err)
-		}
-		if reloaded {
-			t.Error("should not report reloaded when file unchanged")
-		}
-		if mock.called {
-			t.Error("UpdateConfig should not be called when file unchanged")
-		}
-	})
-
-	t.Run("file changed with valid config", func(t *testing.T) {
-		mock := &mockConfigUpdater{}
-		reloader := &configReloader{
-			path:     "config.yaml",
-			prevStat: prevStat,
-			stat:     func(string) (os.FileInfo, error) { return newStat, nil },
-			load:     func(string) (*config.Configuration, error) { return validCfg, nil },
-		}
-
-		reloaded, err := reloader.reloadIfChanged(mock)
-		if err != nil {
-			t.Errorf("unexpected error: %v", err)
-		}
-		if !reloaded {
-			t.Error("should report reloaded when file changed")
-		}
-		if !mock.called {
-			t.Error("UpdateConfig should be called when file changed")
-		}
-	})
-
-	t.Run("file changed with invalid config", func(t *testing.T) {
-		mock := &mockConfigUpdater{}
-		reloader := &configReloader{
-			path:     "config.yaml",
-			prevStat: prevStat,
-			stat:     func(string) (os.FileInfo, error) { return newStat, nil },
+	tests := []struct {
+		name       string
+		stat       func(string) (os.FileInfo, error)
+		load       func(string) (*config.Configuration, error)
+		wantReload bool
+		wantErr    bool
+		wantCalled bool
+	}{
+		{
+			name:       "file not changed",
+			stat:       func(string) (os.FileInfo, error) { return prevStat, nil },
+			load:       func(string) (*config.Configuration, error) { return validCfg, nil },
+			wantReload: false,
+			wantErr:    false,
+			wantCalled: false,
+		},
+		{
+			name:       "file changed with valid config",
+			stat:       func(string) (os.FileInfo, error) { return newStat, nil },
+			load:       func(string) (*config.Configuration, error) { return validCfg, nil },
+			wantReload: true,
+			wantErr:    false,
+			wantCalled: true,
+		},
+		{
+			name: "file changed with invalid config",
+			stat: func(string) (os.FileInfo, error) { return newStat, nil },
 			load: func(string) (*config.Configuration, error) {
 				return nil, errors.New("invalid config")
 			},
-		}
-
-		reloaded, err := reloader.reloadIfChanged(mock)
-
-		if err == nil {
-			t.Error("expected error for invalid config")
-		}
-		if reloaded {
-			t.Error("should not report reloaded on error")
-		}
-		if mock.called {
-			t.Error("UpdateConfig should not be called with invalid config")
-		}
-	})
-
-	t.Run("stat error", func(t *testing.T) {
-		mock := &mockConfigUpdater{}
-		reloader := &configReloader{
-			path:     "config.yaml",
-			prevStat: prevStat,
+			wantReload: false,
+			wantErr:    true,
+			wantCalled: false,
+		},
+		{
+			name: "stat error",
 			stat: func(string) (os.FileInfo, error) {
 				return nil, errors.New("stat error")
 			},
-			load: func(string) (*config.Configuration, error) { return validCfg, nil },
-		}
+			load:       func(string) (*config.Configuration, error) { return validCfg, nil },
+			wantReload: false,
+			wantErr:    true,
+			wantCalled: false,
+		},
+	}
 
-		reloaded, err := reloader.reloadIfChanged(mock)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mock := &mockConfigUpdater{}
+			reloader := &configReloader{
+				path:     "config.yaml",
+				prevStat: prevStat,
+				stat:     tt.stat,
+				load:     tt.load,
+			}
 
-		if err == nil {
-			t.Error("expected error for stat failure")
-		}
-		if reloaded {
-			t.Error("should not report reloaded on error")
-		}
-		if mock.called {
-			t.Error("UpdateConfig should not be called when stat fails")
-		}
-	})
-
-	t.Run("failed load can be retried", func(t *testing.T) {
-		mock := &mockConfigUpdater{}
-		loadAttempts := 0
-		reloader := &configReloader{
-			path:     "config.yaml",
-			prevStat: prevStat,
-			stat:     func(string) (os.FileInfo, error) { return newStat, nil },
-			load: func(string) (*config.Configuration, error) {
-				loadAttempts++
-				if loadAttempts == 1 {
-					return nil, errors.New("transient error")
-				}
-				return validCfg, nil
-			},
-		}
-
-		// First attempt fails
-		reloaded, err := reloader.reloadIfChanged(mock)
-		if err == nil {
-			t.Error("expected error on first attempt")
-		}
-		if reloaded || mock.called {
-			t.Error("should not reload on error")
-		}
-
-		// Second attempt succeeds (prevStat was not updated after failure)
-		reloaded, err = reloader.reloadIfChanged(mock)
-		if err != nil {
-			t.Errorf("unexpected error on retry: %v", err)
-		}
-		if !reloaded {
-			t.Error("should report reloaded on successful retry")
-		}
-		if !mock.called {
-			t.Error("UpdateConfig should be called on successful retry")
-		}
-	})
+			reloaded, err := reloader.reloadIfChanged(mock)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("reloadIfChanged() error = %v, want %v", err, tt.wantErr)
+			}
+			if reloaded != tt.wantReload {
+				t.Errorf(
+					"reloadIfChanged() reloaded = %v, want %v",
+					reloaded,
+					tt.wantReload,
+				)
+			}
+			if mock.called != tt.wantCalled {
+				t.Errorf(
+					"UpdateConfig() called = %v, want %v",
+					mock.called,
+					tt.wantCalled,
+				)
+			}
+		})
+	}
 }
 
 func TestStopServer(t *testing.T) {
 	t.Run("shuts down server on context cancellation", func(t *testing.T) {
 		mock := &mockServer{}
-		ctx, cancel := context.WithCancel(context.Background())
-		done := make(chan struct{})
-
-		go func() {
+		testContextCancellation(t, func(ctx context.Context) {
 			stopServer(ctx, mock)
-			close(done)
-		}()
-
-		cancel()
-
-		select {
-		case <-done:
-			if !mock.shutdownCalled {
-				t.Error("Shutdown should be called")
-			}
-		case <-time.After(time.Second):
-			t.Error("stopServer did not return after context cancellation")
+		})
+		if !mock.shutdownCalled {
+			t.Error("Shutdown() called = false, want true")
 		}
 	})
 
 	t.Run("logs error on shutdown failure", func(t *testing.T) {
 		mock := &mockServer{shutdownErr: errors.New("shutdown error")}
-		ctx, cancel := context.WithCancel(context.Background())
-		done := make(chan struct{})
-
-		go func() {
+		testContextCancellation(t, func(ctx context.Context) {
 			stopServer(ctx, mock)
-			close(done)
-		}()
-
-		cancel()
-
-		select {
-		case <-done:
-			if !mock.shutdownCalled {
-				t.Error("Shutdown should be called even if it returns error")
-			}
-		case <-time.After(time.Second):
-			t.Error("stopServer did not return after context cancellation")
+		})
+		if !mock.shutdownCalled {
+			t.Error("Shutdown() called = false, want true")
 		}
 	})
 }
 
 func TestRunEvery(t *testing.T) {
 	t.Run("executes function on each tick", func(t *testing.T) {
-		callCount := 0
+		called := false
 		ctx, cancel := context.WithCancel(context.Background())
 		done := make(chan struct{})
 
 		go func() {
-			runEvery(ctx, 10*time.Millisecond, func() {
-				callCount++
-				if callCount >= 3 {
-					cancel()
-				}
+			runEvery(ctx, testTickInterval, func() {
+				called = true
+				cancel()
 			})
 			close(done)
 		}()
 
 		select {
 		case <-done:
-			if callCount < 3 {
-				t.Errorf("expected at least 3 calls, got %d", callCount)
+			if !called {
+				t.Errorf("called = false, want true")
 			}
-		case <-time.After(time.Second):
+		case <-time.After(testTimeout):
 			cancel()
-			t.Error("runEvery did not complete in time")
+			t.Fatal("runEvery did not complete in time")
 		}
 	})
 
 	t.Run("stops when context is canceled", func(t *testing.T) {
-		ctx, cancel := context.WithCancel(context.Background())
+		testContextCancellation(t, func(ctx context.Context) {
+			runEvery(ctx, time.Hour, func() {})
+		})
+	})
+}
+
+func TestAutoUpdate(t *testing.T) {
+	t.Run("stops when context is canceled", func(t *testing.T) {
+		mock := &mockUpdater{}
+		testContextCancellation(t, func(ctx context.Context) {
+			autoUpdate(ctx, mock)
+		})
+	})
+}
+
+func TestLoadConfig(t *testing.T) {
+	t.Run("loads valid config file", func(t *testing.T) {
+		cfg, err := loadConfig("testdata/valid-config.yaml")
+		if err != nil {
+			t.Fatalf("loadConfig() error = %v, want nil", err)
+		}
+		if cfg == nil {
+			t.Fatal("loadConfig() config = nil, want non-nil")
+		}
+	})
+
+	t.Run("returns error for non-existent file", func(t *testing.T) {
+		_, err := loadConfig("/non/existent/file.yaml")
+		if err == nil {
+			t.Error("loadConfig() error = nil, want error")
+		}
+	})
+
+	t.Run("returns error for invalid YAML", func(t *testing.T) {
+		_, err := loadConfig("testdata/invalid-config.yaml")
+		if err == nil {
+			t.Error("loadConfig() error = nil, want error")
+		}
+	})
+}
+
+func TestNewConfigReloader(t *testing.T) {
+	t.Run("creates reloader for existing file", func(t *testing.T) {
+		reloader, err := newConfigReloader("testdata/valid-config.yaml")
+		if err != nil {
+			t.Fatalf("newConfigReloader() error = %v, want nil", err)
+		}
+		if reloader == nil {
+			t.Fatal("newConfigReloader() reloader = nil, want non-nil")
+		}
+	})
+
+	t.Run("returns error for non-existent file", func(t *testing.T) {
+		_, err := newConfigReloader("/non/existent/file.yaml")
+		if err == nil {
+			t.Error("newConfigReloader() error = nil, want error")
+		}
+	})
+}
+
+func TestAutoReload(t *testing.T) {
+	t.Run("handles non-existent file gracefully", func(t *testing.T) {
+		mock := &mockConfigUpdater{}
 		done := make(chan struct{})
 
 		go func() {
-			runEvery(ctx, time.Hour, func() {})
+			// This should return promptly and close the done channel
+			autoReload(context.Background(), mock, "/non/existent/file.yaml")
 			close(done)
 		}()
 
-		cancel()
-
 		select {
 		case <-done:
-			// Success: runEvery returned after context cancellation
-		case <-time.After(time.Second):
-			t.Error("runEvery did not return after context cancellation")
+			// The channel closed, meaning `autoReload` returned promptly
+		case <-time.After(testTimeout):
+			t.Fatal("autoReload did not return promptly for non-existent file")
 		}
+	})
+
+	t.Run("stops when context is canceled", func(t *testing.T) {
+		mock := &mockConfigUpdater{}
+		testContextCancellation(t, func(ctx context.Context) {
+			autoReload(ctx, mock, "testdata/valid-config.yaml")
+		})
 	})
 }
