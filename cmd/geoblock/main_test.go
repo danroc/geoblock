@@ -77,14 +77,11 @@ func (m *mockServer) Shutdown(context.Context) error {
 	return m.shutdownErr
 }
 
-type mockUpdater struct {
-	updateCalled bool
-	updateErr    error
-}
+// mockUpdater implements the updater interface for testing context cancellation.
+type mockUpdater struct{}
 
 func (m *mockUpdater) Update() error {
-	m.updateCalled = true
-	return m.updateErr
+	return nil
 }
 
 // Tests
@@ -424,7 +421,7 @@ func TestConfigReloader_ReloadIfChanged(t *testing.T) {
 			t.Fatal("first attempt: error = nil, want error")
 		}
 		if reloaded || mock.called {
-			t.Error("first attempt: should not reload on error")
+			t.Error("first attempt: reloaded or called = true, want false")
 		}
 
 		// Second attempt succeeds (prevStat was not updated after failure)
