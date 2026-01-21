@@ -3,9 +3,13 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -25,6 +29,7 @@ const RFC3339Milli = "2006-01-02T15:04:05.000Z07:00"
 const (
 	autoUpdateInterval = 24 * time.Hour
 	autoReloadInterval = 5 * time.Second
+	shutdownTimeout    = 30 * time.Second
 )
 
 // Log levels
@@ -86,20 +91,35 @@ func getOptions() *appOptions {
 	}
 }
 
+// runEvery executes fn at the given interval until the context is canceled.
+func runEvery(ctx context.Context, interval time.Duration, fn func()) {
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			fn()
+		}
+	}
+}
+
 // Updater is the interface for types that can update their databases.
 type Updater interface {
 	Update() error
 }
 
-// autoUpdate updates the databases at regular intervals.
-func autoUpdate(resolver Updater) {
-	for range time.Tick(autoUpdateInterval) {
+// autoUpdate updates the databases at regular intervals until the context is canceled.
+func autoUpdate(ctx context.Context, resolver Updater) {
+	runEvery(ctx, autoUpdateInterval, func() {
 		if err := resolver.Update(); err != nil {
 			log.Error().Err(err).Msg("Cannot update databases")
-			continue
+			return
 		}
 		log.Info().Msg("Databases updated")
-	}
+	})
 }
 
 // loadConfig reads the configuration file from the given path and returns it.
@@ -174,23 +194,41 @@ func (r *configReloader) reloadIfChanged(engine ConfigUpdater) (bool, error) {
 }
 
 // autoReload watches the configuration file for changes and updates the engine when it
-// happens.
-func autoReload(engine ConfigUpdater, path string) {
+// happens. It stops when the context is canceled.
+func autoReload(ctx context.Context, engine ConfigUpdater, path string) {
 	reloader, err := newConfigReloader(path)
 	if err != nil {
 		log.Error().Err(err).Str("path", path).Msg("Cannot watch configuration file")
 		return
 	}
 
-	for range time.Tick(autoReloadInterval) {
+	runEvery(ctx, autoReloadInterval, func() {
 		reloaded, err := reloader.reloadIfChanged(engine)
 		if err != nil {
 			log.Error().Err(err).Str("path", path).Msg("Cannot reload configuration")
-			continue
+			return
 		}
 		if reloaded {
 			log.Info().Msg("Configuration reloaded")
 		}
+	})
+}
+
+// Shutdowner is the interface for types that can be shut down.
+type Shutdowner interface {
+	Shutdown(context.Context) error
+}
+
+// stopServer waits for the context to be canceled and then shuts down the server.
+func stopServer(ctx context.Context, srv Shutdowner) {
+	<-ctx.Done()
+	log.Info().Msg("Shutting down server")
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+	defer cancel()
+
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		log.Error().Err(err).Msg("Server shutdown error")
 	}
 }
 
@@ -261,15 +299,28 @@ func main() {
 		log.Fatal().Err(err).Msg("Cannot initialize database resolver")
 	}
 
+	ctx, stop := signal.NotifyContext(
+		context.Background(),
+		syscall.SIGINT,
+		syscall.SIGTERM,
+	)
+	defer stop()
+
 	var (
 		address = ":" + options.serverPort
 		engine  = rules.NewEngine(&cfg.AccessControl)
-		server  = server.NewServer(address, engine, resolver)
+		srv     = server.New(address, engine, resolver)
 	)
 
-	go autoUpdate(resolver)
-	go autoReload(engine, options.configPath)
+	go autoUpdate(ctx, resolver)
+	go autoReload(ctx, engine, options.configPath)
+	go stopServer(ctx, srv)
 
-	log.Info().Str("address", server.Addr).Msg("Starting server")
-	log.Fatal().Err(server.ListenAndServe()).Msg("Server stopped")
+	log.Info().Str("address", srv.Addr).Msg("Starting server")
+
+	// ErrServerClosed is expected on graceful shutdown, so only log fatal for
+	// unexpected errors.
+	if err := srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+		log.Fatal().Err(err).Msg("Server stopped")
+	}
 }

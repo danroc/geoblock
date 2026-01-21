@@ -193,4 +193,29 @@ diff <(jq --sort-keys 'del(.time, .version)' e2e/expected.log) \
 echo ":: Logs match expected values"
 
 echo ""
+echo "=== Testing Graceful Shutdown ==="
+
+# Send SIGTERM and wait for process to exit
+kill -TERM "$SERVER_PID"
+wait "$SERVER_PID"
+EXIT_CODE=$?
+
+# Verify clean exit (exit code 0)
+if [ "$EXIT_CODE" -ne 0 ]; then
+    echo ":: FAILED - Server exited with code $EXIT_CODE, expected 0"
+    exit 1
+fi
+
+# Verify shutdown message in logs
+if ! grep -q "Shutting down server" geoblock.log; then
+    echo ":: FAILED - Shutdown message not found in logs"
+    exit 1
+fi
+
+echo ":: Graceful shutdown test PASSED"
+
+# Clear SERVER_PID so cleanup doesn't try to kill it again
+SERVER_PID=""
+
+echo ""
 echo ":: ALL E2E TESTS PASSED"

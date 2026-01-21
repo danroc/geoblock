@@ -290,7 +290,7 @@ func (w *brokenResponseWriter) WriteHeader(statusCode int) {
 func TestNewServer(t *testing.T) {
 	resolver := ipinfo.NewResolver()
 	engine := newAllowEngine()
-	server := NewServer(":8080", engine, resolver)
+	server := New(":8080", engine, resolver)
 
 	if got, want := server.Addr, ":8080"; got != want {
 		t.Errorf("Addr = %q, want %q", got, want)
@@ -312,7 +312,7 @@ func TestNewServer(t *testing.T) {
 func TestServerEndpoints(t *testing.T) {
 	resolver := ipinfo.NewResolver()
 	engine := newAllowEngine()
-	server := NewServer(":8080", engine, resolver)
+	server := New(":8080", engine, resolver)
 	tests := []struct {
 		method string
 		path   string
@@ -556,7 +556,7 @@ func TestGetForwardAuthMultipleForwardedIPs(t *testing.T) {
 func TestServerHandlerSetup(t *testing.T) {
 	resolver := ipinfo.NewResolver()
 	engine := newAllowEngine()
-	server := NewServer(":8080", engine, resolver)
+	server := New(":8080", engine, resolver)
 
 	req := httptest.NewRequest("GET", "/v1/forward-auth", nil)
 	w := httptest.NewRecorder()

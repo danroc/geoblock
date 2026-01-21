@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"os"
 	"reflect"
@@ -33,6 +34,16 @@ type mockConfigUpdater struct {
 
 func (m *mockConfigUpdater) UpdateConfig(*config.AccessControl) {
 	m.called = true
+}
+
+type mockServer struct {
+	shutdownCalled bool
+	shutdownErr    error
+}
+
+func (m *mockServer) Shutdown(context.Context) error {
+	m.shutdownCalled = true
+	return m.shutdownErr
 }
 
 // Tests
@@ -387,6 +398,99 @@ func TestConfigReloader_ReloadIfChanged(t *testing.T) {
 		}
 		if !mock.called {
 			t.Error("UpdateConfig should be called on successful retry")
+		}
+	})
+}
+
+func TestStopServer(t *testing.T) {
+	t.Run("shuts down server on context cancellation", func(t *testing.T) {
+		mock := &mockServer{}
+		ctx, cancel := context.WithCancel(context.Background())
+		done := make(chan struct{})
+
+		go func() {
+			stopServer(ctx, mock)
+			close(done)
+		}()
+
+		cancel()
+
+		select {
+		case <-done:
+			if !mock.shutdownCalled {
+				t.Error("Shutdown should be called")
+			}
+		case <-time.After(time.Second):
+			t.Error("stopServer did not return after context cancellation")
+		}
+	})
+
+	t.Run("logs error on shutdown failure", func(t *testing.T) {
+		mock := &mockServer{shutdownErr: errors.New("shutdown error")}
+		ctx, cancel := context.WithCancel(context.Background())
+		done := make(chan struct{})
+
+		go func() {
+			stopServer(ctx, mock)
+			close(done)
+		}()
+
+		cancel()
+
+		select {
+		case <-done:
+			if !mock.shutdownCalled {
+				t.Error("Shutdown should be called even if it returns error")
+			}
+		case <-time.After(time.Second):
+			t.Error("stopServer did not return after context cancellation")
+		}
+	})
+}
+
+func TestRunEvery(t *testing.T) {
+	t.Run("executes function on each tick", func(t *testing.T) {
+		callCount := 0
+		ctx, cancel := context.WithCancel(context.Background())
+		done := make(chan struct{})
+
+		go func() {
+			runEvery(ctx, 10*time.Millisecond, func() {
+				callCount++
+				if callCount >= 3 {
+					cancel()
+				}
+			})
+			close(done)
+		}()
+
+		select {
+		case <-done:
+			if callCount < 3 {
+				t.Errorf("expected at least 3 calls, got %d", callCount)
+			}
+		case <-time.After(time.Second):
+			cancel()
+			t.Error("runEvery did not complete in time")
+		}
+	})
+
+	t.Run("stops when context is canceled", func(t *testing.T) {
+		ctx, cancel := context.WithCancel(context.Background())
+		done := make(chan struct{})
+
+		go func() {
+			runEvery(ctx, time.Hour, func() {})
+			close(done)
+		}()
+
+		cancel()
+
+		select {
+		case <-done:
+			// Success: runEvery returned after context cancellation
+		case <-time.After(time.Second):
+			t.Error("runEvery did not return after context cancellation")
 		}
 	})
 }
