@@ -503,7 +503,6 @@ func TestAutoUpdate(t *testing.T) {
 		testContextCancellation(t, func(ctx context.Context) {
 			autoUpdate(ctx, mock)
 		})
-		_ = mock // mock is available for additional assertions if needed
 	})
 }
 
@@ -594,6 +593,5 @@ func TestAutoReload(t *testing.T) {
 		testContextCancellation(t, func(ctx context.Context) {
 			autoReload(ctx, mock, "testdata/valid-config.yaml")
 		})
-		_ = mock // mock is available for additional assertions if needed
 	})
 }
