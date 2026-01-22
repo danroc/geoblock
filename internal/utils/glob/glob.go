@@ -1,8 +1,8 @@
 // Package glob provides simple globbing functions.
 package glob
 
-// Star matches a string against a pattern that may contain `*` as a
-// wildcard. The `*` character matches zero or more characters.
+// Star matches a string against a pattern that may contain * as a wildcard. The *
+// character matches zero or more characters.
 func Star(pattern, s string) bool {
 	if pattern == "" {
 		return s == ""

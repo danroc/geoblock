@@ -6,7 +6,7 @@ type Comparable[V any] interface {
 	Compare(other V) int
 }
 
-// Interval represents the `[Low, High]` interval (inclusive).
+// Interval represents the [Low, High] interval (inclusive).
 type Interval[V Comparable[V]] struct {
 	Low  V
 	High V
@@ -52,8 +52,8 @@ func (n *Node[K, V]) getHeight() int {
 	return n.height
 }
 
-// maxOf returns the maximum value between the `max` property of the receiver and a
-// given value.
+// maxOf returns the maximum value between the max property of the receiver and a given
+// value.
 func (n *Node[K, V]) maxOf(other K) K {
 	if n == nil || other.Compare(n.max) > 0 {
 		return other
@@ -61,7 +61,7 @@ func (n *Node[K, V]) maxOf(other K) K {
 	return n.max
 }
 
-// updateNode updates the `max` and `height` properties of the node.
+// updateNode updates the max and height properties of the node.
 func (n *Node[K, V]) updateNode() {
 	n.max = n.left.maxOf(n.right.maxOf(n.interval.High))
 	n.height = 1 + max(n.left.getHeight(), n.right.getHeight())
