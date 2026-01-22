@@ -65,8 +65,8 @@ const (
 	OptionServerPort = "GEOBLOCK_PORT"
 )
 
-// getEnv retrieves the value of the environment variable `key`. If it is not set, it
-// returns the `fallback` value.
+// getEnv retrieves the value of the environment variable key. If it is not set, it
+// returns the fallback value.
 func getEnv(key, fallback string) string {
 	if value := os.Getenv(key); value != "" {
 		return value
