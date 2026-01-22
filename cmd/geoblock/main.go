@@ -312,6 +312,8 @@ func main() {
 		srv     = server.New(address, engine, resolver)
 	)
 
+	// Start background tests to update databases, reload configuration, and gracefully
+	// shut down the server.
 	go autoUpdate(ctx, resolver)
 	go autoReload(ctx, engine, options.configPath)
 	go stopServer(ctx, srv)
