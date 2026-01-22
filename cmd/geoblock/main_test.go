@@ -14,14 +14,14 @@ import (
 )
 
 const (
-	testTimeout      = time.Second
+	testTimeout      = 1 * time.Second
 	testTickInterval = 10 * time.Millisecond
 )
 
 // Test helpers
 
-// testContextCancellation runs fn in a goroutine and verifies it returns
-// promptly after ctx is canceled.
+// testContextCancellation runs fn in a goroutine and verifies it returns promptly after
+// ctx is canceled.
 func testContextCancellation(t *testing.T, fn func(ctx context.Context)) {
 	t.Helper()
 	ctx, cancel := context.WithCancel(context.Background())
@@ -29,16 +29,41 @@ func testContextCancellation(t *testing.T, fn func(ctx context.Context)) {
 
 	go func() {
 		fn(ctx)
+
+		// The done channel is closed to signal that fn has returned, which should
+		// happen after the context cancellation.
 		close(done)
 	}()
 
+	// Cancel the context to trigger fn to return
 	cancel()
 
 	select {
 	case <-done:
-		// Success
+		// Success, fn returned after context cancellation
 	case <-time.After(testTimeout):
-		t.Fatal("function did not return after context cancellation")
+		t.Fatal("function did not complete in time after context cancellation")
+	}
+}
+
+// testCompletion runs fn and verifies it completes within testTimeout. If verify is
+// non-nil, it's called after fn completes to check post-conditions.
+func testCompletion(t *testing.T, fn func(), verify func(t *testing.T)) {
+	t.Helper()
+	done := make(chan struct{})
+
+	go func() {
+		fn()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		if verify != nil {
+			verify(t)
+		}
+	case <-time.After(testTimeout):
+		t.Fatal("function did not complete in time")
 	}
 }
 
@@ -213,13 +238,11 @@ func TestParseLogLevel(t *testing.T) {
 					tt.want,
 				)
 			}
-			if (err != nil) != tt.wantErr {
-				t.Errorf(
-					"parseLogLevel(%q) error = %v, want %v",
-					tt.input,
-					err,
-					tt.wantErr,
-				)
+			if err != nil && !tt.wantErr {
+				t.Errorf("parseLogLevel(%q) unexpected error: %v", tt.input, err)
+			}
+			if err == nil && tt.wantErr {
+				t.Errorf("parseLogLevel(%q) expected error, got nil", tt.input)
 			}
 		})
 	}
@@ -366,8 +389,11 @@ func TestConfigReloader_ReloadIfChanged(t *testing.T) {
 			}
 
 			reloaded, err := reloader.reloadIfChanged(mock)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("reloadIfChanged() error = %v, want %v", err, tt.wantErr)
+			if err != nil && !tt.wantErr {
+				t.Errorf("reloadIfChanged() unexpected error: %v", err)
+			}
+			if err == nil && tt.wantErr {
+				t.Errorf("reloadIfChanged() expected error, got nil")
 			}
 			if reloaded != tt.wantReload {
 				t.Errorf(
@@ -393,8 +419,9 @@ func TestStopServer(t *testing.T) {
 		testContextCancellation(t, func(ctx context.Context) {
 			stopServer(ctx, mock)
 		})
+
 		if !mock.shutdownCalled {
-			t.Error("Shutdown() called = false, want true")
+			t.Errorf("Shutdown() called = %v, want %v", mock.shutdownCalled, true)
 		}
 	})
 
@@ -403,35 +430,31 @@ func TestStopServer(t *testing.T) {
 		testContextCancellation(t, func(ctx context.Context) {
 			stopServer(ctx, mock)
 		})
+
 		if !mock.shutdownCalled {
-			t.Error("Shutdown() called = false, want true")
+			t.Errorf("Shutdown() called = %v, want %v", mock.shutdownCalled, true)
 		}
 	})
 }
 
 func TestRunEvery(t *testing.T) {
 	t.Run("executes function on each tick", func(t *testing.T) {
-		called := false
 		ctx, cancel := context.WithCancel(context.Background())
-		done := make(chan struct{})
+		callCount := 0
+		wantCallCount := 3
 
-		go func() {
+		testCompletion(t, func() {
 			runEvery(ctx, testTickInterval, func() {
-				called = true
-				cancel()
+				callCount++
+				if callCount == wantCallCount {
+					cancel()
+				}
 			})
-			close(done)
-		}()
-
-		select {
-		case <-done:
-			if !called {
-				t.Errorf("called = false, want true")
+		}, func(t *testing.T) {
+			if callCount != wantCallCount {
+				t.Errorf("callCount = %d, want %d", callCount, wantCallCount)
 			}
-		case <-time.After(testTimeout):
-			cancel()
-			t.Fatal("runEvery did not complete in time")
-		}
+		})
 	})
 
 	t.Run("stops when context is canceled", func(t *testing.T) {
@@ -451,67 +474,99 @@ func TestAutoUpdate(t *testing.T) {
 }
 
 func TestLoadConfig(t *testing.T) {
-	t.Run("loads valid config file", func(t *testing.T) {
-		cfg, err := loadConfig("testdata/valid-config.yaml")
-		if err != nil {
-			t.Fatalf("loadConfig() error = %v, want nil", err)
-		}
-		if cfg == nil {
-			t.Fatal("loadConfig() config = nil, want non-nil")
-		}
-	})
+	tests := []struct {
+		name    string
+		path    string
+		wantNil bool
+		wantErr bool
+	}{
+		{
+			name:    "loads valid config file",
+			path:    "testdata/valid-config.yaml",
+			wantNil: false,
+			wantErr: false,
+		},
+		{
+			name:    "returns error for non-existent file",
+			path:    "/non/existent/file.yaml",
+			wantNil: true,
+			wantErr: true,
+		},
+		{
+			name:    "returns error for invalid YAML",
+			path:    "testdata/invalid-config.yaml",
+			wantNil: true,
+			wantErr: true,
+		},
+	}
 
-	t.Run("returns error for non-existent file", func(t *testing.T) {
-		_, err := loadConfig("/non/existent/file.yaml")
-		if err == nil {
-			t.Error("loadConfig() error = nil, want error")
-		}
-	})
-
-	t.Run("returns error for invalid YAML", func(t *testing.T) {
-		_, err := loadConfig("testdata/invalid-config.yaml")
-		if err == nil {
-			t.Error("loadConfig() error = nil, want error")
-		}
-	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg, err := loadConfig(tt.path)
+			if err != nil && !tt.wantErr {
+				t.Errorf("loadConfig(%q) unexpected error: %v", tt.path, err)
+			}
+			if err == nil && tt.wantErr {
+				t.Errorf("loadConfig(%q) expected error, got nil", tt.path)
+			}
+			if tt.wantNil && cfg != nil {
+				t.Errorf("loadConfig(%q) = %v, want nil", tt.path, cfg)
+			}
+			if !tt.wantNil && cfg == nil {
+				t.Errorf("loadConfig(%q) = nil, want non-nil", tt.path)
+			}
+		})
+	}
 }
 
 func TestNewConfigReloader(t *testing.T) {
-	t.Run("creates reloader for existing file", func(t *testing.T) {
-		reloader, err := newConfigReloader("testdata/valid-config.yaml")
-		if err != nil {
-			t.Fatalf("newConfigReloader() error = %v, want nil", err)
-		}
-		if reloader == nil {
-			t.Fatal("newConfigReloader() reloader = nil, want non-nil")
-		}
-	})
+	tests := []struct {
+		name    string
+		path    string
+		wantNil bool
+		wantErr bool
+	}{
+		{
+			name:    "creates reloader for existing file",
+			path:    "testdata/valid-config.yaml",
+			wantNil: false,
+			wantErr: false,
+		},
+		{
+			name:    "returns error for non-existent file",
+			path:    "/non/existent/file.yaml",
+			wantNil: true,
+			wantErr: true,
+		},
+	}
 
-	t.Run("returns error for non-existent file", func(t *testing.T) {
-		_, err := newConfigReloader("/non/existent/file.yaml")
-		if err == nil {
-			t.Error("newConfigReloader() error = nil, want error")
-		}
-	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			reloader, err := newConfigReloader(tt.path)
+			if err != nil && !tt.wantErr {
+				t.Errorf("newConfigReloader(%q) unexpected error: %v", tt.path, err)
+			}
+			if err == nil && tt.wantErr {
+				t.Errorf("newConfigReloader(%q) expected error, got nil", tt.path)
+			}
+			if tt.wantNil && reloader != nil {
+				t.Errorf("newConfigReloader(%q) = %v, want nil", tt.path, reloader)
+			}
+			if !tt.wantNil && reloader == nil {
+				t.Errorf("newConfigReloader(%q) = nil, want non-nil", tt.path)
+			}
+		})
+	}
 }
 
 func TestAutoReload(t *testing.T) {
 	t.Run("handles non-existent file gracefully", func(t *testing.T) {
 		mock := &mockConfigUpdater{}
-		done := make(chan struct{})
-
-		go func() {
-			// This should return promptly and close the done channel
+		testCompletion(t, func() {
+			// autoReload should fail to load the non-existent file and return promptly,
+			// causing testCompletion to complete before the timeout.
 			autoReload(context.Background(), mock, "/non/existent/file.yaml")
-			close(done)
-		}()
-
-		select {
-		case <-done:
-			// The channel closed, meaning `autoReload` returned promptly
-		case <-time.After(testTimeout):
-			t.Fatal("autoReload did not return promptly for non-existent file")
-		}
+		}, nil)
 	})
 
 	t.Run("stops when context is canceled", func(t *testing.T) {

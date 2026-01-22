@@ -1,3 +1,4 @@
 /dist/
 coverage.txt
+coverage.out
 coverage.xml
