@@ -174,9 +174,7 @@ func getHealth(writer http.ResponseWriter, _ *http.Request) {
 
 // getPrometheusMetrics returns metrics in Prometheus format.
 func getPrometheusMetrics(writer http.ResponseWriter, _ *http.Request) {
-	writer.Header().Set(
-		"Content-Type", "text/plain; version=0.0.4; charset=utf-8",
-	)
+	writer.Header().Set("Content-Type", "text/plain; version=0.0.4; charset=utf-8")
 	writer.WriteHeader(http.StatusOK)
 	if _, err := writer.Write([]byte(metrics.Prometheus())); err != nil {
 		log.Error().Err(err).Msg("Cannot write Prometheus metrics response")

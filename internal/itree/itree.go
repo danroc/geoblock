@@ -33,10 +33,7 @@ type Node[K Comparable[K], V any] struct {
 }
 
 // NewNode creates a new node with the given interval.
-func NewNode[K Comparable[K], V any](
-	interval Interval[K],
-	value V,
-) *Node[K, V] {
+func NewNode[K Comparable[K], V any](interval Interval[K], value V) *Node[K, V] {
 	return &Node[K, V]{
 		interval: interval,
 		value:    value,
@@ -171,10 +168,7 @@ func traverse[K Comparable[K], V any](
 	traverse(node.right, fn)
 }
 
-func query[K Comparable[K], V any](
-	node *Node[K, V],
-	key K,
-) []V {
+func query[K Comparable[K], V any](node *Node[K, V], key K) []V {
 	// If the maximum of all intervals from this node and below is less than
 	// the key, there are no intervals to query.
 	if node == nil || node.max.Compare(key) < 0 {
