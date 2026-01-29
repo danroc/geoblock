@@ -1,5 +1,5 @@
 ---
-name: Build, test and lint
+name: Build, Test and Lint
 permissions:
   contents: read
 
