@@ -1,0 +1,31 @@
+---
+name: Nightly Tests
+permissions:
+  contents: read
+
+on:
+  schedule:
+    - cron: '0 4 * * *'  # Every day at 4 AM UTC
+  workflow_dispatch:     # Allow manual triggering
+
+jobs:
+  nightly-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        with:
+          fetch-depth: 0
+
+      - name: Install Go
+        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6
+        with:
+          go-version: '1.25.6'
+          cache: true
+
+      - name: Run unit tests
+        run: make test-unit
+
+      - name: Run e2e tests
+        run: make test-e2e
