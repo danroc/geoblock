@@ -26,8 +26,7 @@
 
 ## Introduction
 
-Geoblock is a lightweight authorization service that restricts client access
-based on:
+Geoblock is a lightweight authorization service that restricts client access based on:
 
 - Client's country
 - Client's IP address
@@ -35,26 +34,24 @@ based on:
 - Requested domain
 - Requested method
 
-It works as a forward-authentication service that can be used with reverse
-proxies such as Traefik, NGINX, and Caddy.
+It works as a forward-authentication service that can be used with reverse proxies such
+as Traefik, NGINX, and Caddy.
 
 ## Features
 
-- **Flexible:** Allows you to define access control rules based on
-  countries, domains, methods, networks, and ASNs.
+- **Flexible:** Allows you to define access control rules based on countries, domains,
+  methods, networks, and ASNs.
 
-- **Auto-reload:** Automatically reloads the configuration file when it
-  changes.
+- **Auto-reload:** Automatically reloads the configuration file when it changes.
 
 - **Auto-update:** Automatically updates the GeoLite2 databases every day.
 
-- **Metrics:** Exposes simple metrics to monitor the service and build
-  dashboards.
+- **Metrics:** Exposes simple metrics to monitor the service and build dashboards.
 
 ## Installation
 
-Geoblock should be deployed as a forward authentication service that integrates
-with your existing reverse proxy.
+Geoblock should be deployed as a forward authentication service that integrates with
+your existing reverse proxy.
 
 ```mermaid
 flowchart TD
@@ -78,15 +75,14 @@ flowchart TD
 
 ## Configuration
 
-Geoblock uses a single configuration file (`/etc/geoblock/config.yaml` by
-default) to set access control rules. Rules are evaluated sequentially,
-applying the first match per request. If no rules match, the default policy
-applies.
+Geoblock uses a single configuration file (`/etc/geoblock/config.yaml` by default) to
+set access control rules. Rules are evaluated sequentially, applying the first match per
+request. If no rules match, the default policy applies.
 
-A rule matches if all specified conditions are met. Rules can include one or
-more of the following criteria:
+A rule matches if all specified conditions are met. Rules can include one or more of the
+following criteria:
 
-- `countries`: List of country codes ([ISO 3166-1 alpha-2](https://www.iban.com/country-codes))
+- `countries`: List of country codes ([ISO 3166-1 alpha-2][country-codes])
 - `domains`: List of domain names (supports `*` wildcard, e.g., `*.example.com`)
 - `methods`: List of HTTP methods
 - `networks`: List of IP ranges in CIDR notation
@@ -155,8 +151,8 @@ The following environment variables can be used to configure Geoblock:
 | `GEOBLOCK_LOG_LEVEL`   | Log level                      | `info`                      |
 | `GEOBLOCK_LOG_FORMAT`  | Log format                     | `json`                      |
 
-- Supported log levels are: `trace`, `debug`, `info`, `warn`, `error`, `fatal`,
-  or `panic`.
+- Supported log levels are: `trace`, `debug`, `info`, `warn`, `error`, `fatal`, or
+  `panic`.
 
 - Supported log formats are: `json`, and `text`.
 
@@ -217,8 +213,8 @@ geoblock_requests_total{status="invalid"} 1
 
 ## Monitoring
 
-Geoblock exposes Prometheus metrics and structured logs that can be used to
-monitor the service and create dashboards.
+Geoblock exposes Prometheus metrics and structured logs that can be used to monitor the
+service and create dashboards.
 
 **Dashboard:** [grafana/dashboard.json](./grafana/dashboard.json)
 
@@ -226,12 +222,12 @@ monitor the service and create dashboards.
 
 ## Attribution
 
-- This project uses the [GeoLite2][geolite2] databases provided by
-  [MaxMind][maxmind].
+- This project uses the [GeoLite2][geolite2] databases provided by [MaxMind][maxmind].
 
-- This project uses the database files provided by the
-  [ip-location-db][ip-location-db] project.
+- This project uses the database files provided by the [ip-location-db][ip-location-db]
+  project.
 
 [geolite2]: https://dev.maxmind.com/geoip/geolite2-free-geolocation-data/
 [maxmind]: https://www.maxmind.com/
 [ip-location-db]: https://github.com/sapics/ip-location-db
+[country-codes]: https://www.iban.com/country-codes
