@@ -15,7 +15,7 @@ TESTS_FAILED=0
 # Check for required commands
 for cmd in jq curl; do
     if ! command -v "$cmd" >/dev/null 2>&1; then
-        echo ":: $cmd is required but not installed."
+        echo ":: Error: $cmd is required but not installed"
         exit 1
     fi
 done
@@ -43,7 +43,7 @@ RETRY_COUNT=0
 while ! curl -fs "$HEALTH_URL"; do
     RETRY_COUNT=$((RETRY_COUNT + 1))
     if [ "$RETRY_COUNT" -ge "$MAX_RETRIES" ]; then
-        echo ":: Server failed to start within ${MAX_RETRIES}s"
+        echo ":: Error: Server failed to start within ${MAX_RETRIES}s"
         exit 1
     fi
     sleep 1
@@ -83,7 +83,6 @@ run_test() {
 
 echo ""
 echo "=== Running E2E Tests ==="
-echo ""
 
 # Invalid request tests
 run_test 'missing "X-Forwarded-Host" header' 400 \
@@ -172,50 +171,58 @@ echo "=== Test Summary ==="
 TOTAL_TESTS=$((TESTS_PASSED + TESTS_FAILED))
 echo ":: Passed: $TESTS_PASSED/$TOTAL_TESTS"
 echo ":: Failed: $TESTS_FAILED/$TOTAL_TESTS"
-echo ""
 
 if [ "$ANY_FAILED" -ne 0 ]; then
-    echo ":: SOME TESTS FAILED"
+    echo ""
+    echo ":: Some tests FAILED"
     exit 1
 fi
+echo ""
 
 echo "=== Verifying Metrics ==="
 curl -s "$METRICS_URL" > metrics.prometheus
 
+echo -n ":: Comparing metrics ... "
 diff <(sed 's/{version="[^"]*"}//' metrics.prometheus) \
      <(sed 's/{version="[^"]*"}//' e2e/metrics-expected.prometheus)
-echo ":: Metrics match expected values"
+echo "PASSED"
 
 echo ""
 echo "=== Verifying Logs ==="
+echo -n ":: Comparing logs ... "
 diff <(jq --sort-keys 'del(.time, .version)' e2e/expected.log) \
      <(jq --sort-keys 'del(.time, .version)' geoblock.log)
-echo ":: Logs match expected values"
+echo "PASSED"
 
 echo ""
 echo "=== Testing Graceful Shutdown ==="
-
 # Send SIGTERM and wait for process to exit
 kill -TERM "$SERVER_PID"
 wait "$SERVER_PID"
 EXIT_CODE=$?
 
 # Verify clean exit (exit code 0)
+echo -n ":: Checking exit code ... "
 if [ "$EXIT_CODE" -ne 0 ]; then
-    echo ":: FAILED - Server exited with code $EXIT_CODE, expected 0"
+    echo "FAILED"
+    echo "   Expected: 0"
+    echo "   Actual:   $EXIT_CODE"
     exit 1
 fi
+echo "PASSED"
 
 # Verify shutdown message in logs
+echo -n ":: Checking shutdown message ... "
 if ! grep -q "Shutting down server" geoblock.log; then
-    echo ":: FAILED - Shutdown message not found in logs"
+    echo "FAILED"
+    echo "   Expected: Shutdown message in logs"
+    echo "   Actual:   Message not found"
     exit 1
 fi
-
-echo ":: Graceful shutdown test PASSED"
+echo "PASSED"
 
 # Clear SERVER_PID so cleanup doesn't try to kill it again
 SERVER_PID=""
 
 echo ""
-echo ":: ALL E2E TESTS PASSED"
+echo ":: All E2E tests PASSED"
