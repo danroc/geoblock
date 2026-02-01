@@ -1,5 +1,5 @@
 ---
-name: Nightly Tests
+name: Nightly tests
 permissions:
   contents: read
 
