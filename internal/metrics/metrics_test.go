@@ -23,33 +23,25 @@ func getCounterValue(status string) float64 {
 	return testutil.ToFloat64(requestsTotal.WithLabelValues(status))
 }
 
-func TestIncDenied(t *testing.T) {
-	setupTest(t)
-
-	IncDenied()
-
-	if got := getCounterValue("denied"); got != 1 {
-		t.Errorf("Expected denied count to be 1, got %v", got)
+func TestIncrementFunctions(t *testing.T) {
+	tests := []struct {
+		name   string
+		inc    func()
+		status string
+	}{
+		{"IncDenied", IncDenied, "denied"},
+		{"IncAllowed", IncAllowed, "allowed"},
+		{"IncInvalid", IncInvalid, "invalid"},
 	}
-}
 
-func TestIncAllowed(t *testing.T) {
-	setupTest(t)
-
-	IncAllowed()
-
-	if got := getCounterValue("allowed"); got != 1 {
-		t.Errorf("Expected allowed count to be 1, got %v", got)
-	}
-}
-
-func TestIncInvalid(t *testing.T) {
-	setupTest(t)
-
-	IncInvalid()
-
-	if got := getCounterValue("invalid"); got != 1 {
-		t.Errorf("Expected invalid count to be 1, got %v", got)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			setupTest(t)
+			tt.inc()
+			if got := getCounterValue(tt.status); got != 1 {
+				t.Errorf("Expected %s count to be 1, got %v", tt.status, got)
+			}
+		})
 	}
 }
 
@@ -83,50 +75,34 @@ func TestConcurrentIncrements(t *testing.T) {
 	const numGoroutines = 100
 	const incrementsPerGoroutine = 10
 
+	increments := []struct {
+		inc    func()
+		status string
+	}{
+		{IncDenied, "denied"},
+		{IncAllowed, "allowed"},
+		{IncInvalid, "invalid"},
+	}
+
 	var wg sync.WaitGroup
-
-	wg.Add(numGoroutines)
-	for i := 0; i < numGoroutines; i++ {
-		go func() {
-			defer wg.Done()
-			for j := 0; j < incrementsPerGoroutine; j++ {
-				IncDenied()
-			}
-		}()
+	for _, inc := range increments {
+		wg.Add(numGoroutines)
+		for range numGoroutines {
+			go func() {
+				defer wg.Done()
+				for range incrementsPerGoroutine {
+					inc.inc()
+				}
+			}()
+		}
 	}
-
-	wg.Add(numGoroutines)
-	for i := 0; i < numGoroutines; i++ {
-		go func() {
-			defer wg.Done()
-			for j := 0; j < incrementsPerGoroutine; j++ {
-				IncAllowed()
-			}
-		}()
-	}
-
-	wg.Add(numGoroutines)
-	for i := 0; i < numGoroutines; i++ {
-		go func() {
-			defer wg.Done()
-			for j := 0; j < incrementsPerGoroutine; j++ {
-				IncInvalid()
-			}
-		}()
-	}
-
 	wg.Wait()
 
 	expected := float64(numGoroutines * incrementsPerGoroutine)
-
-	if got := getCounterValue("denied"); got != expected {
-		t.Errorf("Expected denied count to be %v, got %v", expected, got)
-	}
-	if got := getCounterValue("allowed"); got != expected {
-		t.Errorf("Expected allowed count to be %v, got %v", expected, got)
-	}
-	if got := getCounterValue("invalid"); got != expected {
-		t.Errorf("Expected invalid count to be %v, got %v", expected, got)
+	for _, inc := range increments {
+		if got := getCounterValue(inc.status); got != expected {
+			t.Errorf("Expected %s count to be %v, got %v", inc.status, expected, got)
+		}
 	}
 }
 
@@ -235,24 +211,22 @@ func TestReset(t *testing.T) {
 	}
 }
 
-// BenchmarkIncDenied benchmarks the IncDenied function.
-func BenchmarkIncDenied(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		IncDenied()
+func BenchmarkIncrements(b *testing.B) {
+	benchmarks := []struct {
+		name string
+		inc  func()
+	}{
+		{"Denied", IncDenied},
+		{"Allowed", IncAllowed},
+		{"Invalid", IncInvalid},
 	}
-}
 
-// BenchmarkIncAllowed benchmarks the IncAllowed function.
-func BenchmarkIncAllowed(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		IncAllowed()
-	}
-}
-
-// BenchmarkIncInvalid benchmarks the IncInvalid function.
-func BenchmarkIncInvalid(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		IncInvalid()
+	for _, bm := range benchmarks {
+		b.Run(bm.name, func(b *testing.B) {
+			for range b.N {
+				bm.inc()
+			}
+		})
 	}
 }
 
