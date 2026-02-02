@@ -10,6 +10,13 @@ import (
 	"github.com/danroc/geoblock/internal/version"
 )
 
+// Status label values for the requests counter.
+const (
+	StatusAllowed = "allowed"
+	StatusDenied  = "denied"
+	StatusInvalid = "invalid"
+)
+
 var (
 	// registry is a custom registry to avoid exposing Go runtime metrics.
 	registry = prometheus.NewRegistry()
@@ -40,17 +47,17 @@ func init() {
 
 // IncAllowed increments the allowed requests counter.
 func IncAllowed() {
-	requestsTotal.WithLabelValues("allowed").Inc()
+	requestsTotal.WithLabelValues(StatusAllowed).Inc()
 }
 
 // IncDenied increments the denied requests counter.
 func IncDenied() {
-	requestsTotal.WithLabelValues("denied").Inc()
+	requestsTotal.WithLabelValues(StatusDenied).Inc()
 }
 
 // IncInvalid increments the invalid requests counter.
 func IncInvalid() {
-	requestsTotal.WithLabelValues("invalid").Inc()
+	requestsTotal.WithLabelValues(StatusInvalid).Inc()
 }
 
 // Handler returns an HTTP handler for the metrics endpoint.

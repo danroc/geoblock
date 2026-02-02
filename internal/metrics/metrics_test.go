@@ -29,9 +29,9 @@ func TestIncrementFunctions(t *testing.T) {
 		inc    func()
 		status string
 	}{
-		{"IncDenied", IncDenied, "denied"},
-		{"IncAllowed", IncAllowed, "allowed"},
-		{"IncInvalid", IncInvalid, "invalid"},
+		{"IncDenied", IncDenied, StatusDenied},
+		{"IncAllowed", IncAllowed, StatusAllowed},
+		{"IncInvalid", IncInvalid, StatusInvalid},
 	}
 
 	for _, tt := range tests {
@@ -79,9 +79,9 @@ func TestConcurrentIncrements(t *testing.T) {
 		inc    func()
 		status string
 	}{
-		{IncDenied, "denied"},
-		{IncAllowed, "allowed"},
-		{IncInvalid, "invalid"},
+		{IncDenied, StatusDenied},
+		{IncAllowed, StatusAllowed},
+		{IncInvalid, StatusInvalid},
 	}
 
 	var wg sync.WaitGroup
