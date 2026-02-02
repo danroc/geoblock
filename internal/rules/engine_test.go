@@ -396,8 +396,8 @@ func TestEngineAuthorize(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			e := rules.NewEngine(tt.config)
-			if got := e.Authorize(tt.query); got != tt.want {
-				t.Errorf("Engine.Authorize() = %v, want %v", got, tt.want)
+			if got := e.Authorize(tt.query).Allowed; got != tt.want {
+				t.Errorf("Engine.Authorize().Allowed = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -408,15 +408,15 @@ func TestEngineUpdateConfig(t *testing.T) {
 		DefaultPolicy: config.PolicyAllow,
 	})
 
-	if got := e.Authorize(&rules.Query{}); got != true {
-		t.Errorf("Engine.Authorize() = %v, want %v", got, true)
+	if got := e.Authorize(&rules.Query{}).Allowed; got != true {
+		t.Errorf("Engine.Authorize().Allowed = %v, want %v", got, true)
 	}
 
 	e.UpdateConfig(&config.AccessControl{
 		DefaultPolicy: config.PolicyDeny,
 	})
 
-	if got := e.Authorize(&rules.Query{}); got != false {
-		t.Errorf("Engine.Authorize() = %v, want %v", got, false)
+	if got := e.Authorize(&rules.Query{}).Allowed; got != false {
+		t.Errorf("Engine.Authorize().Allowed = %v, want %v", got, false)
 	}
 }

@@ -139,7 +139,7 @@ func getForwardAuth(
 	}
 
 	resolved := resolver.Resolve(sourceIP)
-	result := engine.AuthorizeWithResult(&rules.Query{
+	result := engine.Authorize(&rules.Query{
 		RequestedDomain: domain,
 		RequestedMethod: method,
 		SourceIP:        sourceIP,

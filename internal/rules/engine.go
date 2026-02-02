@@ -83,12 +83,6 @@ func (e *Engine) UpdateConfig(config *config.AccessControl) {
 	e.config.Store(config)
 }
 
-// Authorize checks if the given query is allowed by the engine's rules. The engine will
-// return true if the query is allowed, false otherwise.
-func (e *Engine) Authorize(query *Query) bool {
-	return e.AuthorizeWithResult(query).Allowed
-}
-
 // AuthorizationResult contains the result of an authorization check with metadata.
 type AuthorizationResult struct {
 	Allowed         bool
@@ -97,8 +91,9 @@ type AuthorizationResult struct {
 	IsDefaultPolicy bool
 }
 
-// AuthorizeWithResult checks if the given query is allowed and returns detailed result.
-func (e *Engine) AuthorizeWithResult(query *Query) AuthorizationResult {
+// Authorize checks if the given query is allowed by the engine's rules and returns
+// detailed result including which rule matched.
+func (e *Engine) Authorize(query *Query) AuthorizationResult {
 	cfg := e.config.Load()
 	for i, rule := range cfg.Rules {
 		if ruleApplies(&rule, query) {
