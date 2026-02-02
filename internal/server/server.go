@@ -172,15 +172,6 @@ func getHealth(writer http.ResponseWriter, _ *http.Request) {
 	writer.WriteHeader(http.StatusNoContent)
 }
 
-// getPrometheusMetrics returns metrics in Prometheus format.
-func getPrometheusMetrics(writer http.ResponseWriter, _ *http.Request) {
-	writer.Header().Set("Content-Type", "text/plain; version=0.0.4; charset=utf-8")
-	writer.WriteHeader(http.StatusOK)
-	if _, err := writer.Write([]byte(metrics.Prometheus())); err != nil {
-		log.Error().Err(err).Msg("Cannot write Prometheus metrics response")
-	}
-}
-
 // New creates a new HTTP server that listens on the given address.
 func New(address string, engine *rules.Engine, resolver *ipinfo.Resolver) *http.Server {
 	mux := http.NewServeMux()
@@ -191,7 +182,7 @@ func New(address string, engine *rules.Engine, resolver *ipinfo.Resolver) *http.
 		},
 	)
 	mux.HandleFunc("GET /v1/health", getHealth)
-	mux.HandleFunc("GET /metrics", getPrometheusMetrics)
+	mux.Handle("GET /metrics", metrics.Handler())
 
 	return &http.Server{
 		Addr:         address,

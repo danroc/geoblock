@@ -2,7 +2,6 @@ package server
 
 import (
 	"bytes"
-	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -21,14 +20,6 @@ func assertStatus(t *testing.T, got, want int) {
 	t.Helper()
 	if got != want {
 		t.Errorf("status = %d, want %d", got, want)
-	}
-}
-
-// assertContentType is a test helper that checks Content-Type headers.
-func assertContentType(t *testing.T, got, want string) {
-	t.Helper()
-	if got != want {
-		t.Errorf("Content-Type = %q, want %q", got, want)
 	}
 }
 
@@ -229,17 +220,16 @@ func TestGetHealth(t *testing.T) {
 }
 
 func TestGetPrometheusMetrics(t *testing.T) {
+	resolver := ipinfo.NewResolver()
+	engine := newAllowEngine()
+	server := New(":8080", engine, resolver)
+
 	req := httptest.NewRequest("GET", "/metrics", nil)
 	w := httptest.NewRecorder()
 
-	getPrometheusMetrics(w, req)
+	server.Handler.ServeHTTP(w, req)
 
 	assertStatus(t, w.Code, http.StatusOK)
-	assertContentType(
-		t,
-		w.Header().Get("Content-Type"),
-		"text/plain; version=0.0.4; charset=utf-8",
-	)
 
 	body := w.Body.Bytes()
 	if !bytes.Contains(body, []byte("geoblock_version_info")) {
@@ -258,33 +248,6 @@ func TestGetPrometheusMetrics(t *testing.T) {
 	if !bytes.Contains(body, []byte("# TYPE")) {
 		t.Error("Prometheus output should contain TYPE comments")
 	}
-}
-
-func TestGetMetricsPrometheusError(t *testing.T) {
-	brokenWriter := &brokenResponseWriter{
-		header: make(http.Header),
-	}
-	req := httptest.NewRequest("GET", "/metrics", nil)
-	getPrometheusMetrics(brokenWriter, req)
-	assertStatus(t, brokenWriter.statusCode, http.StatusOK)
-}
-
-// brokenResponseWriter is a ResponseWriter that fails on Write
-type brokenResponseWriter struct {
-	header     http.Header
-	statusCode int
-}
-
-func (w *brokenResponseWriter) Header() http.Header {
-	return w.header
-}
-
-func (w *brokenResponseWriter) Write([]byte) (int, error) {
-	return 0, errors.New("write error")
-}
-
-func (w *brokenResponseWriter) WriteHeader(statusCode int) {
-	w.statusCode = statusCode
 }
 
 func TestNewServer(t *testing.T) {
