@@ -305,8 +305,6 @@ func main() {
 		log.Fatal().Err(err).Msg("Cannot initialize database resolver")
 	}
 	metrics.RecordDBUpdate(stats.Entries, stats.Duration)
-
-	// Record initial config metrics
 	metrics.RecordConfigReload(true, len(cfg.AccessControl.Rules))
 
 	ctx, stop := signal.NotifyContext(
