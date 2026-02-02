@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 
 	"github.com/danroc/geoblock/internal/config"
@@ -30,6 +31,19 @@ func recordTestRequest(status, action string) {
 	RecordRequest(status, "US", "GET", time.Millisecond, 0, action, false)
 }
 
+// assertCounterValue asserts that a counter metric has the expected value.
+func assertCounterValue(
+	t *testing.T,
+	collector prometheus.Collector,
+	expected float64,
+	name string,
+) {
+	t.Helper()
+	if got := testutil.ToFloat64(collector); got != expected {
+		t.Errorf("Expected %s to be %v, got %v", name, expected, got)
+	}
+}
+
 func TestRecordRequest(t *testing.T) {
 	tests := []struct {
 		name   string
@@ -51,6 +65,247 @@ func TestRecordRequest(t *testing.T) {
 	}
 }
 
+func TestRecordRequestEmptyCountry(t *testing.T) {
+	setupTest(t)
+
+	RecordRequest(
+		StatusAllowed,
+		"",
+		"GET",
+		time.Millisecond,
+		0,
+		config.PolicyAllow,
+		false,
+	)
+
+	// Request should still be counted
+	if got := getCounterValue(StatusAllowed); got != 1 {
+		t.Errorf("Expected allowed count to be 1, got %v", got)
+	}
+
+	// Country counter should not be incremented for empty country
+	if got := testutil.ToFloat64(requestsByCountry.WithLabelValues("")); got != 0 {
+		t.Errorf("Expected empty country count to be 0, got %v", got)
+	}
+}
+
+func TestRecordRequestEmptyMethod(t *testing.T) {
+	setupTest(t)
+
+	RecordRequest(
+		StatusAllowed,
+		"US",
+		"",
+		time.Millisecond,
+		0,
+		config.PolicyAllow,
+		false,
+	)
+
+	// Request should still be counted
+	if got := getCounterValue(StatusAllowed); got != 1 {
+		t.Errorf("Expected allowed count to be 1, got %v", got)
+	}
+
+	// Method counter should not be incremented for empty method
+	if got := testutil.ToFloat64(requestsByMethod.WithLabelValues("")); got != 0 {
+		t.Errorf("Expected empty method count to be 0, got %v", got)
+	}
+}
+
+func TestRecordRequestDefaultPolicy(t *testing.T) {
+	setupTest(t)
+
+	RecordRequest(
+		StatusAllowed,
+		"US",
+		"GET",
+		time.Millisecond,
+		0,
+		config.PolicyAllow,
+		true,
+	)
+
+	// Request should be counted
+	if got := getCounterValue(StatusAllowed); got != 1 {
+		t.Errorf("Expected allowed count to be 1, got %v", got)
+	}
+
+	// Default policy counter should be incremented
+	if got := testutil.ToFloat64(
+		defaultPolicyMatches.WithLabelValues(config.PolicyAllow),
+	); got != 1 {
+		t.Errorf("Expected default policy allow count to be 1, got %v", got)
+	}
+
+	// Rule matches should NOT be incremented
+	if got := testutil.ToFloat64(
+		ruleMatches.WithLabelValues("0", config.PolicyAllow),
+	); got != 0 {
+		t.Errorf("Expected rule matches to be 0 for default policy, got %v", got)
+	}
+}
+
+func TestRecordRequestByCountry(t *testing.T) {
+	setupTest(t)
+
+	RecordRequest(
+		StatusAllowed,
+		"US",
+		"GET",
+		time.Millisecond,
+		0,
+		config.PolicyAllow,
+		false,
+	)
+	RecordRequest(
+		StatusAllowed,
+		"US",
+		"GET",
+		time.Millisecond,
+		0,
+		config.PolicyAllow,
+		false,
+	)
+	RecordRequest(
+		StatusAllowed,
+		"DE",
+		"GET",
+		time.Millisecond,
+		0,
+		config.PolicyAllow,
+		false,
+	)
+
+	assertCounterValue(t, requestsByCountry.WithLabelValues("US"), 2, "US count")
+	assertCounterValue(t, requestsByCountry.WithLabelValues("DE"), 1, "DE count")
+}
+
+func TestRecordRequestByMethod(t *testing.T) {
+	setupTest(t)
+
+	RecordRequest(
+		StatusAllowed,
+		"US",
+		"GET",
+		time.Millisecond,
+		0,
+		config.PolicyAllow,
+		false,
+	)
+	RecordRequest(
+		StatusAllowed,
+		"US",
+		"POST",
+		time.Millisecond,
+		0,
+		config.PolicyAllow,
+		false,
+	)
+	RecordRequest(
+		StatusAllowed,
+		"US",
+		"GET",
+		time.Millisecond,
+		0,
+		config.PolicyAllow,
+		false,
+	)
+
+	assertCounterValue(t, requestsByMethod.WithLabelValues("GET"), 2, "GET count")
+	assertCounterValue(t, requestsByMethod.WithLabelValues("POST"), 1, "POST count")
+}
+
+func TestRecordRequestRuleMatches(t *testing.T) {
+	setupTest(t)
+
+	RecordRequest(
+		StatusAllowed,
+		"US",
+		"GET",
+		time.Millisecond,
+		0,
+		config.PolicyAllow,
+		false,
+	)
+	RecordRequest(
+		StatusDenied,
+		"US",
+		"GET",
+		time.Millisecond,
+		1,
+		config.PolicyDeny,
+		false,
+	)
+	RecordRequest(
+		StatusDenied,
+		"US",
+		"GET",
+		time.Millisecond,
+		1,
+		config.PolicyDeny,
+		false,
+	)
+	RecordRequest(
+		StatusAllowed,
+		"US",
+		"GET",
+		time.Millisecond,
+		2,
+		config.PolicyAllow,
+		false,
+	)
+
+	assertCounterValue(
+		t,
+		ruleMatches.WithLabelValues("0", config.PolicyAllow),
+		1,
+		"rule 0 allow",
+	)
+	assertCounterValue(
+		t,
+		ruleMatches.WithLabelValues("1", config.PolicyDeny),
+		2,
+		"rule 1 deny",
+	)
+	assertCounterValue(
+		t,
+		ruleMatches.WithLabelValues("2", config.PolicyAllow),
+		1,
+		"rule 2 allow",
+	)
+}
+
+func TestRecordRequestDuration(t *testing.T) {
+	setupTest(t)
+
+	RecordRequest(
+		StatusAllowed,
+		"US",
+		"GET",
+		50*time.Millisecond,
+		0,
+		config.PolicyAllow,
+		false,
+	)
+	RecordRequest(
+		StatusDenied,
+		"US",
+		"GET",
+		100*time.Millisecond,
+		0,
+		config.PolicyDeny,
+		false,
+	)
+
+	// Verify histogram has recorded observations by checking the collector count
+	// Each histogram label creates multiple metrics (one per bucket + sum + count)
+	count := testutil.CollectAndCount(requestDuration)
+	if count == 0 {
+		t.Error("Expected request duration histogram to have recorded metrics")
+	}
+}
+
 func TestRecordInvalidRequest(t *testing.T) {
 	setupTest(t)
 	RecordInvalidRequest(time.Millisecond)
@@ -62,13 +317,13 @@ func TestRecordInvalidRequest(t *testing.T) {
 func TestMultipleRequests(t *testing.T) {
 	setupTest(t)
 
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		recordTestRequest(StatusDenied, config.PolicyDeny)
 	}
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		recordTestRequest(StatusAllowed, config.PolicyAllow)
 	}
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		RecordInvalidRequest(time.Millisecond)
 	}
 
@@ -209,7 +464,10 @@ func TestRecordConfigReload(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			setupTest(t)
+
+			before := time.Now().Unix()
 			RecordConfigReload(tt.success, tt.rulesCount)
+			after := time.Now().Unix()
 
 			got := testutil.ToFloat64(configReloadTotal.WithLabelValues(tt.wantResult))
 			if got != 1 {
@@ -223,6 +481,26 @@ func TestRecordConfigReload(t *testing.T) {
 						"Expected rules count to be %d, got %v",
 						tt.rulesCount,
 						rulesGot,
+					)
+				}
+
+				// Verify timestamp was recorded
+				timestamp := testutil.ToFloat64(configLastReload)
+				if timestamp < float64(before) || timestamp > float64(after) {
+					t.Errorf(
+						"Expected configLastReload timestamp between %d and %d, got %v",
+						before,
+						after,
+						timestamp,
+					)
+				}
+			} else {
+				// Verify timestamp was NOT updated on failure
+				timestamp := testutil.ToFloat64(configLastReload)
+				if timestamp != 0 {
+					t.Errorf(
+						"Expected configLastReload to be 0 on failure, got %v",
+						timestamp,
 					)
 				}
 			}
@@ -239,7 +517,9 @@ func TestRecordDBUpdate(t *testing.T) {
 	}
 	duration := 2 * time.Second
 
+	before := time.Now().Unix()
 	RecordDBUpdate(entries, duration)
+	after := time.Now().Unix()
 
 	countryGot := testutil.ToFloat64(dbEntries.WithLabelValues("country"))
 	if countryGot != 1000 {
@@ -254,6 +534,17 @@ func TestRecordDBUpdate(t *testing.T) {
 	durationGot := testutil.ToFloat64(dbLoadDuration)
 	if durationGot != 2.0 {
 		t.Errorf("Expected load duration to be 2.0, got %v", durationGot)
+	}
+
+	// Verify timestamp was recorded
+	timestamp := testutil.ToFloat64(dbLastUpdate)
+	if timestamp < float64(before) || timestamp > float64(after) {
+		t.Errorf(
+			"Expected dbLastUpdate timestamp between %d and %d, got %v",
+			before,
+			after,
+			timestamp,
+		)
 	}
 }
 
