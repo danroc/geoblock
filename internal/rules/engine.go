@@ -86,11 +86,34 @@ func (e *Engine) UpdateConfig(config *config.AccessControl) {
 // Authorize checks if the given query is allowed by the engine's rules. The engine will
 // return true if the query is allowed, false otherwise.
 func (e *Engine) Authorize(query *Query) bool {
+	return e.AuthorizeWithResult(query).Allowed
+}
+
+// AuthorizationResult contains the result of an authorization check with metadata.
+type AuthorizationResult struct {
+	Allowed         bool
+	RuleIndex       int // -1 if default policy was used
+	Action          string
+	IsDefaultPolicy bool
+}
+
+// AuthorizeWithResult checks if the given query is allowed and returns detailed result.
+func (e *Engine) AuthorizeWithResult(query *Query) AuthorizationResult {
 	cfg := e.config.Load()
-	for _, rule := range cfg.Rules {
+	for i, rule := range cfg.Rules {
 		if ruleApplies(&rule, query) {
-			return rule.Policy == config.PolicyAllow
+			return AuthorizationResult{
+				Allowed:         rule.Policy == config.PolicyAllow,
+				RuleIndex:       i,
+				Action:          rule.Policy,
+				IsDefaultPolicy: false,
+			}
 		}
 	}
-	return cfg.DefaultPolicy == config.PolicyAllow
+	return AuthorizationResult{
+		Allowed:         cfg.DefaultPolicy == config.PolicyAllow,
+		RuleIndex:       -1,
+		Action:          cfg.DefaultPolicy,
+		IsDefaultPolicy: true,
+	}
 }

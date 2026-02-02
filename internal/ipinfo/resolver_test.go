@@ -59,7 +59,7 @@ func withRT(rt http.RoundTripper, f func()) {
 func TestUpdateError(t *testing.T) {
 	withRT(newErrRT(), func() {
 		r := ipinfo.NewResolver()
-		if err := r.Update(); err == nil {
+		if _, err := r.Update(); err == nil {
 			t.Fatal("expected an error, got nil")
 		}
 	})
@@ -81,7 +81,7 @@ func TestResolve(t *testing.T) {
 			{"1:4::", "", "", ipinfo.AS0},
 		}
 		r := ipinfo.NewResolver()
-		if err := r.Update(); err != nil {
+		if _, err := r.Update(); err != nil {
 			t.Fatal(err)
 		}
 		for _, tt := range tests {
@@ -210,7 +210,7 @@ func TestUpdateInvalidData(t *testing.T) {
 	for _, tt := range tests {
 		withRT(newRTWithDBs(tt.dbs), func() {
 			r := ipinfo.NewResolver()
-			err := r.Update()
+			_, err := r.Update()
 			if err == nil || !strings.Contains(err.Error(), tt.errMsg) {
 				t.Errorf("got %v, want %v", err, tt.errMsg)
 			}

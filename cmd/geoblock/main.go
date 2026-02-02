@@ -17,6 +17,7 @@ import (
 
 	"github.com/danroc/geoblock/internal/config"
 	"github.com/danroc/geoblock/internal/ipinfo"
+	"github.com/danroc/geoblock/internal/metrics"
 	"github.com/danroc/geoblock/internal/rules"
 	"github.com/danroc/geoblock/internal/server"
 	"github.com/danroc/geoblock/internal/version"
@@ -108,17 +109,19 @@ func runEvery(ctx context.Context, interval time.Duration, fn func()) {
 
 // Updater is the interface for types that can update their databases.
 type Updater interface {
-	Update() error
+	Update() (ipinfo.UpdateStats, error)
 }
 
 // autoUpdate updates the databases at regular intervals until the context is canceled.
 func autoUpdate(ctx context.Context, resolver Updater) {
 	runEvery(ctx, autoUpdateInterval, func() {
-		if err := resolver.Update(); err != nil {
+		stats, err := resolver.Update()
+		if err != nil {
 			log.Error().Err(err).Msg("Cannot update databases")
 			return
 		}
 		log.Info().Msg("Databases updated")
+		metrics.RecordDBUpdate(stats.Entries, stats.Duration)
 	})
 }
 
@@ -170,27 +173,27 @@ func (r *configReloader) hasChanged(stat os.FileInfo) bool {
 }
 
 // reloadIfChanged checks if the config file changed and updates the engine if so.
-// Returns (true, nil) if reloaded, (false, nil) if unchanged, (false, err) on error.
-func (r *configReloader) reloadIfChanged(engine ConfigUpdater) (bool, error) {
+// Returns (reloaded, rulesCount, error).
+func (r *configReloader) reloadIfChanged(engine ConfigUpdater) (bool, int, error) {
 	stat, err := r.stat(r.path)
 	if err != nil {
-		return false, fmt.Errorf("stat config file: %w", err)
+		return false, 0, fmt.Errorf("stat config file: %w", err)
 	}
 
 	if !r.hasChanged(stat) {
-		return false, nil
+		return false, 0, nil
 	}
 
 	cfg, err := r.load(r.path)
 	if err != nil {
-		return false, fmt.Errorf("load config file: %w", err)
+		return false, 0, fmt.Errorf("load config file: %w", err)
 	}
 
 	engine.UpdateConfig(&cfg.AccessControl)
 
 	// Update prevStat only after successful reload
 	r.prevStat = stat
-	return true, nil
+	return true, len(cfg.AccessControl.Rules), nil
 }
 
 // autoReload watches the configuration file for changes and updates the engine when it
@@ -203,13 +206,15 @@ func autoReload(ctx context.Context, engine ConfigUpdater, path string) {
 	}
 
 	runEvery(ctx, autoReloadInterval, func() {
-		reloaded, err := reloader.reloadIfChanged(engine)
+		reloaded, rulesCount, err := reloader.reloadIfChanged(engine)
 		if err != nil {
 			log.Error().Err(err).Str("path", path).Msg("Cannot reload configuration")
+			metrics.RecordConfigReload(false, 0)
 			return
 		}
 		if reloaded {
 			log.Info().Msg("Configuration reloaded")
+			metrics.RecordConfigReload(true, rulesCount)
 		}
 	})
 }
@@ -295,9 +300,14 @@ func main() {
 
 	log.Info().Msg("Initializing database resolver")
 	resolver := ipinfo.NewResolver()
-	if err := resolver.Update(); err != nil {
+	stats, err := resolver.Update()
+	if err != nil {
 		log.Fatal().Err(err).Msg("Cannot initialize database resolver")
 	}
+	metrics.RecordDBUpdate(stats.Entries, stats.Duration)
+
+	// Record initial config metrics
+	metrics.RecordConfigReload(true, len(cfg.AccessControl.Rules))
 
 	ctx, stop := signal.NotifyContext(
 		context.Background(),

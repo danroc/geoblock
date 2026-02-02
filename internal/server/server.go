@@ -101,6 +101,8 @@ func getForwardAuth(
 	resolver *ipinfo.Resolver,
 	engine *rules.Engine,
 ) {
+	start := time.Now()
+
 	var (
 		origin = parseForwardedFor(request.Header.Get(headerForwardedFor))
 		domain = request.Header.Get(headerForwardedHost)
@@ -117,7 +119,7 @@ func getForwardAuth(
 			Str(fieldSourceIP, origin).
 			Msg("Missing required headers")
 		writer.WriteHeader(http.StatusBadRequest)
-		metrics.IncInvalid()
+		metrics.RecordInvalidRequest(time.Since(start))
 		return
 	}
 
@@ -132,12 +134,12 @@ func getForwardAuth(
 			Str(fieldSourceIP, origin).
 			Msg("Invalid source IP")
 		writer.WriteHeader(http.StatusBadRequest)
-		metrics.IncInvalid()
+		metrics.RecordInvalidRequest(time.Since(start))
 		return
 	}
 
 	resolved := resolver.Resolve(sourceIP)
-	isAllowed := engine.Authorize(&rules.Query{
+	result := engine.AuthorizeWithResult(&rules.Query{
 		RequestedDomain: domain,
 		RequestedMethod: method,
 		SourceIP:        sourceIP,
@@ -145,26 +147,37 @@ func getForwardAuth(
 		SourceASN:       resolved.ASN,
 	})
 
+	duration := time.Since(start)
+	status := isAllowedStatus[result.Allowed]
+
 	// Prepare a zerolog event for structured logging
-	event := getLogEvent(isAllowed).
+	event := getLogEvent(result.Allowed).
 		Str(fieldRequestDomain, domain).
 		Str(fieldRequestMethod, method).
-		Str(fieldRequestStatus, isAllowedStatus[isAllowed]).
+		Str(fieldRequestStatus, status).
 		Str(fieldSourceIP, sourceIP.String()).
 		Bool(fieldSourceIsLocal, isLocalIP(sourceIP)).
 		Str(fieldSourceCountry, resolved.CountryCode).
 		Uint32(fieldSourceASN, resolved.ASN).
 		Str(fieldSourceOrg, resolved.Organization)
 
-	if isAllowed {
+	if result.Allowed {
 		event.Msg("Request allowed")
 		writer.WriteHeader(http.StatusNoContent)
-		metrics.IncAllowed()
 	} else {
 		event.Msg("Request denied")
 		writer.WriteHeader(http.StatusForbidden)
-		metrics.IncDenied()
 	}
+
+	metrics.RecordRequest(
+		status,
+		resolved.CountryCode,
+		method,
+		duration,
+		result.RuleIndex,
+		result.Action,
+		result.IsDefaultPolicy,
+	)
 }
 
 // getHealth returns a 204 status code to indicate that the server is running.

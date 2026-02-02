@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/danroc/geoblock/internal/config"
+	"github.com/danroc/geoblock/internal/ipinfo"
 )
 
 const (
@@ -103,8 +104,8 @@ func (m *mockServer) Shutdown(context.Context) error {
 // mockUpdater implements the updater interface for testing.
 type mockUpdater struct{}
 
-func (m *mockUpdater) Update() error {
-	return nil
+func (m *mockUpdater) Update() (ipinfo.UpdateStats, error) {
+	return ipinfo.UpdateStats{}, nil
 }
 
 // Tests
@@ -329,32 +330,41 @@ func TestConfigReloader_ReloadIfChanged(t *testing.T) {
 	prevStat := fakeFileInfo{size: 100, mod: now}
 	newStat := fakeFileInfo{size: 200, mod: now.Add(time.Second)}
 	validCfg := &config.Configuration{
-		AccessControl: config.AccessControl{DefaultPolicy: "deny"},
+		AccessControl: config.AccessControl{
+			DefaultPolicy: "deny",
+			Rules: []config.AccessControlRule{
+				{Policy: "allow", Domains: []string{"example.com"}},
+				{Policy: "deny", Domains: []string{"blocked.com"}},
+			},
+		},
 	}
 
 	tests := []struct {
-		name       string
-		stat       func(string) (os.FileInfo, error)
-		load       func(string) (*config.Configuration, error)
-		wantReload bool
-		wantErr    bool
-		wantCalled bool
+		name           string
+		stat           func(string) (os.FileInfo, error)
+		load           func(string) (*config.Configuration, error)
+		wantReload     bool
+		wantErr        bool
+		wantCalled     bool
+		wantRulesCount int
 	}{
 		{
-			name:       "file not changed",
-			stat:       func(string) (os.FileInfo, error) { return prevStat, nil },
-			load:       func(string) (*config.Configuration, error) { return validCfg, nil },
-			wantReload: false,
-			wantErr:    false,
-			wantCalled: false,
+			name:           "file not changed",
+			stat:           func(string) (os.FileInfo, error) { return prevStat, nil },
+			load:           func(string) (*config.Configuration, error) { return validCfg, nil },
+			wantReload:     false,
+			wantErr:        false,
+			wantCalled:     false,
+			wantRulesCount: 0,
 		},
 		{
-			name:       "file changed with valid config",
-			stat:       func(string) (os.FileInfo, error) { return newStat, nil },
-			load:       func(string) (*config.Configuration, error) { return validCfg, nil },
-			wantReload: true,
-			wantErr:    false,
-			wantCalled: true,
+			name:           "file changed with valid config",
+			stat:           func(string) (os.FileInfo, error) { return newStat, nil },
+			load:           func(string) (*config.Configuration, error) { return validCfg, nil },
+			wantReload:     true,
+			wantErr:        false,
+			wantCalled:     true,
+			wantRulesCount: 2,
 		},
 		{
 			name: "file changed with invalid config",
@@ -362,19 +372,21 @@ func TestConfigReloader_ReloadIfChanged(t *testing.T) {
 			load: func(string) (*config.Configuration, error) {
 				return nil, errors.New("invalid config")
 			},
-			wantReload: false,
-			wantErr:    true,
-			wantCalled: false,
+			wantReload:     false,
+			wantErr:        true,
+			wantCalled:     false,
+			wantRulesCount: 0,
 		},
 		{
 			name: "stat error",
 			stat: func(string) (os.FileInfo, error) {
 				return nil, errors.New("stat error")
 			},
-			load:       func(string) (*config.Configuration, error) { return validCfg, nil },
-			wantReload: false,
-			wantErr:    true,
-			wantCalled: false,
+			load:           func(string) (*config.Configuration, error) { return validCfg, nil },
+			wantReload:     false,
+			wantErr:        true,
+			wantCalled:     false,
+			wantRulesCount: 0,
 		},
 	}
 
@@ -388,7 +400,7 @@ func TestConfigReloader_ReloadIfChanged(t *testing.T) {
 				load:     tt.load,
 			}
 
-			reloaded, err := reloader.reloadIfChanged(mock)
+			reloaded, rulesCount, err := reloader.reloadIfChanged(mock)
 			if err != nil && !tt.wantErr {
 				t.Errorf("reloadIfChanged() unexpected error: %v", err)
 			}
@@ -400,6 +412,13 @@ func TestConfigReloader_ReloadIfChanged(t *testing.T) {
 					"reloadIfChanged() reloaded = %v, want %v",
 					reloaded,
 					tt.wantReload,
+				)
+			}
+			if rulesCount != tt.wantRulesCount {
+				t.Errorf(
+					"reloadIfChanged() rulesCount = %v, want %v",
+					rulesCount,
+					tt.wantRulesCount,
 				)
 			}
 			if mock.called != tt.wantCalled {

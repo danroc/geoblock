@@ -5,9 +5,11 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus/testutil"
 
+	"github.com/danroc/geoblock/internal/config"
 	"github.com/danroc/geoblock/internal/version"
 )
 
@@ -23,21 +25,25 @@ func getCounterValue(status string) float64 {
 	return testutil.ToFloat64(requestsTotal.WithLabelValues(status))
 }
 
-func TestIncrementFunctions(t *testing.T) {
+// recordTestRequest is a helper that calls RecordRequest with common test values.
+func recordTestRequest(status, action string) {
+	RecordRequest(status, "US", "GET", time.Millisecond, 0, action, false)
+}
+
+func TestRecordRequest(t *testing.T) {
 	tests := []struct {
 		name   string
-		inc    func()
 		status string
+		action string
 	}{
-		{"IncDenied", IncDenied, StatusDenied},
-		{"IncAllowed", IncAllowed, StatusAllowed},
-		{"IncInvalid", IncInvalid, StatusInvalid},
+		{"allowed", StatusAllowed, config.PolicyAllow},
+		{"denied", StatusDenied, config.PolicyDeny},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			setupTest(t)
-			tt.inc()
+			recordTestRequest(tt.status, tt.action)
 			if got := getCounterValue(tt.status); got != 1 {
 				t.Errorf("Expected %s count to be 1, got %v", tt.status, got)
 			}
@@ -45,17 +51,25 @@ func TestIncrementFunctions(t *testing.T) {
 	}
 }
 
-func TestMultipleIncrements(t *testing.T) {
+func TestRecordInvalidRequest(t *testing.T) {
+	setupTest(t)
+	RecordInvalidRequest(time.Millisecond)
+	if got := getCounterValue(StatusInvalid); got != 1 {
+		t.Errorf("Expected invalid count to be 1, got %v", got)
+	}
+}
+
+func TestMultipleRequests(t *testing.T) {
 	setupTest(t)
 
 	for i := 0; i < 5; i++ {
-		IncDenied()
+		recordTestRequest(StatusDenied, config.PolicyDeny)
 	}
 	for i := 0; i < 3; i++ {
-		IncAllowed()
+		recordTestRequest(StatusAllowed, config.PolicyAllow)
 	}
 	for i := 0; i < 2; i++ {
-		IncInvalid()
+		RecordInvalidRequest(time.Millisecond)
 	}
 
 	if got := getCounterValue("denied"); got != 5 {
@@ -69,92 +83,62 @@ func TestMultipleIncrements(t *testing.T) {
 	}
 }
 
-func TestConcurrentIncrements(t *testing.T) {
+func TestConcurrentRequests(t *testing.T) {
 	setupTest(t)
 
 	const numGoroutines = 100
-	const incrementsPerGoroutine = 10
-
-	increments := []struct {
-		inc    func()
-		status string
-	}{
-		{IncDenied, StatusDenied},
-		{IncAllowed, StatusAllowed},
-		{IncInvalid, StatusInvalid},
-	}
+	const requestsPerGoroutine = 10
 
 	var wg sync.WaitGroup
-	for _, inc := range increments {
-		wg.Add(numGoroutines)
-		for range numGoroutines {
-			go func() {
-				defer wg.Done()
-				for range incrementsPerGoroutine {
-					inc.inc()
-				}
-			}()
-		}
+	wg.Add(numGoroutines * 3)
+
+	// Concurrent denied requests
+	for range numGoroutines {
+		go func() {
+			defer wg.Done()
+			for range requestsPerGoroutine {
+				recordTestRequest(StatusDenied, config.PolicyDeny)
+			}
+		}()
 	}
+
+	// Concurrent allowed requests
+	for range numGoroutines {
+		go func() {
+			defer wg.Done()
+			for range requestsPerGoroutine {
+				recordTestRequest(StatusAllowed, config.PolicyAllow)
+			}
+		}()
+	}
+
+	// Concurrent invalid requests
+	for range numGoroutines {
+		go func() {
+			defer wg.Done()
+			for range requestsPerGoroutine {
+				RecordInvalidRequest(time.Millisecond)
+			}
+		}()
+	}
+
 	wg.Wait()
 
-	expected := float64(numGoroutines * incrementsPerGoroutine)
-	for _, inc := range increments {
-		if got := getCounterValue(inc.status); got != expected {
-			t.Errorf("Expected %s count to be %v, got %v", inc.status, expected, got)
+	expected := float64(numGoroutines * requestsPerGoroutine)
+	for _, status := range []string{StatusDenied, StatusAllowed, StatusInvalid} {
+		if got := getCounterValue(status); got != expected {
+			t.Errorf("Expected %s count to be %v, got %v", status, expected, got)
 		}
-	}
-}
-
-func TestTotalCalculation(t *testing.T) {
-	testCases := []struct {
-		name    string
-		denied  int
-		allowed int
-		invalid int
-	}{
-		{"zero values", 0, 0, 0},
-		{"only denied", 5, 0, 0},
-		{"only allowed", 0, 3, 0},
-		{"only invalid", 0, 0, 2},
-		{"mixed values", 10, 5, 3},
-		{"large values", 1000, 2000, 500},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			setupTest(t)
-
-			for i := 0; i < tc.denied; i++ {
-				IncDenied()
-			}
-			for i := 0; i < tc.allowed; i++ {
-				IncAllowed()
-			}
-			for i := 0; i < tc.invalid; i++ {
-				IncInvalid()
-			}
-
-			if got := getCounterValue("denied"); got != float64(tc.denied) {
-				t.Errorf("Expected denied to be %d, got %v", tc.denied, got)
-			}
-			if got := getCounterValue("allowed"); got != float64(tc.allowed) {
-				t.Errorf("Expected allowed to be %d, got %v", tc.allowed, got)
-			}
-			if got := getCounterValue("invalid"); got != float64(tc.invalid) {
-				t.Errorf("Expected invalid to be %d, got %v", tc.invalid, got)
-			}
-		})
 	}
 }
 
 func TestHandler(t *testing.T) {
 	setupTest(t)
 
-	IncAllowed()
-	IncAllowed()
-	IncDenied()
-	IncInvalid()
+	recordTestRequest(StatusAllowed, config.PolicyAllow)
+	recordTestRequest(StatusAllowed, config.PolicyAllow)
+	recordTestRequest(StatusDenied, config.PolicyDeny)
+	RecordInvalidRequest(time.Millisecond)
 
 	req := httptest.NewRequest("GET", "/metrics", nil)
 	rec := httptest.NewRecorder()
@@ -189,9 +173,9 @@ func TestHandler(t *testing.T) {
 }
 
 func TestReset(t *testing.T) {
-	IncAllowed()
-	IncDenied()
-	IncInvalid()
+	recordTestRequest(StatusAllowed, config.PolicyAllow)
+	recordTestRequest(StatusDenied, config.PolicyDeny)
+	RecordInvalidRequest(time.Millisecond)
 
 	Reset()
 
@@ -211,32 +195,86 @@ func TestReset(t *testing.T) {
 	}
 }
 
-func BenchmarkIncrements(b *testing.B) {
-	benchmarks := []struct {
-		name string
-		inc  func()
+func TestRecordConfigReload(t *testing.T) {
+	tests := []struct {
+		name       string
+		success    bool
+		rulesCount int
+		wantResult string
 	}{
-		{"Denied", IncDenied},
-		{"Allowed", IncAllowed},
-		{"Invalid", IncInvalid},
+		{"success", true, 5, "success"},
+		{"failure", false, 0, "failure"},
 	}
 
-	for _, bm := range benchmarks {
-		b.Run(bm.name, func(b *testing.B) {
-			for range b.N {
-				bm.inc()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			setupTest(t)
+			RecordConfigReload(tt.success, tt.rulesCount)
+
+			got := testutil.ToFloat64(configReloadTotal.WithLabelValues(tt.wantResult))
+			if got != 1 {
+				t.Errorf("Expected %s count to be 1, got %v", tt.wantResult, got)
+			}
+
+			if tt.success {
+				rulesGot := testutil.ToFloat64(configRulesTotal)
+				if rulesGot != float64(tt.rulesCount) {
+					t.Errorf(
+						"Expected rules count to be %d, got %v",
+						tt.rulesCount,
+						rulesGot,
+					)
+				}
 			}
 		})
 	}
 }
 
-// BenchmarkConcurrentIncrements benchmarks concurrent increments.
-func BenchmarkConcurrentIncrements(b *testing.B) {
+func TestRecordDBUpdate(t *testing.T) {
+	setupTest(t)
+
+	entries := map[string]uint64{
+		"country": 1000,
+		"asn":     500,
+	}
+	duration := 2 * time.Second
+
+	RecordDBUpdate(entries, duration)
+
+	countryGot := testutil.ToFloat64(dbEntries.WithLabelValues("country"))
+	if countryGot != 1000 {
+		t.Errorf("Expected country entries to be 1000, got %v", countryGot)
+	}
+
+	asnGot := testutil.ToFloat64(dbEntries.WithLabelValues("asn"))
+	if asnGot != 500 {
+		t.Errorf("Expected asn entries to be 500, got %v", asnGot)
+	}
+
+	durationGot := testutil.ToFloat64(dbLoadDuration)
+	if durationGot != 2.0 {
+		t.Errorf("Expected load duration to be 2.0, got %v", durationGot)
+	}
+}
+
+func BenchmarkRecordRequest(b *testing.B) {
+	for range b.N {
+		recordTestRequest(StatusAllowed, config.PolicyAllow)
+	}
+}
+
+func BenchmarkRecordInvalidRequest(b *testing.B) {
+	for range b.N {
+		RecordInvalidRequest(time.Millisecond)
+	}
+}
+
+func BenchmarkConcurrentRequests(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			IncDenied()
-			IncAllowed()
-			IncInvalid()
+			recordTestRequest(StatusDenied, config.PolicyDeny)
+			recordTestRequest(StatusAllowed, config.PolicyAllow)
+			RecordInvalidRequest(time.Millisecond)
 		}
 	})
 }

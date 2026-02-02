@@ -85,6 +85,18 @@ type Resolver struct {
 	db atomic.Pointer[ResTree]
 }
 
+// Database type constants for UpdateStats.
+const (
+	DBTypeCountry string = "country"
+	DBTypeASN     string = "asn"
+)
+
+// UpdateStats contains statistics about a database update.
+type UpdateStats struct {
+	Entries  map[string]uint64
+	Duration time.Duration
+}
+
 // NewResolver creates a new IP resolver.
 func NewResolver() *Resolver {
 	return &Resolver{}
@@ -94,15 +106,18 @@ func NewResolver() *Resolver {
 //
 // If an error occurs while updating a database, the function proceeds to update the
 // next database and returns all the errors at the end.
-func (r *Resolver) Update() error {
+func (r *Resolver) Update() (UpdateStats, error) {
+	start := time.Now()
+
 	items := []struct {
 		parser ParserFn
 		url    string
+		dbType string
 	}{
-		{parseCountryRecord, CountryIPv4URL},
-		{parseCountryRecord, CountryIPv6URL},
-		{parseASNRecord, ASNIPv4URL},
-		{parseASNRecord, ASNIPv6URL},
+		{parseCountryRecord, CountryIPv4URL, DBTypeCountry},
+		{parseCountryRecord, CountryIPv6URL, DBTypeCountry},
+		{parseASNRecord, ASNIPv4URL, DBTypeASN},
+		{parseASNRecord, ASNIPv6URL, DBTypeASN},
 	}
 
 	// A new database is created for each update so that it can be atomically swapped
@@ -110,18 +125,28 @@ func (r *Resolver) Update() error {
 	db := itree.NewITree[netip.Addr, Resolution]()
 
 	var errs []error
+	entries := make(map[string]uint64)
 	for _, item := range items {
-		if err := update(db, item.parser, item.url); err != nil {
+		count, err := update(db, item.parser, item.url)
+		if err != nil {
 			errs = append(errs, err)
 		}
+		// Always accumulate count: update() may successfully insert entries before
+		// encountering parse errors, so we track all inserted entries.
+		entries[item.dbType] += count
 	}
+
+	// If any errors occurred during the update, we don't swap the database.
 	if len(errs) > 0 {
-		return errors.Join(errs...)
+		return UpdateStats{}, errors.Join(errs...)
 	}
 
 	// Atomically swap the current database with the new one.
 	r.db.Store(db)
-	return nil
+	return UpdateStats{
+		Entries:  entries,
+		Duration: time.Since(start),
+	}, nil
 }
 
 // Resolve resolves the given IP address to a country code and an ASN.
@@ -139,13 +164,17 @@ func (r *Resolver) Resolve(ip netip.Addr) Resolution {
 }
 
 // update adds the records fetched from the given URL to the database.
-func update(db *ResTree, parser ParserFn, url string) error {
+// Returns the number of entries added and any errors encountered.
+func update(db *ResTree, parser ParserFn, url string) (uint64, error) {
 	records, err := fetchCSV(url)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	var errs []error
+	var (
+		errs  []error
+		count uint64
+	)
 	for _, record := range records {
 		entry, err := parser(record)
 		if err != nil {
@@ -156,8 +185,9 @@ func update(db *ResTree, parser ParserFn, url string) error {
 			itree.NewInterval(entry.StartIP, entry.EndIP),
 			entry.Resolution,
 		)
+		count++
 	}
-	return errors.Join(errs...)
+	return count, errors.Join(errs...)
 }
 
 // fetchCSV returns the CSV records fetched from the given URL.

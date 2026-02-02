@@ -78,7 +78,7 @@ func createTestResolver(testData map[string]string) *ipinfo.Resolver {
 	var resolver *ipinfo.Resolver
 	withTestTransport(testData, func() {
 		resolver = ipinfo.NewResolver()
-		_ = resolver.Update()
+		_, _ = resolver.Update()
 	})
 	return resolver
 }
