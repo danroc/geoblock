@@ -10,6 +10,10 @@ import (
 	"github.com/danroc/geoblock/internal/utils/glob"
 )
 
+// NoMatchingRuleIndex is the rule index used when no rule matched and the default
+// policy was applied.
+const NoMatchingRuleIndex = -1
+
 // Engine is the access control engine that checks if a given query is allowed by the
 // rules.
 type Engine struct {
@@ -84,31 +88,34 @@ func (e *Engine) UpdateConfig(config *config.AccessControl) {
 }
 
 // AuthorizationResult contains the result of an authorization check with metadata.
+// RuleIndex is NoMatchingRuleIndex if the default policy was used.
 type AuthorizationResult struct {
 	Allowed         bool
-	RuleIndex       int // -1 if default policy was used
+	RuleIndex       int
 	Action          string
 	IsDefaultPolicy bool
+}
+
+func NewAuthorizationResult(ruleIndex int, action string) AuthorizationResult {
+	return AuthorizationResult{
+		Allowed:         action == config.PolicyAllow,
+		RuleIndex:       ruleIndex,
+		Action:          action,
+		IsDefaultPolicy: ruleIndex == NoMatchingRuleIndex,
+	}
 }
 
 // Authorize checks if the given query is allowed by the engine's rules and returns
 // detailed result including which rule matched.
 func (e *Engine) Authorize(query *Query) AuthorizationResult {
+	// Loop through all rules and apply the first matching rule.
 	cfg := e.config.Load()
 	for i, rule := range cfg.Rules {
 		if ruleApplies(&rule, query) {
-			return AuthorizationResult{
-				Allowed:         rule.Policy == config.PolicyAllow,
-				RuleIndex:       i,
-				Action:          rule.Policy,
-				IsDefaultPolicy: false,
-			}
+			return NewAuthorizationResult(i, rule.Policy)
 		}
 	}
-	return AuthorizationResult{
-		Allowed:         cfg.DefaultPolicy == config.PolicyAllow,
-		RuleIndex:       -1,
-		Action:          cfg.DefaultPolicy,
-		IsDefaultPolicy: true,
-	}
+
+	// No rule matched, apply default policy.
+	return NewAuthorizationResult(NoMatchingRuleIndex, cfg.DefaultPolicy)
 }
