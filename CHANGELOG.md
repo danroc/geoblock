@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-02-03
+
+### Added
+
+- Add new Prometheus metrics for rules, requests, and database updates ([#368](https://github.com/danroc/geoblock/pull/368))
+- Add `ip_version` label to database entry metrics ([#372](https://github.com/danroc/geoblock/pull/372))
+- Update Grafana dashboard to include new metrics ([#373](https://github.com/danroc/geoblock/pull/373))
+
+### Changed
+
+- Use official Prometheus client library ([#367](https://github.com/danroc/geoblock/pull/367))
+
 ## [0.5.1] - 2026-01-22
 
 ### Added
@@ -251,7 +263,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add CIDR unmarshalling and validation
 - Add autonomous systems to configuration
 
-[Unreleased]: https://github.com/danroc/geoblock/compare/v0.5.1...HEAD
+[Unreleased]: https://github.com/danroc/geoblock/compare/v0.5.2...HEAD
+[0.5.2]: https://github.com/danroc/geoblock/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/danroc/geoblock/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/danroc/geoblock/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/danroc/geoblock/compare/v0.4.0...v0.4.1
