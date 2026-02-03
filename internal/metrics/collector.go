@@ -34,27 +34,3 @@ type Collector interface {
 	DBUpdateCollector
 	ConfigReloadCollector
 }
-
-// NopCollector is a no-op collector for testing or when metrics are disabled.
-type NopCollector struct{}
-
-// RecordRequest is a no-op.
-func (NopCollector) RecordRequest(
-	_ string,
-	_ string,
-	_ string,
-	_ time.Duration,
-	_ int,
-	_ string,
-	_ bool,
-) {
-}
-
-// RecordInvalidRequest is a no-op.
-func (NopCollector) RecordInvalidRequest(_ time.Duration) {}
-
-// RecordDBUpdate is a no-op.
-func (NopCollector) RecordDBUpdate(_ map[string]uint64, _ time.Duration) {}
-
-// RecordConfigReload is a no-op.
-func (NopCollector) RecordConfigReload(_ bool, _ int) {}

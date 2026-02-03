@@ -11,7 +11,6 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/danroc/geoblock/internal/config"
-	"github.com/danroc/geoblock/internal/metrics"
 )
 
 const (
@@ -107,6 +106,11 @@ type mockUpdater struct{}
 func (m *mockUpdater) Update() error {
 	return nil
 }
+
+// nopConfigReloadCollector is a no-op collector for testing.
+type nopConfigReloadCollector struct{}
+
+func (nopConfigReloadCollector) RecordConfigReload(_ bool, _ int) {}
 
 // Tests
 
@@ -587,8 +591,8 @@ func TestAutoReload(t *testing.T) {
 			autoReload(
 				context.Background(),
 				mock,
-				"/non/existent/file.yaml",
-				metrics.NopCollector{},
+				"testdata/non-existent-config.yaml",
+				nopConfigReloadCollector{},
 			)
 		}, nil)
 	})
@@ -596,7 +600,12 @@ func TestAutoReload(t *testing.T) {
 	t.Run("stops when context is canceled", func(t *testing.T) {
 		mock := &mockConfigUpdater{}
 		testContextCancellation(t, func(ctx context.Context) {
-			autoReload(ctx, mock, "testdata/valid-config.yaml", metrics.NopCollector{})
+			autoReload(
+				ctx,
+				mock,
+				"testdata/valid-config.yaml",
+				nopConfigReloadCollector{},
+			)
 		})
 	})
 }

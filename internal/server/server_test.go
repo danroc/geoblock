@@ -7,12 +7,28 @@ import (
 	"net/http/httptest"
 	"net/netip"
 	"testing"
+	"time"
 
 	"github.com/danroc/geoblock/internal/config"
 	"github.com/danroc/geoblock/internal/ipinfo"
 	"github.com/danroc/geoblock/internal/metrics"
 	"github.com/danroc/geoblock/internal/rules"
 )
+
+// nopDBUpdateCollector is a no-op collector for ipinfo.Resolver in tests.
+type nopDBUpdateCollector struct{}
+
+func (nopDBUpdateCollector) RecordDBUpdate(_ map[string]uint64, _ time.Duration) {}
+
+// nopRequestCollector is a no-op collector for server tests.
+type nopRequestCollector struct{}
+
+func (nopRequestCollector) RecordRequest(
+	_, _, _ string, _ time.Duration, _ int, _ string, _ bool,
+) {
+}
+
+func (nopRequestCollector) RecordInvalidRequest(_ time.Duration) {}
 
 // Test helpers
 
@@ -78,14 +94,14 @@ func withTestTransport(testData map[string]string, fn func()) {
 func createTestResolver(testData map[string]string) *ipinfo.Resolver {
 	var resolver *ipinfo.Resolver
 	withTestTransport(testData, func() {
-		resolver = ipinfo.NewResolver(metrics.NopCollector{})
+		resolver = ipinfo.NewResolver(nopDBUpdateCollector{})
 		_ = resolver.Update()
 	})
 	return resolver
 }
 
 func TestGetForwardAuth(t *testing.T) {
-	resolver := ipinfo.NewResolver(metrics.NopCollector{})
+	resolver := ipinfo.NewResolver(nopDBUpdateCollector{})
 	engine := newAllowEngine()
 	tests := []struct {
 		name    string
@@ -141,7 +157,7 @@ func TestGetForwardAuth(t *testing.T) {
 			req := newTestRequest("GET", "/v1/forward-auth", tt.headers)
 			w := httptest.NewRecorder()
 
-			getForwardAuth(w, req, resolver, engine, metrics.NopCollector{})
+			getForwardAuth(w, req, resolver, engine, nopRequestCollector{})
 			assertStatus(t, w.Code, tt.want)
 		})
 	}
@@ -207,7 +223,7 @@ func TestGetForwardAuthWithSpecificRules(t *testing.T) {
 			req := newTestRequest("GET", "/v1/forward-auth", headers)
 			w := httptest.NewRecorder()
 
-			getForwardAuth(w, req, resolver, engine, metrics.NopCollector{})
+			getForwardAuth(w, req, resolver, engine, nopRequestCollector{})
 			assertStatus(t, w.Code, tt.want)
 		})
 	}
@@ -222,7 +238,7 @@ func TestGetHealth(t *testing.T) {
 
 func TestGetPrometheusMetrics(t *testing.T) {
 	collector := metrics.NewCollector()
-	resolver := ipinfo.NewResolver(metrics.NopCollector{})
+	resolver := ipinfo.NewResolver(nopDBUpdateCollector{})
 	engine := newAllowEngine()
 	server := New(":8080", engine, resolver, collector, metrics.Handler())
 
@@ -256,9 +272,9 @@ func TestGetPrometheusMetrics(t *testing.T) {
 }
 
 func TestNewServer(t *testing.T) {
-	resolver := ipinfo.NewResolver(metrics.NopCollector{})
+	resolver := ipinfo.NewResolver(nopDBUpdateCollector{})
 	engine := newAllowEngine()
-	server := New(":8080", engine, resolver, metrics.NopCollector{}, metrics.Handler())
+	server := New(":8080", engine, resolver, nopRequestCollector{}, metrics.Handler())
 
 	if got, want := server.Addr, ":8080"; got != want {
 		t.Errorf("Addr = %q, want %q", got, want)
@@ -278,9 +294,9 @@ func TestNewServer(t *testing.T) {
 }
 
 func TestServerEndpoints(t *testing.T) {
-	resolver := ipinfo.NewResolver(metrics.NopCollector{})
+	resolver := ipinfo.NewResolver(nopDBUpdateCollector{})
 	engine := newAllowEngine()
-	server := New(":8080", engine, resolver, metrics.NopCollector{}, metrics.Handler())
+	server := New(":8080", engine, resolver, nopRequestCollector{}, metrics.Handler())
 	tests := []struct {
 		method string
 		path   string
@@ -469,7 +485,7 @@ func TestGetForwardAuthValidRequests(t *testing.T) {
 	req := newTestRequest("GET", "/v1/forward-auth", headers)
 	w := httptest.NewRecorder()
 
-	getForwardAuth(w, req, resolver, engine, metrics.NopCollector{})
+	getForwardAuth(w, req, resolver, engine, nopRequestCollector{})
 	assertStatus(t, w.Code, http.StatusNoContent)
 }
 
@@ -515,16 +531,16 @@ func TestGetForwardAuthMultipleForwardedIPs(t *testing.T) {
 			req := newTestRequest("GET", "/v1/forward-auth", headers)
 			w := httptest.NewRecorder()
 
-			getForwardAuth(w, req, resolver, engine, metrics.NopCollector{})
+			getForwardAuth(w, req, resolver, engine, nopRequestCollector{})
 			assertStatus(t, w.Code, tt.expectedStatus)
 		})
 	}
 }
 
 func TestServerHandlerSetup(t *testing.T) {
-	resolver := ipinfo.NewResolver(metrics.NopCollector{})
+	resolver := ipinfo.NewResolver(nopDBUpdateCollector{})
 	engine := newAllowEngine()
-	server := New(":8080", engine, resolver, metrics.NopCollector{}, metrics.Handler())
+	server := New(":8080", engine, resolver, nopRequestCollector{}, metrics.Handler())
 
 	req := httptest.NewRequest("GET", "/v1/forward-auth", nil)
 	w := httptest.NewRecorder()
