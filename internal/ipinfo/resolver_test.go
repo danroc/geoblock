@@ -15,7 +15,11 @@ import (
 // nopDBUpdateCollector is a no-op collector for testing.
 type nopDBUpdateCollector struct{}
 
-func (nopDBUpdateCollector) RecordDBUpdate(_ map[string]uint64, _ time.Duration) {}
+func (nopDBUpdateCollector) RecordDBUpdate(
+	_ map[ipinfo.DBSource]uint64,
+	_ time.Duration,
+) {
+}
 
 type mockRT struct {
 	respond func(req *http.Request) (*http.Response, error)

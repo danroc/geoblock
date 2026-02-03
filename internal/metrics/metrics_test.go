@@ -11,6 +11,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/testutil"
 
 	"github.com/danroc/geoblock/internal/config"
+	"github.com/danroc/geoblock/internal/ipinfo"
 	"github.com/danroc/geoblock/internal/version"
 )
 
@@ -514,9 +515,11 @@ func TestRecordConfigReload(t *testing.T) {
 func TestRecordDBUpdate(t *testing.T) {
 	setupTest(t)
 
-	entries := map[string]uint64{
-		"country": 1000,
-		"asn":     500,
+	entries := map[ipinfo.DBSource]uint64{
+		{DBType: ipinfo.DBTypeCountry, IPVersion: ipinfo.IPVersion4}: 1000,
+		{DBType: ipinfo.DBTypeCountry, IPVersion: ipinfo.IPVersion6}: 800,
+		{DBType: ipinfo.DBTypeASN, IPVersion: ipinfo.IPVersion4}:     500,
+		{DBType: ipinfo.DBTypeASN, IPVersion: ipinfo.IPVersion6}:     400,
 	}
 	duration := 2 * time.Second
 
@@ -524,14 +527,24 @@ func TestRecordDBUpdate(t *testing.T) {
 	collector.RecordDBUpdate(entries, duration)
 	after := time.Now().Unix()
 
-	countryGot := testutil.ToFloat64(dbEntries.WithLabelValues("country"))
-	if countryGot != 1000 {
-		t.Errorf("Expected country entries to be 1000, got %v", countryGot)
+	countryV4Got := testutil.ToFloat64(dbEntries.WithLabelValues("country", "4"))
+	if countryV4Got != 1000 {
+		t.Errorf("Expected country IPv4 entries to be 1000, got %v", countryV4Got)
 	}
 
-	asnGot := testutil.ToFloat64(dbEntries.WithLabelValues("asn"))
-	if asnGot != 500 {
-		t.Errorf("Expected asn entries to be 500, got %v", asnGot)
+	countryV6Got := testutil.ToFloat64(dbEntries.WithLabelValues("country", "6"))
+	if countryV6Got != 800 {
+		t.Errorf("Expected country IPv6 entries to be 800, got %v", countryV6Got)
+	}
+
+	asnV4Got := testutil.ToFloat64(dbEntries.WithLabelValues("asn", "4"))
+	if asnV4Got != 500 {
+		t.Errorf("Expected asn IPv4 entries to be 500, got %v", asnV4Got)
+	}
+
+	asnV6Got := testutil.ToFloat64(dbEntries.WithLabelValues("asn", "6"))
+	if asnV6Got != 400 {
+		t.Errorf("Expected asn IPv6 entries to be 400, got %v", asnV6Got)
 	}
 
 	durationGot := testutil.ToFloat64(dbLoadDuration)

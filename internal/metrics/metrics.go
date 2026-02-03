@@ -9,6 +9,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
+	"github.com/danroc/geoblock/internal/ipinfo"
 	"github.com/danroc/geoblock/internal/version"
 )
 
@@ -134,7 +135,7 @@ var (
 			Name: "geoblock_db_entries",
 			Help: "Number of entries in IP database",
 		},
-		[]string{"database"},
+		[]string{"database", "ip_version"},
 	)
 
 	// dbLastUpdate records the timestamp of last successful database update.
@@ -226,11 +227,11 @@ func (c *PrometheusCollector) RecordConfigReload(success bool, rulesCount int) {
 
 // RecordDBUpdate records an IP database update.
 func (c *PrometheusCollector) RecordDBUpdate(
-	entries map[string]uint64,
+	entries map[ipinfo.DBSource]uint64,
 	duration time.Duration,
 ) {
-	for dbType, count := range entries {
-		dbEntries.WithLabelValues(dbType).Set(float64(count))
+	for key, count := range entries {
+		dbEntries.WithLabelValues(key.DBType, key.IPVersion).Set(float64(count))
 	}
 
 	dbLastUpdate.Set(float64(time.Now().Unix()))

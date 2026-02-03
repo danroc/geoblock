@@ -9,8 +9,10 @@ geoblock_config_reload_total{result="success"} 1
 geoblock_config_rules_total 7
 # HELP geoblock_db_entries Number of entries in IP database
 # TYPE geoblock_db_entries gauge
-geoblock_db_entries{database="asn"} 486374
-geoblock_db_entries{database="country"} 614739
+geoblock_db_entries{database="asn",ip_version="4"} 486374
+geoblock_db_entries{database="asn",ip_version="6"} 486374
+geoblock_db_entries{database="country",ip_version="4"} 614739
+geoblock_db_entries{database="country",ip_version="6"} 614739
 # HELP geoblock_db_last_update_timestamp Unix timestamp of last successful database update
 # TYPE geoblock_db_last_update_timestamp gauge
 geoblock_db_last_update_timestamp 1.770049555e+09
