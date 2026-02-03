@@ -403,6 +403,96 @@ func TestEngineAuthorize(t *testing.T) {
 	}
 }
 
+func TestNewAuthorizationResult(t *testing.T) {
+	tests := []struct {
+		name          string
+		ruleIndex     int
+		action        string
+		wantAllowed   bool
+		wantRuleIndex int
+		wantAction    string
+		wantIsDefault bool
+	}{
+		{
+			name:          "allow action with rule match",
+			ruleIndex:     0,
+			action:        config.PolicyAllow,
+			wantAllowed:   true,
+			wantRuleIndex: 0,
+			wantAction:    config.PolicyAllow,
+			wantIsDefault: false,
+		},
+		{
+			name:          "deny action with rule match",
+			ruleIndex:     0,
+			action:        config.PolicyDeny,
+			wantAllowed:   false,
+			wantRuleIndex: 0,
+			wantAction:    config.PolicyDeny,
+			wantIsDefault: false,
+		},
+		{
+			name:          "allow action with default policy",
+			ruleIndex:     rules.NoMatchingRuleIndex,
+			action:        config.PolicyAllow,
+			wantAllowed:   true,
+			wantRuleIndex: rules.NoMatchingRuleIndex,
+			wantAction:    config.PolicyAllow,
+			wantIsDefault: true,
+		},
+		{
+			name:          "deny action with default policy",
+			ruleIndex:     rules.NoMatchingRuleIndex,
+			action:        config.PolicyDeny,
+			wantAllowed:   false,
+			wantRuleIndex: rules.NoMatchingRuleIndex,
+			wantAction:    config.PolicyDeny,
+			wantIsDefault: true,
+		},
+		{
+			name:          "allow action with higher rule index",
+			ruleIndex:     5,
+			action:        config.PolicyAllow,
+			wantAllowed:   true,
+			wantRuleIndex: 5,
+			wantAction:    config.PolicyAllow,
+			wantIsDefault: false,
+		},
+		{
+			name:          "unknown action treated as deny",
+			ruleIndex:     0,
+			action:        "unknown",
+			wantAllowed:   false,
+			wantRuleIndex: 0,
+			wantAction:    "unknown",
+			wantIsDefault: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := rules.NewAuthorizationResult(tt.ruleIndex, tt.action)
+
+			if got.Allowed != tt.wantAllowed {
+				t.Errorf("Allowed = %v, want %v", got.Allowed, tt.wantAllowed)
+			}
+			if got.RuleIndex != tt.wantRuleIndex {
+				t.Errorf("RuleIndex = %v, want %v", got.RuleIndex, tt.wantRuleIndex)
+			}
+			if got.Action != tt.wantAction {
+				t.Errorf("Action = %v, want %v", got.Action, tt.wantAction)
+			}
+			if got.IsDefaultPolicy != tt.wantIsDefault {
+				t.Errorf(
+					"IsDefaultPolicy = %v, want %v",
+					got.IsDefaultPolicy,
+					tt.wantIsDefault,
+				)
+			}
+		})
+	}
+}
+
 func TestEngineUpdateConfig(t *testing.T) {
 	e := rules.NewEngine(&config.AccessControl{
 		DefaultPolicy: config.PolicyAllow,
