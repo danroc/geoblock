@@ -107,7 +107,7 @@ make format             # Run before committing
 3. `git commit -m "release: X.Y.Z"`
 4. Push, create PR, merge
 5. `git tag vX.Y.Z && git push origin vX.Y.Z`
-6. CI builds and pushes to `ghcr.io/danroc/geoblock`
+6. CI builds and pushes to `ghcr.io/danroc/geoblock:X.Y.Z` (no `v` prefix)
 
 ### CI Workflows
 
