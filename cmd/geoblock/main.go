@@ -109,19 +109,17 @@ func runEvery(ctx context.Context, interval time.Duration, fn func()) {
 
 // Updater is the interface for types that can update their databases.
 type Updater interface {
-	Update() (ipinfo.UpdateStats, error)
+	Update() error
 }
 
 // autoUpdate updates the databases at regular intervals until the context is canceled.
 func autoUpdate(ctx context.Context, resolver Updater) {
 	runEvery(ctx, autoUpdateInterval, func() {
-		stats, err := resolver.Update()
-		if err != nil {
+		if err := resolver.Update(); err != nil {
 			log.Error().Err(err).Msg("Cannot update databases")
 			return
 		}
 		log.Info().Msg("Databases updated")
-		metrics.RecordDBUpdate(stats.Entries, stats.Duration)
 	})
 }
 
@@ -196,9 +194,19 @@ func (r *configReloader) reloadIfChanged(engine ConfigUpdater) (bool, int, error
 	return true, len(cfg.AccessControl.Rules), nil
 }
 
+// ConfigReloadCollector collects metrics for config reloads.
+type ConfigReloadCollector interface {
+	RecordConfigReload(success bool, rulesCount int)
+}
+
 // autoReload watches the configuration file for changes and updates the engine when it
 // happens. It stops when the context is canceled.
-func autoReload(ctx context.Context, engine ConfigUpdater, path string) {
+func autoReload(
+	ctx context.Context,
+	engine ConfigUpdater,
+	path string,
+	collector ConfigReloadCollector,
+) {
 	reloader, err := newConfigReloader(path)
 	if err != nil {
 		log.Error().Err(err).Str("path", path).Msg("Cannot watch configuration file")
@@ -209,12 +217,12 @@ func autoReload(ctx context.Context, engine ConfigUpdater, path string) {
 		reloaded, rulesCount, err := reloader.reloadIfChanged(engine)
 		if err != nil {
 			log.Error().Err(err).Str("path", path).Msg("Cannot reload configuration")
-			metrics.RecordConfigReload(false, 0)
+			collector.RecordConfigReload(false, 0)
 			return
 		}
 		if reloaded {
 			log.Info().Msg("Configuration reloaded")
-			metrics.RecordConfigReload(true, rulesCount)
+			collector.RecordConfigReload(true, rulesCount)
 		}
 	})
 }
@@ -298,14 +306,15 @@ func main() {
 		)
 	}
 
+	// Create metrics collector for dependency injection.
+	collector := metrics.NewCollector()
+
 	log.Info().Msg("Initializing database resolver")
-	resolver := ipinfo.NewResolver()
-	stats, err := resolver.Update()
-	if err != nil {
+	resolver := ipinfo.NewResolver(collector)
+	if err := resolver.Update(); err != nil {
 		log.Fatal().Err(err).Msg("Cannot initialize database resolver")
 	}
-	metrics.RecordDBUpdate(stats.Entries, stats.Duration)
-	metrics.RecordConfigReload(true, len(cfg.AccessControl.Rules))
+	collector.RecordConfigReload(true, len(cfg.AccessControl.Rules))
 
 	ctx, stop := signal.NotifyContext(
 		context.Background(),
@@ -317,13 +326,13 @@ func main() {
 	var (
 		address = ":" + options.serverPort
 		engine  = rules.NewEngine(&cfg.AccessControl)
-		srv     = server.New(address, engine, resolver)
+		srv     = server.New(address, engine, resolver, collector, metrics.Handler())
 	)
 
 	// Start background tasks to update databases, reload configuration, and gracefully
 	// shut down the server.
 	go autoUpdate(ctx, resolver)
-	go autoReload(ctx, engine, options.configPath)
+	go autoReload(ctx, engine, options.configPath, collector)
 	go stopServer(ctx, srv)
 
 	log.Info().Str("address", srv.Addr).Msg("Starting server")

@@ -80,33 +80,33 @@ func mergeResolutions(resolutions []Resolution) Resolution {
 	return merged
 }
 
-// Resolver is an IP resolver that returns information about an IP address.
-type Resolver struct {
-	db atomic.Pointer[ResTree]
+// DBUpdateCollector collects metrics for database updates.
+type DBUpdateCollector interface {
+	RecordDBUpdate(entries map[string]uint64, duration time.Duration)
 }
 
-// Database type constants for UpdateStats.
+// Database type constants for metrics.
 const (
-	DBTypeCountry string = "country"
-	DBTypeASN     string = "asn"
+	DBTypeCountry = "country"
+	DBTypeASN     = "asn"
 )
 
-// UpdateStats contains statistics about a database update.
-type UpdateStats struct {
-	Entries  map[string]uint64
-	Duration time.Duration
+// Resolver is an IP resolver that returns information about an IP address.
+type Resolver struct {
+	db        atomic.Pointer[ResTree]
+	collector DBUpdateCollector
 }
 
-// NewResolver creates a new IP resolver.
-func NewResolver() *Resolver {
-	return &Resolver{}
+// NewResolver creates a new IP resolver with the given metrics collector.
+func NewResolver(collector DBUpdateCollector) *Resolver {
+	return &Resolver{collector: collector}
 }
 
 // Update updates the databases used by the resolver.
 //
 // If an error occurs while updating a database, the function proceeds to update the
 // next database and returns all the errors at the end.
-func (r *Resolver) Update() (UpdateStats, error) {
+func (r *Resolver) Update() error {
 	start := time.Now()
 
 	items := []struct {
@@ -138,15 +138,16 @@ func (r *Resolver) Update() (UpdateStats, error) {
 
 	// If any errors occurred during the update, we don't swap the database.
 	if len(errs) > 0 {
-		return UpdateStats{}, errors.Join(errs...)
+		return errors.Join(errs...)
 	}
 
 	// Atomically swap the current database with the new one.
 	r.db.Store(db)
-	return UpdateStats{
-		Entries:  entries,
-		Duration: time.Since(start),
-	}, nil
+
+	// Record metrics.
+	r.collector.RecordDBUpdate(entries, time.Since(start))
+
+	return nil
 }
 
 // Resolve resolves the given IP address to a country code and an ASN.

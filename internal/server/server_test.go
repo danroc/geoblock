@@ -10,6 +10,7 @@ import (
 
 	"github.com/danroc/geoblock/internal/config"
 	"github.com/danroc/geoblock/internal/ipinfo"
+	"github.com/danroc/geoblock/internal/metrics"
 	"github.com/danroc/geoblock/internal/rules"
 )
 
@@ -77,14 +78,14 @@ func withTestTransport(testData map[string]string, fn func()) {
 func createTestResolver(testData map[string]string) *ipinfo.Resolver {
 	var resolver *ipinfo.Resolver
 	withTestTransport(testData, func() {
-		resolver = ipinfo.NewResolver()
-		_, _ = resolver.Update()
+		resolver = ipinfo.NewResolver(metrics.NopCollector{})
+		_ = resolver.Update()
 	})
 	return resolver
 }
 
 func TestGetForwardAuth(t *testing.T) {
-	resolver := ipinfo.NewResolver()
+	resolver := ipinfo.NewResolver(metrics.NopCollector{})
 	engine := newAllowEngine()
 	tests := []struct {
 		name    string
@@ -140,7 +141,7 @@ func TestGetForwardAuth(t *testing.T) {
 			req := newTestRequest("GET", "/v1/forward-auth", tt.headers)
 			w := httptest.NewRecorder()
 
-			getForwardAuth(w, req, resolver, engine)
+			getForwardAuth(w, req, resolver, engine, metrics.NopCollector{})
 			assertStatus(t, w.Code, tt.want)
 		})
 	}
@@ -206,7 +207,7 @@ func TestGetForwardAuthWithSpecificRules(t *testing.T) {
 			req := newTestRequest("GET", "/v1/forward-auth", headers)
 			w := httptest.NewRecorder()
 
-			getForwardAuth(w, req, resolver, engine)
+			getForwardAuth(w, req, resolver, engine, metrics.NopCollector{})
 			assertStatus(t, w.Code, tt.want)
 		})
 	}
@@ -220,9 +221,13 @@ func TestGetHealth(t *testing.T) {
 }
 
 func TestGetPrometheusMetrics(t *testing.T) {
-	resolver := ipinfo.NewResolver()
+	collector := metrics.NewCollector()
+	resolver := ipinfo.NewResolver(metrics.NopCollector{})
 	engine := newAllowEngine()
-	server := New(":8080", engine, resolver)
+	server := New(":8080", engine, resolver, collector, metrics.Handler())
+
+	// Record a request so that the requests_total metric appears in output
+	collector.RecordRequest("allowed", "US", "GET", 0, 0, "allow", false)
 
 	req := httptest.NewRequest("GET", "/metrics", nil)
 	w := httptest.NewRecorder()
@@ -251,9 +256,9 @@ func TestGetPrometheusMetrics(t *testing.T) {
 }
 
 func TestNewServer(t *testing.T) {
-	resolver := ipinfo.NewResolver()
+	resolver := ipinfo.NewResolver(metrics.NopCollector{})
 	engine := newAllowEngine()
-	server := New(":8080", engine, resolver)
+	server := New(":8080", engine, resolver, metrics.NopCollector{}, metrics.Handler())
 
 	if got, want := server.Addr, ":8080"; got != want {
 		t.Errorf("Addr = %q, want %q", got, want)
@@ -273,9 +278,9 @@ func TestNewServer(t *testing.T) {
 }
 
 func TestServerEndpoints(t *testing.T) {
-	resolver := ipinfo.NewResolver()
+	resolver := ipinfo.NewResolver(metrics.NopCollector{})
 	engine := newAllowEngine()
-	server := New(":8080", engine, resolver)
+	server := New(":8080", engine, resolver, metrics.NopCollector{}, metrics.Handler())
 	tests := []struct {
 		method string
 		path   string
@@ -464,7 +469,7 @@ func TestGetForwardAuthValidRequests(t *testing.T) {
 	req := newTestRequest("GET", "/v1/forward-auth", headers)
 	w := httptest.NewRecorder()
 
-	getForwardAuth(w, req, resolver, engine)
+	getForwardAuth(w, req, resolver, engine, metrics.NopCollector{})
 	assertStatus(t, w.Code, http.StatusNoContent)
 }
 
@@ -510,16 +515,16 @@ func TestGetForwardAuthMultipleForwardedIPs(t *testing.T) {
 			req := newTestRequest("GET", "/v1/forward-auth", headers)
 			w := httptest.NewRecorder()
 
-			getForwardAuth(w, req, resolver, engine)
+			getForwardAuth(w, req, resolver, engine, metrics.NopCollector{})
 			assertStatus(t, w.Code, tt.expectedStatus)
 		})
 	}
 }
 
 func TestServerHandlerSetup(t *testing.T) {
-	resolver := ipinfo.NewResolver()
+	resolver := ipinfo.NewResolver(metrics.NopCollector{})
 	engine := newAllowEngine()
-	server := New(":8080", engine, resolver)
+	server := New(":8080", engine, resolver, metrics.NopCollector{}, metrics.Handler())
 
 	req := httptest.NewRequest("GET", "/v1/forward-auth", nil)
 	w := httptest.NewRecorder()

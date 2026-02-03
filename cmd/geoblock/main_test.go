@@ -11,7 +11,7 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/danroc/geoblock/internal/config"
-	"github.com/danroc/geoblock/internal/ipinfo"
+	"github.com/danroc/geoblock/internal/metrics"
 )
 
 const (
@@ -104,8 +104,8 @@ func (m *mockServer) Shutdown(context.Context) error {
 // mockUpdater implements the updater interface for testing.
 type mockUpdater struct{}
 
-func (m *mockUpdater) Update() (ipinfo.UpdateStats, error) {
-	return ipinfo.UpdateStats{}, nil
+func (m *mockUpdater) Update() error {
+	return nil
 }
 
 // Tests
@@ -584,14 +584,19 @@ func TestAutoReload(t *testing.T) {
 		testCompletion(t, func() {
 			// autoReload should fail to load the non-existent file and return promptly,
 			// causing testCompletion to complete before the timeout.
-			autoReload(context.Background(), mock, "/non/existent/file.yaml")
+			autoReload(
+				context.Background(),
+				mock,
+				"/non/existent/file.yaml",
+				metrics.NopCollector{},
+			)
 		}, nil)
 	})
 
 	t.Run("stops when context is canceled", func(t *testing.T) {
 		mock := &mockConfigUpdater{}
 		testContextCancellation(t, func(ctx context.Context) {
-			autoReload(ctx, mock, "testdata/valid-config.yaml")
+			autoReload(ctx, mock, "testdata/valid-config.yaml", metrics.NopCollector{})
 		})
 	})
 }

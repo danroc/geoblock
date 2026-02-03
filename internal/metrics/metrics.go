@@ -172,8 +172,16 @@ func init() {
 	startTime.Set(float64(time.Now().Unix()))
 }
 
+// PrometheusCollector implements the Collector interface using Prometheus metrics.
+type PrometheusCollector struct{}
+
+// NewCollector creates a new PrometheusCollector.
+func NewCollector() *PrometheusCollector {
+	return &PrometheusCollector{}
+}
+
 // RecordRequest records comprehensive metrics for a request.
-func RecordRequest(
+func (c *PrometheusCollector) RecordRequest(
 	status string,
 	country string,
 	method string,
@@ -200,13 +208,13 @@ func RecordRequest(
 }
 
 // RecordInvalidRequest records metrics for an invalid request.
-func RecordInvalidRequest(duration time.Duration) {
+func (c *PrometheusCollector) RecordInvalidRequest(duration time.Duration) {
 	requestsTotal.WithLabelValues(StatusInvalid).Inc()
 	requestDuration.WithLabelValues(StatusInvalid).Observe(duration.Seconds())
 }
 
 // RecordConfigReload records a config reload attempt.
-func RecordConfigReload(success bool, rulesCount int) {
+func (c *PrometheusCollector) RecordConfigReload(success bool, rulesCount int) {
 	if success {
 		configReloadTotal.WithLabelValues("success").Inc()
 		configLastReload.Set(float64(time.Now().Unix()))
@@ -217,7 +225,10 @@ func RecordConfigReload(success bool, rulesCount int) {
 }
 
 // RecordDBUpdate records an IP database update.
-func RecordDBUpdate(entries map[string]uint64, duration time.Duration) {
+func (c *PrometheusCollector) RecordDBUpdate(
+	entries map[string]uint64,
+	duration time.Duration,
+) {
 	for dbType, count := range entries {
 		dbEntries.WithLabelValues(dbType).Set(float64(count))
 	}

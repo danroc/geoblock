@@ -11,9 +11,22 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/danroc/geoblock/internal/ipinfo"
-	"github.com/danroc/geoblock/internal/metrics"
 	"github.com/danroc/geoblock/internal/rules"
 )
+
+// RequestCollector collects metrics for HTTP requests.
+type RequestCollector interface {
+	RecordRequest(
+		status string,
+		country string,
+		method string,
+		duration time.Duration,
+		ruleIndex int,
+		action string,
+		isDefaultPolicy bool,
+	)
+	RecordInvalidRequest(duration time.Duration)
+}
 
 // HTTP server timeout constants
 const (
@@ -100,6 +113,7 @@ func getForwardAuth(
 	request *http.Request,
 	resolver *ipinfo.Resolver,
 	engine *rules.Engine,
+	collector RequestCollector,
 ) {
 	start := time.Now()
 
@@ -119,7 +133,7 @@ func getForwardAuth(
 			Str(fieldSourceIP, origin).
 			Msg("Missing required headers")
 		writer.WriteHeader(http.StatusBadRequest)
-		metrics.RecordInvalidRequest(time.Since(start))
+		collector.RecordInvalidRequest(time.Since(start))
 		return
 	}
 
@@ -134,7 +148,7 @@ func getForwardAuth(
 			Str(fieldSourceIP, origin).
 			Msg("Invalid source IP")
 		writer.WriteHeader(http.StatusBadRequest)
-		metrics.RecordInvalidRequest(time.Since(start))
+		collector.RecordInvalidRequest(time.Since(start))
 		return
 	}
 
@@ -169,7 +183,7 @@ func getForwardAuth(
 		writer.WriteHeader(http.StatusForbidden)
 	}
 
-	metrics.RecordRequest(
+	collector.RecordRequest(
 		status,
 		resolved.CountryCode,
 		method,
@@ -186,16 +200,22 @@ func getHealth(writer http.ResponseWriter, _ *http.Request) {
 }
 
 // New creates a new HTTP server that listens on the given address.
-func New(address string, engine *rules.Engine, resolver *ipinfo.Resolver) *http.Server {
+func New(
+	address string,
+	engine *rules.Engine,
+	resolver *ipinfo.Resolver,
+	collector RequestCollector,
+	metricsHandler http.Handler,
+) *http.Server {
 	mux := http.NewServeMux()
 	mux.HandleFunc(
 		"GET /v1/forward-auth",
 		func(writer http.ResponseWriter, request *http.Request) {
-			getForwardAuth(writer, request, resolver, engine)
+			getForwardAuth(writer, request, resolver, engine, collector)
 		},
 	)
 	mux.HandleFunc("GET /v1/health", getHealth)
-	mux.Handle("GET /metrics", metrics.Handler())
+	mux.Handle("GET /metrics", metricsHandler)
 
 	return &http.Server{
 		Addr:         address,

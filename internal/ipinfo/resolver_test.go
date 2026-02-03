@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/danroc/geoblock/internal/ipinfo"
+	"github.com/danroc/geoblock/internal/metrics"
 )
 
 type mockRT struct {
@@ -58,8 +59,8 @@ func withRT(rt http.RoundTripper, f func()) {
 
 func TestUpdateError(t *testing.T) {
 	withRT(newErrRT(), func() {
-		r := ipinfo.NewResolver()
-		if _, err := r.Update(); err == nil {
+		r := ipinfo.NewResolver(metrics.NopCollector{})
+		if err := r.Update(); err == nil {
 			t.Fatal("expected an error, got nil")
 		}
 	})
@@ -80,8 +81,8 @@ func TestResolve(t *testing.T) {
 			{"1:2::", "FR", "Test4", 4},
 			{"1:4::", "", "", ipinfo.AS0},
 		}
-		r := ipinfo.NewResolver()
-		if _, err := r.Update(); err != nil {
+		r := ipinfo.NewResolver(metrics.NopCollector{})
+		if err := r.Update(); err != nil {
 			t.Fatal(err)
 		}
 		for _, tt := range tests {
@@ -209,8 +210,8 @@ func TestUpdateInvalidData(t *testing.T) {
 
 	for _, tt := range tests {
 		withRT(newRTWithDBs(tt.dbs), func() {
-			r := ipinfo.NewResolver()
-			_, err := r.Update()
+			r := ipinfo.NewResolver(metrics.NopCollector{})
+			err := r.Update()
 			if err == nil || !strings.Contains(err.Error(), tt.errMsg) {
 				t.Errorf("got %v, want %v", err, tt.errMsg)
 			}
