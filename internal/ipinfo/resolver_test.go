@@ -7,9 +7,15 @@ import (
 	"net/netip"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/danroc/geoblock/internal/ipinfo"
 )
+
+// nopDBUpdateCollector is a no-op collector for testing.
+type nopDBUpdateCollector struct{}
+
+func (nopDBUpdateCollector) RecordDBUpdate(_ map[string]uint64, _ time.Duration) {}
 
 type mockRT struct {
 	respond func(req *http.Request) (*http.Response, error)
@@ -58,7 +64,7 @@ func withRT(rt http.RoundTripper, f func()) {
 
 func TestUpdateError(t *testing.T) {
 	withRT(newErrRT(), func() {
-		r := ipinfo.NewResolver()
+		r := ipinfo.NewResolver(nopDBUpdateCollector{})
 		if err := r.Update(); err == nil {
 			t.Fatal("expected an error, got nil")
 		}
@@ -80,7 +86,7 @@ func TestResolve(t *testing.T) {
 			{"1:2::", "FR", "Test4", 4},
 			{"1:4::", "", "", ipinfo.AS0},
 		}
-		r := ipinfo.NewResolver()
+		r := ipinfo.NewResolver(nopDBUpdateCollector{})
 		if err := r.Update(); err != nil {
 			t.Fatal(err)
 		}
@@ -209,7 +215,7 @@ func TestUpdateInvalidData(t *testing.T) {
 
 	for _, tt := range tests {
 		withRT(newRTWithDBs(tt.dbs), func() {
-			r := ipinfo.NewResolver()
+			r := ipinfo.NewResolver(nopDBUpdateCollector{})
 			err := r.Update()
 			if err == nil || !strings.Contains(err.Error(), tt.errMsg) {
 				t.Errorf("got %v, want %v", err, tt.errMsg)

@@ -1,8 +1,87 @@
+# HELP geoblock_config_last_reload_timestamp Unix timestamp of last successful config reload
+# TYPE geoblock_config_last_reload_timestamp gauge
+geoblock_config_last_reload_timestamp 1.770049555e+09
+# HELP geoblock_config_reload_total Total number of configuration reload attempts
+# TYPE geoblock_config_reload_total counter
+geoblock_config_reload_total{result="success"} 1
+# HELP geoblock_config_rules_total Number of configured access control rules
+# TYPE geoblock_config_rules_total gauge
+geoblock_config_rules_total 7
+# HELP geoblock_db_entries Number of entries in IP database
+# TYPE geoblock_db_entries gauge
+geoblock_db_entries{database="asn"} 486374
+geoblock_db_entries{database="country"} 614739
+# HELP geoblock_db_last_update_timestamp Unix timestamp of last successful database update
+# TYPE geoblock_db_last_update_timestamp gauge
+geoblock_db_last_update_timestamp 1.770049555e+09
+# HELP geoblock_db_load_duration_seconds Duration of last database load in seconds
+# TYPE geoblock_db_load_duration_seconds gauge
+geoblock_db_load_duration_seconds 8.642421858
+# HELP geoblock_default_policy_matches_total Total number of requests matched by default policy
+# TYPE geoblock_default_policy_matches_total counter
+geoblock_default_policy_matches_total{action="deny"} 1
+# HELP geoblock_request_duration_seconds Request processing duration in seconds
+# TYPE geoblock_request_duration_seconds histogram
+geoblock_request_duration_seconds_bucket{status="allowed",le="0.001"} 5
+geoblock_request_duration_seconds_bucket{status="allowed",le="0.005"} 5
+geoblock_request_duration_seconds_bucket{status="allowed",le="0.01"} 5
+geoblock_request_duration_seconds_bucket{status="allowed",le="0.025"} 5
+geoblock_request_duration_seconds_bucket{status="allowed",le="0.05"} 5
+geoblock_request_duration_seconds_bucket{status="allowed",le="0.1"} 5
+geoblock_request_duration_seconds_bucket{status="allowed",le="0.25"} 5
+geoblock_request_duration_seconds_bucket{status="allowed",le="0.5"} 5
+geoblock_request_duration_seconds_bucket{status="allowed",le="1"} 5
+geoblock_request_duration_seconds_bucket{status="allowed",le="+Inf"} 5
+geoblock_request_duration_seconds_sum{status="allowed"} 9.5209e-05
+geoblock_request_duration_seconds_count{status="allowed"} 5
+geoblock_request_duration_seconds_bucket{status="denied",le="0.001"} 4
+geoblock_request_duration_seconds_bucket{status="denied",le="0.005"} 4
+geoblock_request_duration_seconds_bucket{status="denied",le="0.01"} 4
+geoblock_request_duration_seconds_bucket{status="denied",le="0.025"} 4
+geoblock_request_duration_seconds_bucket{status="denied",le="0.05"} 4
+geoblock_request_duration_seconds_bucket{status="denied",le="0.1"} 4
+geoblock_request_duration_seconds_bucket{status="denied",le="0.25"} 4
+geoblock_request_duration_seconds_bucket{status="denied",le="0.5"} 4
+geoblock_request_duration_seconds_bucket{status="denied",le="1"} 4
+geoblock_request_duration_seconds_bucket{status="denied",le="+Inf"} 4
+geoblock_request_duration_seconds_sum{status="denied"} 8.8459e-05
+geoblock_request_duration_seconds_count{status="denied"} 4
+geoblock_request_duration_seconds_bucket{status="invalid",le="0.001"} 4
+geoblock_request_duration_seconds_bucket{status="invalid",le="0.005"} 4
+geoblock_request_duration_seconds_bucket{status="invalid",le="0.01"} 4
+geoblock_request_duration_seconds_bucket{status="invalid",le="0.025"} 4
+geoblock_request_duration_seconds_bucket{status="invalid",le="0.05"} 4
+geoblock_request_duration_seconds_bucket{status="invalid",le="0.1"} 4
+geoblock_request_duration_seconds_bucket{status="invalid",le="0.25"} 4
+geoblock_request_duration_seconds_bucket{status="invalid",le="0.5"} 4
+geoblock_request_duration_seconds_bucket{status="invalid",le="1"} 4
+geoblock_request_duration_seconds_bucket{status="invalid",le="+Inf"} 4
+geoblock_request_duration_seconds_sum{status="invalid"} 0.000255876
+geoblock_request_duration_seconds_count{status="invalid"} 4
+# HELP geoblock_requests_by_country_total Total number of requests by country
+# TYPE geoblock_requests_by_country_total counter
+geoblock_requests_by_country_total{country="US"} 7
+# HELP geoblock_requests_by_method_total Total number of requests by HTTP method
+# TYPE geoblock_requests_by_method_total counter
+geoblock_requests_by_method_total{method="GET"} 8
+geoblock_requests_by_method_total{method="POST"} 1
 # HELP geoblock_requests_total Total number of requests by status
 # TYPE geoblock_requests_total counter
 geoblock_requests_total{status="allowed"} 5
 geoblock_requests_total{status="denied"} 4
 geoblock_requests_total{status="invalid"} 4
+# HELP geoblock_rule_matches_total Total number of requests matched by each rule
+# TYPE geoblock_rule_matches_total counter
+geoblock_rule_matches_total{action="allow",rule_index="0"} 2
+geoblock_rule_matches_total{action="allow",rule_index="2"} 1
+geoblock_rule_matches_total{action="allow",rule_index="5"} 1
+geoblock_rule_matches_total{action="allow",rule_index="6"} 1
+geoblock_rule_matches_total{action="deny",rule_index="1"} 1
+geoblock_rule_matches_total{action="deny",rule_index="3"} 1
+geoblock_rule_matches_total{action="deny",rule_index="4"} 1
+# HELP geoblock_start_time_seconds Unix timestamp of when the process started
+# TYPE geoblock_start_time_seconds gauge
+geoblock_start_time_seconds 1.770049547e+09
 # HELP geoblock_version_info Version information
 # TYPE geoblock_version_info gauge
-geoblock_version_info{version="0.0.0"} 1
+geoblock_version_info{version="0.6.0"} 1

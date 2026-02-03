@@ -107,6 +107,11 @@ func (m *mockUpdater) Update() error {
 	return nil
 }
 
+// nopConfigReloadCollector is a no-op collector for testing.
+type nopConfigReloadCollector struct{}
+
+func (nopConfigReloadCollector) RecordConfigReload(_ bool, _ int) {}
+
 // Tests
 
 func TestGetEnv(t *testing.T) {
@@ -329,32 +334,41 @@ func TestConfigReloader_ReloadIfChanged(t *testing.T) {
 	prevStat := fakeFileInfo{size: 100, mod: now}
 	newStat := fakeFileInfo{size: 200, mod: now.Add(time.Second)}
 	validCfg := &config.Configuration{
-		AccessControl: config.AccessControl{DefaultPolicy: "deny"},
+		AccessControl: config.AccessControl{
+			DefaultPolicy: "deny",
+			Rules: []config.AccessControlRule{
+				{Policy: "allow", Domains: []string{"example.com"}},
+				{Policy: "deny", Domains: []string{"blocked.com"}},
+			},
+		},
 	}
 
 	tests := []struct {
-		name       string
-		stat       func(string) (os.FileInfo, error)
-		load       func(string) (*config.Configuration, error)
-		wantReload bool
-		wantErr    bool
-		wantCalled bool
+		name           string
+		stat           func(string) (os.FileInfo, error)
+		load           func(string) (*config.Configuration, error)
+		wantReload     bool
+		wantErr        bool
+		wantCalled     bool
+		wantRulesCount int
 	}{
 		{
-			name:       "file not changed",
-			stat:       func(string) (os.FileInfo, error) { return prevStat, nil },
-			load:       func(string) (*config.Configuration, error) { return validCfg, nil },
-			wantReload: false,
-			wantErr:    false,
-			wantCalled: false,
+			name:           "file not changed",
+			stat:           func(string) (os.FileInfo, error) { return prevStat, nil },
+			load:           func(string) (*config.Configuration, error) { return validCfg, nil },
+			wantReload:     false,
+			wantErr:        false,
+			wantCalled:     false,
+			wantRulesCount: 0,
 		},
 		{
-			name:       "file changed with valid config",
-			stat:       func(string) (os.FileInfo, error) { return newStat, nil },
-			load:       func(string) (*config.Configuration, error) { return validCfg, nil },
-			wantReload: true,
-			wantErr:    false,
-			wantCalled: true,
+			name:           "file changed with valid config",
+			stat:           func(string) (os.FileInfo, error) { return newStat, nil },
+			load:           func(string) (*config.Configuration, error) { return validCfg, nil },
+			wantReload:     true,
+			wantErr:        false,
+			wantCalled:     true,
+			wantRulesCount: 2,
 		},
 		{
 			name: "file changed with invalid config",
@@ -362,19 +376,21 @@ func TestConfigReloader_ReloadIfChanged(t *testing.T) {
 			load: func(string) (*config.Configuration, error) {
 				return nil, errors.New("invalid config")
 			},
-			wantReload: false,
-			wantErr:    true,
-			wantCalled: false,
+			wantReload:     false,
+			wantErr:        true,
+			wantCalled:     false,
+			wantRulesCount: 0,
 		},
 		{
 			name: "stat error",
 			stat: func(string) (os.FileInfo, error) {
 				return nil, errors.New("stat error")
 			},
-			load:       func(string) (*config.Configuration, error) { return validCfg, nil },
-			wantReload: false,
-			wantErr:    true,
-			wantCalled: false,
+			load:           func(string) (*config.Configuration, error) { return validCfg, nil },
+			wantReload:     false,
+			wantErr:        true,
+			wantCalled:     false,
+			wantRulesCount: 0,
 		},
 	}
 
@@ -388,7 +404,7 @@ func TestConfigReloader_ReloadIfChanged(t *testing.T) {
 				load:     tt.load,
 			}
 
-			reloaded, err := reloader.reloadIfChanged(mock)
+			reloaded, rulesCount, err := reloader.reloadIfChanged(mock)
 			if err != nil && !tt.wantErr {
 				t.Errorf("reloadIfChanged() unexpected error: %v", err)
 			}
@@ -400,6 +416,13 @@ func TestConfigReloader_ReloadIfChanged(t *testing.T) {
 					"reloadIfChanged() reloaded = %v, want %v",
 					reloaded,
 					tt.wantReload,
+				)
+			}
+			if rulesCount != tt.wantRulesCount {
+				t.Errorf(
+					"reloadIfChanged() rulesCount = %v, want %v",
+					rulesCount,
+					tt.wantRulesCount,
 				)
 			}
 			if mock.called != tt.wantCalled {
@@ -565,14 +588,24 @@ func TestAutoReload(t *testing.T) {
 		testCompletion(t, func() {
 			// autoReload should fail to load the non-existent file and return promptly,
 			// causing testCompletion to complete before the timeout.
-			autoReload(context.Background(), mock, "/non/existent/file.yaml")
+			autoReload(
+				context.Background(),
+				mock,
+				"testdata/non-existent-config.yaml",
+				nopConfigReloadCollector{},
+			)
 		}, nil)
 	})
 
 	t.Run("stops when context is canceled", func(t *testing.T) {
 		mock := &mockConfigUpdater{}
 		testContextCancellation(t, func(ctx context.Context) {
-			autoReload(ctx, mock, "testdata/valid-config.yaml")
+			autoReload(
+				ctx,
+				mock,
+				"testdata/valid-config.yaml",
+				nopConfigReloadCollector{},
+			)
 		})
 	})
 }

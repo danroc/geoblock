@@ -11,9 +11,22 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/danroc/geoblock/internal/ipinfo"
-	"github.com/danroc/geoblock/internal/metrics"
 	"github.com/danroc/geoblock/internal/rules"
 )
+
+// RequestCollector collects metrics for HTTP requests.
+type RequestCollector interface {
+	RecordRequest(
+		status string,
+		country string,
+		method string,
+		duration time.Duration,
+		ruleIndex int,
+		action string,
+		isDefaultPolicy bool,
+	)
+	RecordInvalidRequest(duration time.Duration)
+}
 
 // HTTP server timeout constants
 const (
@@ -100,7 +113,10 @@ func getForwardAuth(
 	request *http.Request,
 	resolver *ipinfo.Resolver,
 	engine *rules.Engine,
+	collector RequestCollector,
 ) {
+	start := time.Now()
+
 	var (
 		origin = parseForwardedFor(request.Header.Get(headerForwardedFor))
 		domain = request.Header.Get(headerForwardedHost)
@@ -117,7 +133,7 @@ func getForwardAuth(
 			Str(fieldSourceIP, origin).
 			Msg("Missing required headers")
 		writer.WriteHeader(http.StatusBadRequest)
-		metrics.IncInvalid()
+		collector.RecordInvalidRequest(time.Since(start))
 		return
 	}
 
@@ -132,12 +148,12 @@ func getForwardAuth(
 			Str(fieldSourceIP, origin).
 			Msg("Invalid source IP")
 		writer.WriteHeader(http.StatusBadRequest)
-		metrics.IncInvalid()
+		collector.RecordInvalidRequest(time.Since(start))
 		return
 	}
 
 	resolved := resolver.Resolve(sourceIP)
-	isAllowed := engine.Authorize(&rules.Query{
+	result := engine.Authorize(&rules.Query{
 		RequestedDomain: domain,
 		RequestedMethod: method,
 		SourceIP:        sourceIP,
@@ -145,26 +161,37 @@ func getForwardAuth(
 		SourceASN:       resolved.ASN,
 	})
 
+	duration := time.Since(start)
+	status := isAllowedStatus[result.Allowed]
+
 	// Prepare a zerolog event for structured logging
-	event := getLogEvent(isAllowed).
+	event := getLogEvent(result.Allowed).
 		Str(fieldRequestDomain, domain).
 		Str(fieldRequestMethod, method).
-		Str(fieldRequestStatus, isAllowedStatus[isAllowed]).
+		Str(fieldRequestStatus, status).
 		Str(fieldSourceIP, sourceIP.String()).
 		Bool(fieldSourceIsLocal, isLocalIP(sourceIP)).
 		Str(fieldSourceCountry, resolved.CountryCode).
 		Uint32(fieldSourceASN, resolved.ASN).
 		Str(fieldSourceOrg, resolved.Organization)
 
-	if isAllowed {
+	if result.Allowed {
 		event.Msg("Request allowed")
 		writer.WriteHeader(http.StatusNoContent)
-		metrics.IncAllowed()
 	} else {
 		event.Msg("Request denied")
 		writer.WriteHeader(http.StatusForbidden)
-		metrics.IncDenied()
 	}
+
+	collector.RecordRequest(
+		status,
+		resolved.CountryCode,
+		method,
+		duration,
+		result.RuleIndex,
+		result.Action,
+		result.IsDefaultPolicy,
+	)
 }
 
 // getHealth returns a 204 status code to indicate that the server is running.
@@ -173,16 +200,22 @@ func getHealth(writer http.ResponseWriter, _ *http.Request) {
 }
 
 // New creates a new HTTP server that listens on the given address.
-func New(address string, engine *rules.Engine, resolver *ipinfo.Resolver) *http.Server {
+func New(
+	address string,
+	engine *rules.Engine,
+	resolver *ipinfo.Resolver,
+	collector RequestCollector,
+	metricsHandler http.Handler,
+) *http.Server {
 	mux := http.NewServeMux()
 	mux.HandleFunc(
 		"GET /v1/forward-auth",
 		func(writer http.ResponseWriter, request *http.Request) {
-			getForwardAuth(writer, request, resolver, engine)
+			getForwardAuth(writer, request, resolver, engine, collector)
 		},
 	)
 	mux.HandleFunc("GET /v1/health", getHealth)
-	mux.Handle("GET /metrics", metrics.Handler())
+	mux.Handle("GET /metrics", metricsHandler)
 
 	return &http.Server{
 		Addr:         address,

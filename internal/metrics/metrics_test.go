@@ -5,11 +5,17 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 
+	"github.com/danroc/geoblock/internal/config"
 	"github.com/danroc/geoblock/internal/version"
 )
+
+// collector is a package-level test collector.
+var collector = NewCollector()
 
 // setupTest resets metrics and registers cleanup to reset after test.
 func setupTest(t *testing.T) {
@@ -23,21 +29,38 @@ func getCounterValue(status string) float64 {
 	return testutil.ToFloat64(requestsTotal.WithLabelValues(status))
 }
 
-func TestIncrementFunctions(t *testing.T) {
+// recordTestRequest is a helper that calls RecordRequest with common test values.
+func recordTestRequest(status, action string) {
+	collector.RecordRequest(status, "US", "GET", time.Millisecond, 0, action, false)
+}
+
+// assertCounterValue asserts that a counter metric has the expected value.
+func assertCounterValue(
+	t *testing.T,
+	collector prometheus.Collector,
+	expected float64,
+	name string,
+) {
+	t.Helper()
+	if got := testutil.ToFloat64(collector); got != expected {
+		t.Errorf("Expected %s to be %v, got %v", name, expected, got)
+	}
+}
+
+func TestRecordRequest(t *testing.T) {
 	tests := []struct {
 		name   string
-		inc    func()
 		status string
+		action string
 	}{
-		{"IncDenied", IncDenied, StatusDenied},
-		{"IncAllowed", IncAllowed, StatusAllowed},
-		{"IncInvalid", IncInvalid, StatusInvalid},
+		{"allowed", StatusAllowed, config.PolicyAllow},
+		{"denied", StatusDenied, config.PolicyDeny},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			setupTest(t)
-			tt.inc()
+			recordTestRequest(tt.status, tt.action)
 			if got := getCounterValue(tt.status); got != 1 {
 				t.Errorf("Expected %s count to be 1, got %v", tt.status, got)
 			}
@@ -45,17 +68,266 @@ func TestIncrementFunctions(t *testing.T) {
 	}
 }
 
-func TestMultipleIncrements(t *testing.T) {
+func TestRecordRequestEmptyCountry(t *testing.T) {
 	setupTest(t)
 
-	for i := 0; i < 5; i++ {
-		IncDenied()
+	collector.RecordRequest(
+		StatusAllowed,
+		"",
+		"GET",
+		time.Millisecond,
+		0,
+		config.PolicyAllow,
+		false,
+	)
+
+	// Request should still be counted
+	if got := getCounterValue(StatusAllowed); got != 1 {
+		t.Errorf("Expected allowed count to be 1, got %v", got)
 	}
-	for i := 0; i < 3; i++ {
-		IncAllowed()
+
+	// Country counter should not be incremented for empty country
+	if got := testutil.ToFloat64(requestsByCountry.WithLabelValues("")); got != 0 {
+		t.Errorf("Expected empty country count to be 0, got %v", got)
 	}
-	for i := 0; i < 2; i++ {
-		IncInvalid()
+}
+
+func TestRecordRequestEmptyMethod(t *testing.T) {
+	setupTest(t)
+
+	collector.RecordRequest(
+		StatusAllowed,
+		"US",
+		"",
+		time.Millisecond,
+		0,
+		config.PolicyAllow,
+		false,
+	)
+
+	// Request should still be counted
+	if got := getCounterValue(StatusAllowed); got != 1 {
+		t.Errorf("Expected allowed count to be 1, got %v", got)
+	}
+
+	// Method counter should not be incremented for empty method
+	if got := testutil.ToFloat64(requestsByMethod.WithLabelValues("")); got != 0 {
+		t.Errorf("Expected empty method count to be 0, got %v", got)
+	}
+}
+
+func TestRecordRequestDefaultPolicy(t *testing.T) {
+	setupTest(t)
+
+	collector.RecordRequest(
+		StatusAllowed,
+		"US",
+		"GET",
+		time.Millisecond,
+		0,
+		config.PolicyAllow,
+		true,
+	)
+
+	// Request should be counted
+	if got := getCounterValue(StatusAllowed); got != 1 {
+		t.Errorf("Expected allowed count to be 1, got %v", got)
+	}
+
+	// Default policy counter should be incremented
+	if got := testutil.ToFloat64(
+		defaultPolicyMatches.WithLabelValues(config.PolicyAllow),
+	); got != 1 {
+		t.Errorf("Expected default policy allow count to be 1, got %v", got)
+	}
+
+	// Rule matches should NOT be incremented
+	if got := testutil.ToFloat64(
+		ruleMatches.WithLabelValues("0", config.PolicyAllow),
+	); got != 0 {
+		t.Errorf("Expected rule matches to be 0 for default policy, got %v", got)
+	}
+}
+
+func TestRecordRequestByCountry(t *testing.T) {
+	setupTest(t)
+
+	collector.RecordRequest(
+		StatusAllowed,
+		"US",
+		"GET",
+		time.Millisecond,
+		0,
+		config.PolicyAllow,
+		false,
+	)
+	collector.RecordRequest(
+		StatusAllowed,
+		"US",
+		"GET",
+		time.Millisecond,
+		0,
+		config.PolicyAllow,
+		false,
+	)
+	collector.RecordRequest(
+		StatusAllowed,
+		"DE",
+		"GET",
+		time.Millisecond,
+		0,
+		config.PolicyAllow,
+		false,
+	)
+
+	assertCounterValue(t, requestsByCountry.WithLabelValues("US"), 2, "US count")
+	assertCounterValue(t, requestsByCountry.WithLabelValues("DE"), 1, "DE count")
+}
+
+func TestRecordRequestByMethod(t *testing.T) {
+	setupTest(t)
+
+	collector.RecordRequest(
+		StatusAllowed,
+		"US",
+		"GET",
+		time.Millisecond,
+		0,
+		config.PolicyAllow,
+		false,
+	)
+	collector.RecordRequest(
+		StatusAllowed,
+		"US",
+		"POST",
+		time.Millisecond,
+		0,
+		config.PolicyAllow,
+		false,
+	)
+	collector.RecordRequest(
+		StatusAllowed,
+		"US",
+		"GET",
+		time.Millisecond,
+		0,
+		config.PolicyAllow,
+		false,
+	)
+
+	assertCounterValue(t, requestsByMethod.WithLabelValues("GET"), 2, "GET count")
+	assertCounterValue(t, requestsByMethod.WithLabelValues("POST"), 1, "POST count")
+}
+
+func TestRecordRequestRuleMatches(t *testing.T) {
+	setupTest(t)
+
+	collector.RecordRequest(
+		StatusAllowed,
+		"US",
+		"GET",
+		time.Millisecond,
+		0,
+		config.PolicyAllow,
+		false,
+	)
+	collector.RecordRequest(
+		StatusDenied,
+		"US",
+		"GET",
+		time.Millisecond,
+		1,
+		config.PolicyDeny,
+		false,
+	)
+	collector.RecordRequest(
+		StatusDenied,
+		"US",
+		"GET",
+		time.Millisecond,
+		1,
+		config.PolicyDeny,
+		false,
+	)
+	collector.RecordRequest(
+		StatusAllowed,
+		"US",
+		"GET",
+		time.Millisecond,
+		2,
+		config.PolicyAllow,
+		false,
+	)
+
+	assertCounterValue(
+		t,
+		ruleMatches.WithLabelValues("0", config.PolicyAllow),
+		1,
+		"rule 0 allow",
+	)
+	assertCounterValue(
+		t,
+		ruleMatches.WithLabelValues("1", config.PolicyDeny),
+		2,
+		"rule 1 deny",
+	)
+	assertCounterValue(
+		t,
+		ruleMatches.WithLabelValues("2", config.PolicyAllow),
+		1,
+		"rule 2 allow",
+	)
+}
+
+func TestRecordRequestDuration(t *testing.T) {
+	setupTest(t)
+
+	collector.RecordRequest(
+		StatusAllowed,
+		"US",
+		"GET",
+		50*time.Millisecond,
+		0,
+		config.PolicyAllow,
+		false,
+	)
+	collector.RecordRequest(
+		StatusDenied,
+		"US",
+		"GET",
+		100*time.Millisecond,
+		0,
+		config.PolicyDeny,
+		false,
+	)
+
+	// Verify histogram has recorded observations by checking the collector count
+	// Each histogram label creates multiple metrics (one per bucket + sum + count)
+	count := testutil.CollectAndCount(requestDuration)
+	if count == 0 {
+		t.Error("Expected request duration histogram to have recorded metrics")
+	}
+}
+
+func TestRecordInvalidRequest(t *testing.T) {
+	setupTest(t)
+	collector.RecordInvalidRequest(time.Millisecond)
+	if got := getCounterValue(StatusInvalid); got != 1 {
+		t.Errorf("Expected invalid count to be 1, got %v", got)
+	}
+}
+
+func TestMultipleRequests(t *testing.T) {
+	setupTest(t)
+
+	for range 5 {
+		recordTestRequest(StatusDenied, config.PolicyDeny)
+	}
+	for range 3 {
+		recordTestRequest(StatusAllowed, config.PolicyAllow)
+	}
+	for range 2 {
+		collector.RecordInvalidRequest(time.Millisecond)
 	}
 
 	if got := getCounterValue("denied"); got != 5 {
@@ -69,92 +341,62 @@ func TestMultipleIncrements(t *testing.T) {
 	}
 }
 
-func TestConcurrentIncrements(t *testing.T) {
+func TestConcurrentRequests(t *testing.T) {
 	setupTest(t)
 
 	const numGoroutines = 100
-	const incrementsPerGoroutine = 10
-
-	increments := []struct {
-		inc    func()
-		status string
-	}{
-		{IncDenied, StatusDenied},
-		{IncAllowed, StatusAllowed},
-		{IncInvalid, StatusInvalid},
-	}
+	const requestsPerGoroutine = 10
 
 	var wg sync.WaitGroup
-	for _, inc := range increments {
-		wg.Add(numGoroutines)
-		for range numGoroutines {
-			go func() {
-				defer wg.Done()
-				for range incrementsPerGoroutine {
-					inc.inc()
-				}
-			}()
-		}
+	wg.Add(numGoroutines * 3)
+
+	// Concurrent denied requests
+	for range numGoroutines {
+		go func() {
+			defer wg.Done()
+			for range requestsPerGoroutine {
+				recordTestRequest(StatusDenied, config.PolicyDeny)
+			}
+		}()
 	}
+
+	// Concurrent allowed requests
+	for range numGoroutines {
+		go func() {
+			defer wg.Done()
+			for range requestsPerGoroutine {
+				recordTestRequest(StatusAllowed, config.PolicyAllow)
+			}
+		}()
+	}
+
+	// Concurrent invalid requests
+	for range numGoroutines {
+		go func() {
+			defer wg.Done()
+			for range requestsPerGoroutine {
+				collector.RecordInvalidRequest(time.Millisecond)
+			}
+		}()
+	}
+
 	wg.Wait()
 
-	expected := float64(numGoroutines * incrementsPerGoroutine)
-	for _, inc := range increments {
-		if got := getCounterValue(inc.status); got != expected {
-			t.Errorf("Expected %s count to be %v, got %v", inc.status, expected, got)
+	expected := float64(numGoroutines * requestsPerGoroutine)
+	for _, status := range []string{StatusDenied, StatusAllowed, StatusInvalid} {
+		if got := getCounterValue(status); got != expected {
+			t.Errorf("Expected %s count to be %v, got %v", status, expected, got)
 		}
-	}
-}
-
-func TestTotalCalculation(t *testing.T) {
-	testCases := []struct {
-		name    string
-		denied  int
-		allowed int
-		invalid int
-	}{
-		{"zero values", 0, 0, 0},
-		{"only denied", 5, 0, 0},
-		{"only allowed", 0, 3, 0},
-		{"only invalid", 0, 0, 2},
-		{"mixed values", 10, 5, 3},
-		{"large values", 1000, 2000, 500},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			setupTest(t)
-
-			for i := 0; i < tc.denied; i++ {
-				IncDenied()
-			}
-			for i := 0; i < tc.allowed; i++ {
-				IncAllowed()
-			}
-			for i := 0; i < tc.invalid; i++ {
-				IncInvalid()
-			}
-
-			if got := getCounterValue("denied"); got != float64(tc.denied) {
-				t.Errorf("Expected denied to be %d, got %v", tc.denied, got)
-			}
-			if got := getCounterValue("allowed"); got != float64(tc.allowed) {
-				t.Errorf("Expected allowed to be %d, got %v", tc.allowed, got)
-			}
-			if got := getCounterValue("invalid"); got != float64(tc.invalid) {
-				t.Errorf("Expected invalid to be %d, got %v", tc.invalid, got)
-			}
-		})
 	}
 }
 
 func TestHandler(t *testing.T) {
 	setupTest(t)
 
-	IncAllowed()
-	IncAllowed()
-	IncDenied()
-	IncInvalid()
+	recordTestRequest(StatusAllowed, config.PolicyAllow)
+	recordTestRequest(StatusAllowed, config.PolicyAllow)
+	recordTestRequest(StatusDenied, config.PolicyDeny)
+	collector.RecordInvalidRequest(time.Millisecond)
 
 	req := httptest.NewRequest("GET", "/metrics", nil)
 	rec := httptest.NewRecorder()
@@ -189,9 +431,9 @@ func TestHandler(t *testing.T) {
 }
 
 func TestReset(t *testing.T) {
-	IncAllowed()
-	IncDenied()
-	IncInvalid()
+	recordTestRequest(StatusAllowed, config.PolicyAllow)
+	recordTestRequest(StatusDenied, config.PolicyDeny)
+	collector.RecordInvalidRequest(time.Millisecond)
 
 	Reset()
 
@@ -211,32 +453,122 @@ func TestReset(t *testing.T) {
 	}
 }
 
-func BenchmarkIncrements(b *testing.B) {
-	benchmarks := []struct {
-		name string
-		inc  func()
+func TestRecordConfigReload(t *testing.T) {
+	tests := []struct {
+		name       string
+		success    bool
+		rulesCount int
+		wantResult string
 	}{
-		{"Denied", IncDenied},
-		{"Allowed", IncAllowed},
-		{"Invalid", IncInvalid},
+		{"success", true, 5, "success"},
+		{"failure", false, 0, "failure"},
 	}
 
-	for _, bm := range benchmarks {
-		b.Run(bm.name, func(b *testing.B) {
-			for range b.N {
-				bm.inc()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			setupTest(t)
+
+			before := time.Now().Unix()
+			collector.RecordConfigReload(tt.success, tt.rulesCount)
+			after := time.Now().Unix()
+
+			got := testutil.ToFloat64(configReloadTotal.WithLabelValues(tt.wantResult))
+			if got != 1 {
+				t.Errorf("Expected %s count to be 1, got %v", tt.wantResult, got)
+			}
+
+			if tt.success {
+				rulesGot := testutil.ToFloat64(configRulesTotal)
+				if rulesGot != float64(tt.rulesCount) {
+					t.Errorf(
+						"Expected rules count to be %d, got %v",
+						tt.rulesCount,
+						rulesGot,
+					)
+				}
+
+				// Verify timestamp was recorded
+				timestamp := testutil.ToFloat64(configLastReload)
+				if timestamp < float64(before) || timestamp > float64(after) {
+					t.Errorf(
+						"Expected configLastReload timestamp between %d and %d, got %v",
+						before,
+						after,
+						timestamp,
+					)
+				}
+			} else {
+				// Verify timestamp was NOT updated on failure
+				timestamp := testutil.ToFloat64(configLastReload)
+				if timestamp != 0 {
+					t.Errorf(
+						"Expected configLastReload to be 0 on failure, got %v",
+						timestamp,
+					)
+				}
 			}
 		})
 	}
 }
 
-// BenchmarkConcurrentIncrements benchmarks concurrent increments.
-func BenchmarkConcurrentIncrements(b *testing.B) {
+func TestRecordDBUpdate(t *testing.T) {
+	setupTest(t)
+
+	entries := map[string]uint64{
+		"country": 1000,
+		"asn":     500,
+	}
+	duration := 2 * time.Second
+
+	before := time.Now().Unix()
+	collector.RecordDBUpdate(entries, duration)
+	after := time.Now().Unix()
+
+	countryGot := testutil.ToFloat64(dbEntries.WithLabelValues("country"))
+	if countryGot != 1000 {
+		t.Errorf("Expected country entries to be 1000, got %v", countryGot)
+	}
+
+	asnGot := testutil.ToFloat64(dbEntries.WithLabelValues("asn"))
+	if asnGot != 500 {
+		t.Errorf("Expected asn entries to be 500, got %v", asnGot)
+	}
+
+	durationGot := testutil.ToFloat64(dbLoadDuration)
+	if durationGot != 2.0 {
+		t.Errorf("Expected load duration to be 2.0, got %v", durationGot)
+	}
+
+	// Verify timestamp was recorded
+	timestamp := testutil.ToFloat64(dbLastUpdate)
+	if timestamp < float64(before) || timestamp > float64(after) {
+		t.Errorf(
+			"Expected dbLastUpdate timestamp between %d and %d, got %v",
+			before,
+			after,
+			timestamp,
+		)
+	}
+}
+
+func BenchmarkRecordRequest(b *testing.B) {
+	for range b.N {
+		recordTestRequest(StatusAllowed, config.PolicyAllow)
+	}
+}
+
+func BenchmarkRecordInvalidRequest(b *testing.B) {
+	for range b.N {
+		collector.RecordInvalidRequest(time.Millisecond)
+	}
+}
+
+func BenchmarkConcurrentRequests(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			IncDenied()
-			IncAllowed()
-			IncInvalid()
+			recordTestRequest(StatusDenied, config.PolicyDeny)
+			recordTestRequest(StatusAllowed, config.PolicyAllow)
+			collector.RecordInvalidRequest(time.Millisecond)
 		}
 	})
 }

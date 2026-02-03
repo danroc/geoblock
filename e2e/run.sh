@@ -182,9 +182,20 @@ echo ""
 echo "=== Verifying Metrics ==="
 curl -s "$METRICS_URL" > metrics.prometheus
 
+# Filter function to remove dynamic values for comparison
+filter_metrics() {
+    sed -e '/^geoblock_version_info/d' \
+        -e '/^geoblock_start_time_seconds/d' \
+        -e '/^geoblock_config_last_reload_timestamp/d' \
+        -e '/^geoblock_db_last_update_timestamp/d' \
+        -e '/^geoblock_db_load_duration_seconds/d' \
+        -e '/^geoblock_db_entries/d' \
+        -e '/^geoblock_request_duration_seconds/d'
+}
+
 echo -n ":: Comparing metrics ... "
-diff <(sed 's/{version="[^"]*"}//' metrics.prometheus) \
-     <(sed 's/{version="[^"]*"}//' e2e/metrics-expected.prometheus)
+diff <(filter_metrics < metrics.prometheus) \
+     <(filter_metrics < e2e/metrics-expected.prometheus)
 echo "PASSED"
 
 echo ""
