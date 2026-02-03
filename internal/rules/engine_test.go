@@ -405,13 +405,13 @@ func TestEngineAuthorize(t *testing.T) {
 
 func TestNewAuthorizationResult(t *testing.T) {
 	tests := []struct {
-		name            string
-		ruleIndex       int
-		action          string
-		wantAllowed     bool
-		wantRuleIndex   int
-		wantAction      string
-		wantIsDefault   bool
+		name          string
+		ruleIndex     int
+		action        string
+		wantAllowed   bool
+		wantRuleIndex int
+		wantAction    string
+		wantIsDefault bool
 	}{
 		{
 			name:          "allow action with rule match",
@@ -483,7 +483,11 @@ func TestNewAuthorizationResult(t *testing.T) {
 				t.Errorf("Action = %v, want %v", got.Action, tt.wantAction)
 			}
 			if got.IsDefaultPolicy != tt.wantIsDefault {
-				t.Errorf("IsDefaultPolicy = %v, want %v", got.IsDefaultPolicy, tt.wantIsDefault)
+				t.Errorf(
+					"IsDefaultPolicy = %v, want %v",
+					got.IsDefaultPolicy,
+					tt.wantIsDefault,
+				)
 			}
 		})
 	}

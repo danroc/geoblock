@@ -96,6 +96,8 @@ type AuthorizationResult struct {
 	IsDefaultPolicy bool
 }
 
+// NewAuthorizationResult creates a new AuthorizationResult from a rule index and
+// action.
 func NewAuthorizationResult(ruleIndex int, action string) AuthorizationResult {
 	return AuthorizationResult{
 		Allowed:         action == config.PolicyAllow,
