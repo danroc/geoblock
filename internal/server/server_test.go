@@ -18,7 +18,11 @@ import (
 // nopDBUpdateCollector is a no-op collector for ipinfo.Resolver in tests.
 type nopDBUpdateCollector struct{}
 
-func (nopDBUpdateCollector) RecordDBUpdate(_ map[string]uint64, _ time.Duration) {}
+func (nopDBUpdateCollector) RecordDBUpdate(
+	_ map[ipinfo.DBSource]uint64,
+	_ time.Duration,
+) {
+}
 
 // nopRequestCollector is a no-op collector for server tests.
 type nopRequestCollector struct{}

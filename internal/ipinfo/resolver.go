@@ -82,7 +82,7 @@ func mergeResolutions(resolutions []Resolution) Resolution {
 
 // DBUpdateCollector collects metrics for database updates.
 type DBUpdateCollector interface {
-	RecordDBUpdate(entries map[string]uint64, duration time.Duration)
+	RecordDBUpdate(entries map[DBSource]uint64, duration time.Duration)
 }
 
 // Database type constants for metrics.
@@ -90,6 +90,18 @@ const (
 	DBTypeCountry = "country"
 	DBTypeASN     = "asn"
 )
+
+// IP version constants for metrics.
+const (
+	IPVersion4 = "4"
+	IPVersion6 = "6"
+)
+
+// DBSource identifies a database entry by type and IP version.
+type DBSource struct {
+	DBType    string
+	IPVersion string
+}
 
 // Resolver is an IP resolver that returns information about an IP address.
 type Resolver struct {
@@ -110,14 +122,15 @@ func (r *Resolver) Update() error {
 	start := time.Now()
 
 	items := []struct {
-		parser ParserFn
-		url    string
-		dbType string
+		parser    ParserFn
+		url       string
+		dbType    string
+		ipVersion string
 	}{
-		{parseCountryRecord, CountryIPv4URL, DBTypeCountry},
-		{parseCountryRecord, CountryIPv6URL, DBTypeCountry},
-		{parseASNRecord, ASNIPv4URL, DBTypeASN},
-		{parseASNRecord, ASNIPv6URL, DBTypeASN},
+		{parseCountryRecord, CountryIPv4URL, DBTypeCountry, IPVersion4},
+		{parseCountryRecord, CountryIPv6URL, DBTypeCountry, IPVersion6},
+		{parseASNRecord, ASNIPv4URL, DBTypeASN, IPVersion4},
+		{parseASNRecord, ASNIPv6URL, DBTypeASN, IPVersion6},
 	}
 
 	// A new database is created for each update so that it can be atomically swapped
@@ -125,15 +138,15 @@ func (r *Resolver) Update() error {
 	db := itree.NewITree[netip.Addr, Resolution]()
 
 	var errs []error
-	entries := make(map[string]uint64)
+	entries := make(map[DBSource]uint64)
 	for _, item := range items {
 		count, err := update(db, item.parser, item.url)
 		if err != nil {
 			errs = append(errs, err)
 		}
-		// Always accumulate count: update() may successfully insert entries before
+		// Always record count: update() may successfully insert entries before
 		// encountering parse errors, so we track all inserted entries.
-		entries[item.dbType] += count
+		entries[DBSource{item.dbType, item.ipVersion}] = count
 	}
 
 	// If any errors occurred during the update, we don't swap the database.
