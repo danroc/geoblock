@@ -23,13 +23,13 @@ import (
 	"github.com/danroc/geoblock/internal/version"
 )
 
-// RFC3339Milli is the RFC3339 format with milliseconds precision
+// RFC3339Milli is the RFC3339 format with milliseconds precision.
 const RFC3339Milli = "2006-01-02T15:04:05.000Z07:00"
 
-// Auto-update and auto-reload intervals
+// Auto-reload, auto-update, and shutdown intervals
 const (
-	autoUpdateInterval = 24 * time.Hour
 	autoReloadInterval = 5 * time.Second
+	autoUpdateInterval = 24 * time.Hour
 	shutdownTimeout    = 30 * time.Second
 )
 
@@ -109,17 +109,17 @@ func runEvery(ctx context.Context, interval time.Duration, fn func()) {
 
 // Updater is the interface for types that can update their databases.
 type Updater interface {
-	Update() error
+	Update(ctx context.Context) error
 }
 
-// autoUpdate updates the databases at regular intervals until the context is canceled.
+// autoUpdate updates the databases at regular intervals.
 func autoUpdate(ctx context.Context, resolver Updater) {
 	runEvery(ctx, autoUpdateInterval, func() {
-		if err := resolver.Update(); err != nil {
+		if err := resolver.Update(ctx); err != nil {
 			log.Error().Err(err).Msg("Cannot update databases")
-			return
+		} else {
+			log.Info().Msg("Databases updated")
 		}
-		log.Info().Msg("Databases updated")
 	})
 }
 
@@ -297,6 +297,13 @@ func main() {
 	options := getOptions()
 	configureLogger(options.logFormat, options.logLevel)
 
+	ctx, stop := signal.NotifyContext(
+		context.Background(),
+		syscall.SIGINT,
+		syscall.SIGTERM,
+	)
+	defer stop()
+
 	log.Info().Str("version", version.Get()).Msg("Starting Geoblock")
 	log.Info().Msg("Loading configuration file")
 	cfg, err := loadConfig(options.configPath)
@@ -311,16 +318,9 @@ func main() {
 
 	log.Info().Msg("Initializing database")
 	resolver := ipinfo.NewResolver(collector)
-	if err := resolver.Update(); err != nil {
+	if err := resolver.Update(ctx); err != nil {
 		log.Fatal().Err(err).Msg("Cannot initialize database")
 	}
-
-	ctx, stop := signal.NotifyContext(
-		context.Background(),
-		syscall.SIGINT,
-		syscall.SIGTERM,
-	)
-	defer stop()
 
 	var (
 		address = ":" + options.serverPort

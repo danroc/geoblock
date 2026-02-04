@@ -100,10 +100,10 @@ func (m *mockServer) Shutdown(context.Context) error {
 	return m.shutdownErr
 }
 
-// mockUpdater implements the updater interface for testing.
+// mockUpdater implements the Updater interface for testing.
 type mockUpdater struct{}
 
-func (m *mockUpdater) Update() error {
+func (m *mockUpdater) Update(_ context.Context) error {
 	return nil
 }
 

@@ -2,54 +2,14 @@
 package ipinfo
 
 import (
-	"encoding/csv"
+	"context"
 	"errors"
-	"net/http"
 	"net/netip"
-	"strconv"
 	"sync/atomic"
 	"time"
 
 	"github.com/danroc/geoblock/internal/itree"
 )
-
-// URLs of the CSV IP location databases
-const (
-	CountryIPv4URL = "https://cdn.jsdelivr.net/npm/@ip-location-db/geolite2-country/geolite2-country-ipv4.csv"
-	CountryIPv6URL = "https://cdn.jsdelivr.net/npm/@ip-location-db/geolite2-country/geolite2-country-ipv6.csv"
-	ASNIPv4URL     = "https://cdn.jsdelivr.net/npm/@ip-location-db/geolite2-asn/geolite2-asn-ipv4.csv"
-	ASNIPv6URL     = "https://cdn.jsdelivr.net/npm/@ip-location-db/geolite2-asn/geolite2-asn-ipv6.csv"
-)
-
-// Length of the CSV records (number of fields)
-const (
-	asnRecordLength     = 4
-	countryRecordLength = 3
-)
-
-const (
-	// The timeout for the HTTP client.
-	clientTimeout = 30 * time.Second
-)
-
-// ErrRecordLength is returned when a CSV record has an unexpected length.
-var (
-	ErrRecordLength = errors.New("invalid record length")
-	ErrInvalidASN   = errors.New("invalid ASN")
-)
-
-// AS0 represents the default ASN value for unknown addresses.
-const AS0 uint32 = 0
-
-// DBRecord contains the information of a database record.
-type DBRecord struct {
-	StartIP    netip.Addr
-	EndIP      netip.Addr
-	Resolution Resolution
-}
-
-// ParserFn is a function that parses a CSV record into a database record.
-type ParserFn func([]string) (*DBRecord, error)
 
 // ResTree is a type alias for an interval tree that maps IP addresses to resolutions.
 type ResTree = itree.ITree[netip.Addr, Resolution]
@@ -103,63 +63,78 @@ type DBSource struct {
 	IPVersion string
 }
 
+// DBSourceSpec defines a database source with its URL and parser.
+type DBSourceSpec struct {
+	Source DBSource
+	URL    string
+	Parser ParserFn
+}
+
+// defaultSources defines all database sources to fetch during updates.
+var defaultSources = []DBSourceSpec{
+	{
+		Source: DBSource{DBTypeCountry, IPVersion4},
+		URL:    CountryIPv4URL,
+		Parser: ParseCountryRecord,
+	},
+	{
+		Source: DBSource{DBTypeCountry, IPVersion6},
+		URL:    CountryIPv6URL,
+		Parser: ParseCountryRecord,
+	},
+	{
+		Source: DBSource{DBTypeASN, IPVersion4},
+		URL:    ASNIPv4URL,
+		Parser: ParseASNRecord,
+	},
+	{
+		Source: DBSource{DBTypeASN, IPVersion6},
+		URL:    ASNIPv6URL,
+		Parser: ParseASNRecord,
+	},
+}
+
 // Resolver is an IP resolver that returns information about an IP address.
 type Resolver struct {
 	db        atomic.Pointer[ResTree]
 	collector DBUpdateCollector
+	fetcher   Fetcher
 }
 
 // NewResolver creates a new IP resolver with the given metrics collector.
 func NewResolver(collector DBUpdateCollector) *Resolver {
-	return &Resolver{collector: collector}
+	return &Resolver{
+		collector: collector,
+		fetcher:   NewHTTPFetcher(),
+	}
 }
 
-// Update updates the databases used by the resolver.
+// Update updates the databases used by the resolver. The context can be used to cancel
+// the update operation.
 //
 // If an error occurs while updating a database, the function proceeds to update the
 // next database and returns all the errors at the end.
-func (r *Resolver) Update() error {
+func (r *Resolver) Update(ctx context.Context) error {
 	start := time.Now()
-
-	items := []struct {
-		parser    ParserFn
-		url       string
-		dbType    string
-		ipVersion string
-	}{
-		{parseCountryRecord, CountryIPv4URL, DBTypeCountry, IPVersion4},
-		{parseCountryRecord, CountryIPv6URL, DBTypeCountry, IPVersion6},
-		{parseASNRecord, ASNIPv4URL, DBTypeASN, IPVersion4},
-		{parseASNRecord, ASNIPv6URL, DBTypeASN, IPVersion6},
-	}
-
-	// A new database is created for each update so that it can be atomically swapped
-	// with the current database.
 	db := itree.NewITree[netip.Addr, Resolution]()
+	loader := NewLoader(r.fetcher)
 
 	var errs []error
 	entries := make(map[DBSource]uint64)
-	for _, item := range items {
-		count, err := update(db, item.parser, item.url)
+	for _, src := range defaultSources {
+		count, err := loader.Load(ctx, db, src)
 		if err != nil {
 			errs = append(errs, err)
 		}
-		// Always record count: update() may successfully insert entries before
-		// encountering parse errors, so we track all inserted entries.
-		entries[DBSource{item.dbType, item.ipVersion}] = count
+		entries[src.Source] = count
 	}
 
-	// If any errors occurred during the update, we don't swap the database.
 	if len(errs) > 0 {
 		return errors.Join(errs...)
 	}
 
-	// Atomically swap the current database with the new one.
 	r.db.Store(db)
-
-	// Record metrics.
 	r.collector.RecordDBUpdate(entries, time.Since(start))
-
 	return nil
 }
 
@@ -175,108 +150,4 @@ func (r *Resolver) Update() error {
 // the rules engine.
 func (r *Resolver) Resolve(ip netip.Addr) Resolution {
 	return mergeResolutions(r.db.Load().Query(ip))
-}
-
-// update adds the records fetched from the given URL to the database.
-// Returns the number of entries added and any errors encountered.
-func update(db *ResTree, parser ParserFn, url string) (uint64, error) {
-	records, err := fetchCSV(url)
-	if err != nil {
-		return 0, err
-	}
-
-	var (
-		errs  []error
-		count uint64
-	)
-	for _, record := range records {
-		entry, err := parser(record)
-		if err != nil {
-			errs = append(errs, err)
-			continue
-		}
-		db.Insert(
-			itree.NewInterval(entry.StartIP, entry.EndIP),
-			entry.Resolution,
-		)
-		count++
-	}
-	return count, errors.Join(errs...)
-}
-
-// fetchCSV returns the CSV records fetched from the given URL.
-func fetchCSV(url string) ([][]string, error) {
-	// It's important to set a timeout to avoid hanging the program if the remote server
-	// doesn't respond.
-	client := &http.Client{
-		Timeout: clientTimeout,
-	}
-
-	resp, err := client.Get(url) // #nosec G107
-	if err != nil {
-		return nil, err
-	}
-	defer func() { _ = resp.Body.Close() }()
-	return csv.NewReader(resp.Body).ReadAll()
-}
-
-// parseIPRange parses the start and end IP addresses from a record.
-func parseIPRange(record []string) (netip.Addr, netip.Addr, error) {
-	startIP, err := netip.ParseAddr(record[0])
-	if err != nil {
-		return netip.Addr{}, netip.Addr{}, err
-	}
-
-	endIP, err := netip.ParseAddr(record[1])
-	if err != nil {
-		return netip.Addr{}, netip.Addr{}, err
-	}
-
-	return startIP, endIP, nil
-}
-
-// parseCountryRecord parses a country database record.
-func parseCountryRecord(record []string) (*DBRecord, error) {
-	if len(record) != countryRecordLength {
-		return nil, ErrRecordLength
-	}
-
-	startIP, endIP, err := parseIPRange(record)
-	if err != nil {
-		return nil, err
-	}
-
-	return &DBRecord{
-		StartIP: startIP,
-		EndIP:   endIP,
-		Resolution: Resolution{
-			CountryCode: record[2],
-		},
-	}, nil
-}
-
-// parseASNRecord parses an ASN database record.
-func parseASNRecord(record []string) (*DBRecord, error) {
-	if len(record) != asnRecordLength {
-		return nil, ErrRecordLength
-	}
-
-	startIP, endIP, err := parseIPRange(record)
-	if err != nil {
-		return nil, err
-	}
-
-	asn, err := strconv.ParseUint(record[2], 10, 32)
-	if err != nil {
-		return nil, ErrInvalidASN
-	}
-
-	return &DBRecord{
-		StartIP: startIP,
-		EndIP:   endIP,
-		Resolution: Resolution{
-			ASN:          uint32(asn),
-			Organization: record[3],
-		},
-	}, nil
 }

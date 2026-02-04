@@ -2,6 +2,7 @@ package server
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -99,7 +100,7 @@ func createTestResolver(testData map[string]string) *ipinfo.Resolver {
 	var resolver *ipinfo.Resolver
 	withTestTransport(testData, func() {
 		resolver = ipinfo.NewResolver(nopDBUpdateCollector{})
-		_ = resolver.Update()
+		_ = resolver.Update(context.Background())
 	})
 	return resolver
 }
