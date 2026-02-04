@@ -200,7 +200,7 @@
               }
             ]
           },
-          "unit": "s"
+          "unit": "dtdurations"
         },
         "overrides": []
       },
@@ -365,7 +365,7 @@
           },
           "editorMode": "builder",
           "exemplar": false,
-          "expr": "round(increase(geoblock_requests_total{status=\"allowed\"}[$__range]), 1)",
+          "expr": "round(sum(increase(geoblock_requests_total{status=\"allowed\"}[$__range])), 1) or vector(0)",
           "instant": true,
           "legendFormat": "__auto",
           "range": false,
@@ -433,7 +433,7 @@
           },
           "editorMode": "builder",
           "exemplar": false,
-          "expr": "round(increase(geoblock_requests_total{status=\"denied\"}[$__range]), 1)",
+          "expr": "round(sum(increase(geoblock_requests_total{status=\"denied\"}[$__range])), 1) or vector(0)",
           "instant": true,
           "legendFormat": "__auto",
           "range": false,
@@ -499,9 +499,9 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "editorMode": "builder",
+          "editorMode": "code",
           "exemplar": false,
-          "expr": "round(increase(geoblock_requests_total{status=\"invalid\"}[$__range]), 1)",
+          "expr": "round(sum(increase(geoblock_requests_total{status=\"invalid\"}[$__range])), 1) or vector(0)",
           "instant": true,
           "legendFormat": "__auto",
           "range": false,
@@ -1750,7 +1750,7 @@
       },
       "gridPos": {
         "h": 10,
-        "w": 8,
+        "w": 12,
         "x": 0,
         "y": 77
       },
@@ -1852,7 +1852,7 @@
       "gridPos": {
         "h": 10,
         "w": 8,
-        "x": 8,
+        "x": 12,
         "y": 77
       },
       "id": 38,
@@ -1917,54 +1917,45 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic"
+            "mode": "thresholds"
           },
-          "custom": {
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            }
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
           },
-          "mappings": []
+          "unit": "short"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 10,
-        "w": 8,
-        "x": 16,
+        "w": 4,
+        "x": 20,
         "y": 77
       },
       "id": 24,
       "options": {
-        "displayLabels": [
-          "name",
-          "value"
-        ],
-        "legend": {
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true,
-          "values": [
-            "value",
-            "percent"
-          ]
-        },
-        "pieType": "donut",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
         "reduceOptions": {
           "calcs": [
-            "sum"
+            "lastNotNull"
           ],
           "fields": "",
           "values": false
         },
-        "sort": "desc",
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "single",
-          "sort": "none"
-        }
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
       "pluginVersion": "12.3.2",
       "targets": [
@@ -1975,15 +1966,15 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "sum by(action) (increase(geoblock_default_policy_matches_total[$__range]))",
+          "expr": "round(sum(increase(geoblock_default_policy_matches_total[$__range])), 1) or vector(0)",
           "instant": true,
-          "legendFormat": "{{action}}",
+          "legendFormat": "__auto",
           "range": false,
           "refId": "A"
         }
       ],
       "title": "Default Policy Matches",
-      "type": "piechart"
+      "type": "stat"
     },
     {
       "collapsed": false,
@@ -2164,8 +2155,8 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 4,
-        "w": 8,
+        "h": 8,
+        "w": 16,
         "x": 8,
         "y": 88
       },
@@ -2238,8 +2229,8 @@
       "gridPos": {
         "h": 4,
         "w": 4,
-        "x": 16,
-        "y": 88
+        "x": 0,
+        "y": 92
       },
       "id": 30,
       "options": {
@@ -2302,8 +2293,8 @@
       "gridPos": {
         "h": 4,
         "w": 4,
-        "x": 20,
-        "y": 88
+        "x": 4,
+        "y": 92
       },
       "id": 29,
       "options": {
@@ -2348,7 +2339,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 92
+        "y": 96
       },
       "id": 32,
       "panels": [],
@@ -2380,7 +2371,7 @@
         "h": 10,
         "w": 6,
         "x": 0,
-        "y": 93
+        "y": 97
       },
       "id": 33,
       "options": {
@@ -2484,7 +2475,7 @@
         "h": 10,
         "w": 6,
         "x": 6,
-        "y": 93
+        "y": 97
       },
       "id": 34,
       "options": {
@@ -2572,7 +2563,7 @@
         "h": 10,
         "w": 4,
         "x": 12,
-        "y": 93
+        "y": 97
       },
       "id": 37,
       "options": {
@@ -2647,7 +2638,7 @@
         "h": 10,
         "w": 4,
         "x": 16,
-        "y": 93
+        "y": 97
       },
       "id": 35,
       "options": {
@@ -2722,7 +2713,7 @@
         "h": 10,
         "w": 4,
         "x": 20,
-        "y": 93
+        "y": 97
       },
       "id": 36,
       "options": {
@@ -2833,7 +2824,7 @@
   "timezone": "browser",
   "title": "Geoblock",
   "uid": "geoblock",
-  "version": 2,
+  "version": 4,
   "weekStart": "",
   "id": null
 }
