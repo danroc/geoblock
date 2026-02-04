@@ -2,6 +2,7 @@ package ipinfo_test
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"net/http"
 	"net/netip"
@@ -69,7 +70,7 @@ func withRT(rt http.RoundTripper, f func()) {
 func TestUpdateError(t *testing.T) {
 	withRT(newErrRT(), func() {
 		r := ipinfo.NewResolver(nopDBUpdateCollector{})
-		if err := r.Update(); err == nil {
+		if err := r.Update(context.Background()); err == nil {
 			t.Fatal("expected an error, got nil")
 		}
 	})
@@ -91,7 +92,7 @@ func TestResolve(t *testing.T) {
 			{"1:4::", "", "", ipinfo.AS0},
 		}
 		r := ipinfo.NewResolver(nopDBUpdateCollector{})
-		if err := r.Update(); err != nil {
+		if err := r.Update(context.Background()); err != nil {
 			t.Fatal(err)
 		}
 		for _, tt := range tests {
@@ -101,7 +102,7 @@ func TestResolve(t *testing.T) {
 					t.Errorf("got %q, want %q", result.CountryCode, tt.country)
 				}
 				if result.ASN != tt.asn {
-					t.Errorf("got %q, want %q", result.ASN, tt.asn)
+					t.Errorf("got %d, want %d", result.ASN, tt.asn)
 				}
 				if result.Organization != tt.org {
 					t.Errorf("got %q, want %q", result.Organization, tt.org)
@@ -113,117 +114,131 @@ func TestResolve(t *testing.T) {
 
 func TestUpdateInvalidData(t *testing.T) {
 	tests := []struct {
+		name   string
 		dbs    map[string]string
 		errMsg string
 	}{
 		{
-			map[string]string{
+			name: "invalid start IP in country IPv4",
+			dbs: map[string]string{
 				ipinfo.CountryIPv4URL: "invalid,1.0.2.2,US\n",
 				ipinfo.CountryIPv6URL: "1:0::,1:1::,US\n",
 				ipinfo.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1\n",
 				ipinfo.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n",
 			},
-			"unable to parse IP",
+			errMsg: "unable to parse IP",
 		},
 		{
-			map[string]string{
+			name: "invalid end IP in country IPv4",
+			dbs: map[string]string{
 				ipinfo.CountryIPv4URL: "1.0.0.0,invalid,US\n",
 				ipinfo.CountryIPv6URL: "1:0::,1:1::,US\n",
 				ipinfo.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1\n",
 				ipinfo.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n",
 			},
-			"unable to parse IP",
+			errMsg: "unable to parse IP",
 		},
 		{
-			map[string]string{
+			name: "invalid start IP in country IPv6",
+			dbs: map[string]string{
 				ipinfo.CountryIPv4URL: "1.0.0.0,1.0.2.2,US\n",
 				ipinfo.CountryIPv6URL: "invalid,1:1::,US\n",
 				ipinfo.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1\n",
 				ipinfo.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n",
 			},
-			"unable to parse IP",
+			errMsg: "unable to parse IP",
 		},
 		{
-			map[string]string{
+			name: "invalid end IP in country IPv6",
+			dbs: map[string]string{
 				ipinfo.CountryIPv4URL: "1.0.0.0,1.0.2.2,US\n",
 				ipinfo.CountryIPv6URL: "1:0::,invalid,US\n",
 				ipinfo.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1\n",
 				ipinfo.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n",
 			},
-			"unable to parse IP",
+			errMsg: "unable to parse IP",
 		},
 		{
-			map[string]string{
+			name: "invalid start IP in ASN IPv4",
+			dbs: map[string]string{
 				ipinfo.CountryIPv4URL: "1.0.0.0,1.0.2.2,US\n",
 				ipinfo.CountryIPv6URL: "1:0::,1:1::,US\n",
 				ipinfo.ASNIPv4URL:     "invalid,1.0.2.2,1,Test1\n",
 				ipinfo.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n",
 			},
-			"unable to parse IP",
+			errMsg: "unable to parse IP",
 		},
 		{
-			map[string]string{
+			name: "invalid end IP in ASN IPv6",
+			dbs: map[string]string{
 				ipinfo.CountryIPv4URL: "1.0.0.0,1.0.2.2,US\n",
 				ipinfo.CountryIPv6URL: "1:0::,1:1::,US\n",
 				ipinfo.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1\n",
 				ipinfo.ASNIPv6URL:     "1:0::,invalid,3,Test3\n",
 			},
-			"unable to parse IP",
+			errMsg: "unable to parse IP",
 		},
 		{
-			map[string]string{
+			name: "extra field in ASN IPv4",
+			dbs: map[string]string{
 				ipinfo.CountryIPv4URL: "1.0.0.0,1.0.2.2,US\n",
 				ipinfo.CountryIPv6URL: "1:0::,1:1::,US\n",
 				ipinfo.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1,extra\n",
 				ipinfo.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n",
 			},
-			"invalid record length",
+			errMsg: "invalid record length",
 		},
 		{
-			map[string]string{
+			name: "missing field in ASN IPv4",
+			dbs: map[string]string{
 				ipinfo.CountryIPv4URL: "1.0.0.0,1.0.2.2,US\n",
 				ipinfo.CountryIPv6URL: "1:0::,1:1::,US\n",
 				ipinfo.ASNIPv4URL:     "1.0.0.0,1.0.2.2,missing\n",
 				ipinfo.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n",
 			},
-			"invalid record length",
+			errMsg: "invalid record length",
 		},
 		{
-			map[string]string{
+			name: "non-numeric ASN in ASN IPv6",
+			dbs: map[string]string{
 				ipinfo.CountryIPv4URL: "1.0.0.0,1.0.2.2,US\n",
 				ipinfo.CountryIPv6URL: "1:0::,1:1::,US\n",
 				ipinfo.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1\n",
 				ipinfo.ASNIPv6URL:     "1:0::,1:1::,invalid,Test3\n",
 			},
-			"invalid ASN",
+			errMsg: "invalid ASN",
 		},
 		{
-			map[string]string{
+			name: "missing country code in country IPv4",
+			dbs: map[string]string{
 				ipinfo.CountryIPv4URL: "1.0.0.0,1.0.2.2\n",
 				ipinfo.CountryIPv6URL: "1:0::,1:1::,US\n",
 				ipinfo.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1\n",
 				ipinfo.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n",
 			},
-			"invalid record length",
+			errMsg: "invalid record length",
 		},
 		{
-			map[string]string{
+			name: "extra field in country IPv6",
+			dbs: map[string]string{
 				ipinfo.CountryIPv4URL: "1.0.0.0,1.0.2.2,US\n",
 				ipinfo.CountryIPv6URL: "1:0::,1:1::,US,FR\n",
 				ipinfo.ASNIPv4URL:     "1.0.0.0,1.0.2.2,1,Test1\n",
 				ipinfo.ASNIPv6URL:     "1:0::,1:1::,3,Test3\n",
 			},
-			"invalid record length",
+			errMsg: "invalid record length",
 		},
 	}
 
 	for _, tt := range tests {
-		withRT(newRTWithDBs(tt.dbs), func() {
-			r := ipinfo.NewResolver(nopDBUpdateCollector{})
-			err := r.Update()
-			if err == nil || !strings.Contains(err.Error(), tt.errMsg) {
-				t.Errorf("got %v, want %v", err, tt.errMsg)
-			}
+		t.Run(tt.name, func(t *testing.T) {
+			withRT(newRTWithDBs(tt.dbs), func() {
+				r := ipinfo.NewResolver(nopDBUpdateCollector{})
+				err := r.Update(context.Background())
+				if err == nil || !strings.Contains(err.Error(), tt.errMsg) {
+					t.Errorf("Update() error = %v, want substring %q", err, tt.errMsg)
+				}
+			})
 		})
 	}
 }
