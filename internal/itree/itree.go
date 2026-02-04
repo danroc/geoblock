@@ -145,7 +145,9 @@ func (t *ITree[K, V]) Insert(interval Interval[K], value V) {
 
 // Query returns the values associated with the intervals that contain the given key.
 func (t *ITree[K, V]) Query(key K) []V {
-	return query(t.root, key)
+	var results []V
+	query(t.root, key, &results)
+	return results
 }
 
 // Traverse walks the tree in pre-order (root, left, right) and calls the provided
@@ -168,19 +170,17 @@ func traverse[K Comparable[K], V any](
 	traverse(node.right, fn)
 }
 
-func query[K Comparable[K], V any](node *Node[K, V], key K) []V {
+func query[K Comparable[K], V any](node *Node[K, V], key K, results *[]V) {
 	// If the maximum of all intervals from this node and below is less than
 	// the key, there are no intervals to query.
 	if node == nil || node.max.Compare(key) < 0 {
-		return nil
+		return
 	}
-
-	var results []V
 
 	// Even if the current interval contains the key, we still need to query
 	// the subtrees since they can also contain intervals that cover the key.
 	if node.interval.Contains(key) {
-		results = append(results, node.value)
+		*results = append(*results, node.value)
 	}
 
 	// After a re-balance, both the left and right children of a node can have
@@ -190,10 +190,10 @@ func query[K Comparable[K], V any](node *Node[K, V], key K) []V {
 	// that it can only be in the left subtree, so the right subtree can be
 	// ignored.
 	if key.Compare(node.interval.Low) >= 0 {
-		results = append(results, query(node.right, key)...)
+		query(node.right, key, results)
 	}
 
 	// The left subtree is always queried since it can contain intervals that
 	// cover any range in the ]-∞, node.max] interval.
-	return append(results, query(node.left, key)...)
+	query(node.left, key, results)
 }
