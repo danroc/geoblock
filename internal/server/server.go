@@ -94,8 +94,8 @@ func isLocalIP(ip netip.Addr) bool {
 // The header can contain a comma-separated list of IPs, where the first IP is typically
 // the original client IP.
 func parseForwardedFor(header string) string {
-	ips := strings.Split(header, ",")
-	return strings.TrimSpace(ips[0])
+	ip, _, _ := strings.Cut(header, ",")
+	return strings.TrimSpace(ip)
 }
 
 // getLogEvent returns a zerolog event based on the authorization result.
