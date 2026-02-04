@@ -169,29 +169,28 @@ func traverse[K Comparable[K], V any](
 }
 
 func query[K Comparable[K], V any](node *Node[K, V], key K, results []V) []V {
-	// If the maximum of all intervals from this node and below is less than
-	// the key, there are no intervals to query.
+	// If the maximum of all intervals from this node and below is less than the key,
+	// there are no intervals to query.
 	if node == nil || node.max.Compare(key) < 0 {
 		return results
 	}
 
-	// Even if the current interval contains the key, we still need to query
-	// the subtrees since they can also contain intervals that cover the key.
+	// Even if the current interval contains the key, we still need to query the
+	// subtrees since they can also contain intervals that cover the key.
 	if node.interval.Contains(key) {
 		results = append(results, node.value)
 	}
 
-	// After a re-balance, both the left and right children of a node can have
-	// the same low value. In this case, we need to query both subtrees.
+	// After a rebalance, both the left and right children of a node can have the same
+	// low value. In this case, we need to query both subtrees.
 	//
-	// However, if the key is less than the low value of the interval, we know
-	// that it can only be in the left subtree, so the right subtree can be
-	// ignored.
+	// However, if the key is less than the low value of the interval, we know that it
+	// can only be in the left subtree, so the right subtree can be ignored.
 	if key.Compare(node.interval.Low) >= 0 {
 		results = query(node.right, key, results)
 	}
 
-	// The left subtree is always queried since it can contain intervals that
-	// cover any range in the ]-∞, node.max] interval.
+	// The left subtree is always queried since it can contain intervals that cover any
+	// range in the ]-∞, node.max] interval.
 	return query(node.left, key, results)
 }
