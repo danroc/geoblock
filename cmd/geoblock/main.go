@@ -306,15 +306,14 @@ func main() {
 		)
 	}
 
-	// Create metrics collector for dependency injection.
 	collector := metrics.NewCollector()
+	collector.RecordConfigReload(true, len(cfg.AccessControl.Rules))
 
-	log.Info().Msg("Initializing database resolver")
+	log.Info().Msg("Initializing database")
 	resolver := ipinfo.NewResolver(collector)
 	if err := resolver.Update(); err != nil {
-		log.Fatal().Err(err).Msg("Cannot initialize database resolver")
+		log.Fatal().Err(err).Msg("Cannot initialize database")
 	}
-	collector.RecordConfigReload(true, len(cfg.AccessControl.Rules))
 
 	ctx, stop := signal.NotifyContext(
 		context.Background(),
