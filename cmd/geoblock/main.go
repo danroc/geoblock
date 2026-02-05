@@ -30,6 +30,7 @@ const RFC3339Milli = "2006-01-02T15:04:05.000Z07:00"
 const (
 	autoReloadInterval = 5 * time.Second
 	autoUpdateInterval = 24 * time.Hour
+	maxCacheAge        = 12 * time.Hour
 	shutdownTimeout    = 30 * time.Second
 )
 
@@ -52,6 +53,7 @@ const (
 
 // Default options
 const (
+	DefaultCacheDir   = "/var/cache/geoblock"
 	DefaultConfigPath = "/etc/geoblock/config.yaml"
 	DefaultLogFormat  = LogFormatJSON
 	DefaultLogLevel   = LogLevelInfo
@@ -60,6 +62,7 @@ const (
 
 // Environment variable names
 const (
+	OptionCacheDir   = "GEOBLOCK_CACHE_DIR"
 	OptionConfigPath = "GEOBLOCK_CONFIG_FILE"
 	OptionLogFormat  = "GEOBLOCK_LOG_FORMAT"
 	OptionLogLevel   = "GEOBLOCK_LOG_LEVEL"
@@ -90,6 +93,15 @@ func getOptions() *appOptions {
 		logLevel:   getEnv(OptionLogLevel, DefaultLogLevel),
 		logFormat:  getEnv(OptionLogFormat, DefaultLogFormat),
 	}
+}
+
+// getCacheDir returns the database cache directory. Set env var to empty string to
+// disable caching.
+func getCacheDir() string {
+	if val, ok := os.LookupEnv(OptionCacheDir); ok {
+		return val
+	}
+	return DefaultCacheDir
 }
 
 // runEvery executes fn at the given interval until the context is canceled.
@@ -317,7 +329,14 @@ func main() {
 	collector.RecordConfigReload(true, len(cfg.AccessControl.Rules))
 
 	log.Info().Msg("Initializing database")
-	resolver := ipinfo.NewResolver(collector)
+	resolver := ipinfo.NewResolver(
+		collector,
+		ipinfo.NewCachedFetcher(
+			getCacheDir(),
+			maxCacheAge,
+			ipinfo.NewHTTPFetcher(),
+		),
+	)
 	if err := resolver.Update(ctx); err != nil {
 		log.Fatal().Err(err).Msg("Cannot initialize database")
 	}

@@ -101,11 +101,15 @@ type Resolver struct {
 	fetcher   Fetcher
 }
 
-// NewResolver creates a new IP resolver with the given metrics collector.
-func NewResolver(collector DBUpdateCollector) *Resolver {
+// NewResolver creates a new IP resolver with the given metrics collector
+// and fetcher.
+func NewResolver(
+	collector DBUpdateCollector,
+	fetcher Fetcher,
+) *Resolver {
 	return &Resolver{
 		collector: collector,
-		fetcher:   NewHTTPFetcher(),
+		fetcher:   fetcher,
 	}
 }
 
