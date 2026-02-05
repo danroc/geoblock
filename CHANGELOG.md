@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.4] - 2026-02-05
+
+### Added
+
+- Compact IP database by merging identical intervals ([#388](https://github.com/danroc/geoblock/pull/388))
+
+### Changed
+
+- Return slice from query instead of pointer in interval tree ([#386](https://github.com/danroc/geoblock/pull/386))
+- Improve Grafana dashboard counter panels ([#384](https://github.com/danroc/geoblock/pull/384))
+
 ## [0.5.3] - 2026-02-04
 
 ### Changed
@@ -272,7 +283,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add CIDR unmarshalling and validation
 - Add autonomous systems to configuration
 
-[Unreleased]: https://github.com/danroc/geoblock/compare/v0.5.3...HEAD
+[Unreleased]: https://github.com/danroc/geoblock/compare/v0.5.4...HEAD
+[0.5.4]: https://github.com/danroc/geoblock/compare/v0.5.3...v0.5.4
 [0.5.3]: https://github.com/danroc/geoblock/compare/v0.5.2...v0.5.3
 [0.5.2]: https://github.com/danroc/geoblock/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/danroc/geoblock/compare/v0.5.0...v0.5.1
