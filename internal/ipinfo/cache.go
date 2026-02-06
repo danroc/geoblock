@@ -12,6 +12,11 @@ import (
 // defaultDirPermissions is the default permissions used to create cache directories.
 const defaultDirPermissions = 0o750
 
+// CacheLogger is the interface for logging cache operations.
+type CacheLogger interface {
+	Warn(msg, path string, err error)
+}
+
 // CachedFetcher is a Fetcher that caches fetched CSV records in a local directory. It
 // checks the cache before fetching, and updates the cache after fetching.
 //
@@ -20,19 +25,22 @@ type CachedFetcher struct {
 	CacheDir string
 	MaxAge   time.Duration
 	Fetcher  Fetcher
+	Logger   CacheLogger
 }
 
 // NewCachedFetcher creates a new CachedFetcher with the given cache directory, maximum
-// age for cache entries, and underlying fetcher.
+// age for cache entries, underlying fetcher, and logger.
 func NewCachedFetcher(
 	cacheDir string,
 	maxAge time.Duration,
 	fetcher Fetcher,
+	logger CacheLogger,
 ) *CachedFetcher {
 	return &CachedFetcher{
 		CacheDir: cacheDir,
 		MaxAge:   maxAge,
 		Fetcher:  fetcher,
+		Logger:   logger,
 	}
 }
 
@@ -51,10 +59,12 @@ func (c *CachedFetcher) Fetch(ctx context.Context, url string) ([][]string, erro
 	// instead of fetching.
 	if info, err := os.Stat(cachePath); err == nil {
 		if time.Since(info.ModTime()) < c.MaxAge {
-			if records, err := readCSV(cachePath); err == nil {
+			records, err := readCSV(cachePath)
+			if err == nil {
 				return records, nil
 			}
-			// Cache read failed, fall through to fetch fresh data.
+			// Cache read failed, log warning and fall through to fetch fresh data.
+			c.Logger.Warn("Failed to read cache file", cachePath, err)
 		}
 	}
 
@@ -65,8 +75,10 @@ func (c *CachedFetcher) Fetch(ctx context.Context, url string) ([][]string, erro
 	}
 
 	// Try to write the fetched data to the cache for future use. If this fails, we
-	// ignore the error and return the fetched data anyway.
-	_ = writeCSV(cachePath, records)
+	// log a warning and return the fetched data anyway.
+	if err := writeCSV(cachePath, records); err != nil {
+		c.Logger.Warn("Failed to write cache file", cachePath, err)
+	}
 	return records, nil
 }
 

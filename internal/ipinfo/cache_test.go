@@ -12,6 +12,11 @@ import (
 	"github.com/danroc/geoblock/internal/ipinfo"
 )
 
+// nopLogger is a no-op implementation of CacheLogger for testing.
+type nopLogger struct{}
+
+func (nopLogger) Warn(string, string, error) {}
+
 // mockFetcher is a test double for the Fetcher interface.
 type mockFetcher struct {
 	records [][]string
@@ -143,7 +148,7 @@ func TestCachedFetcher_Fetch(t *testing.T) {
 			}
 
 			mock := &mockFetcher{records: tt.records, err: tt.fetchErr}
-			cached := ipinfo.NewCachedFetcher(cacheDir, tt.maxAge, mock)
+			cached := ipinfo.NewCachedFetcher(cacheDir, tt.maxAge, mock, nopLogger{})
 
 			got, err := cached.Fetch(
 				context.Background(),
@@ -175,7 +180,7 @@ func TestCachedFetcher_Fetch_CachePersistence(t *testing.T) {
 	cacheDir := t.TempDir()
 	wantRecords := [][]string{{"data", "here"}}
 	mock := &mockFetcher{records: wantRecords}
-	cached := ipinfo.NewCachedFetcher(cacheDir, time.Hour, mock)
+	cached := ipinfo.NewCachedFetcher(cacheDir, time.Hour, mock, nopLogger{})
 
 	// First call fetches, second uses cache
 	for i := range 2 {
