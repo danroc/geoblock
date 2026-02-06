@@ -26,7 +26,10 @@ HEALTHCHECK \
 
 COPY --from=builder /app/dist/geoblock /usr/bin/geoblock
 
-RUN addgroup -S app && adduser -S app -G app
+RUN addgroup -S app \
+ && adduser -S app -G app \
+ && mkdir -p /var/cache/geoblock \
+ && chown app:app /var/cache/geoblock
 USER app
 
 ENTRYPOINT [ "/usr/bin/geoblock" ]
