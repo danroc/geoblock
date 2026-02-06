@@ -146,10 +146,13 @@ The following environment variables can be used to configure Geoblock:
 
 | Variable               | Description                    | Default                     |
 | :--------------------- | :----------------------------- | :-------------------------- |
+| `GEOBLOCK_CACHE_DIR`   | Path to IP database cache      | `/var/cache/geoblock`       |
 | `GEOBLOCK_CONFIG_FILE` | Path to the configuration file | `/etc/geoblock/config.yaml` |
 | `GEOBLOCK_PORT`        | Port to listen on              | `8080`                      |
 | `GEOBLOCK_LOG_LEVEL`   | Log level                      | `info`                      |
 | `GEOBLOCK_LOG_FORMAT`  | Log format                     | `json`                      |
+
+- Set `GEOBLOCK_CACHE_DIR` to an empty string to disable caching.
 
 - Supported log levels are: `trace`, `debug`, `info`, `warn`, `error`, `fatal`, or
   `panic`.
