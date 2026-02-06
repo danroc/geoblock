@@ -1,3 +1,4 @@
+/.cache/
 /dist/
 coverage.txt
 coverage.out

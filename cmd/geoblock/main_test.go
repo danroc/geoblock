@@ -582,6 +582,43 @@ func TestNewConfigReloader(t *testing.T) {
 	}
 }
 
+func TestGetCacheDir(t *testing.T) {
+	tests := []struct {
+		name   string
+		envVal string
+		setEnv bool
+		want   string
+	}{
+		{
+			name:   "returns env value when set",
+			envVal: "/custom/cache",
+			setEnv: true,
+			want:   "/custom/cache",
+		},
+		{
+			name: "returns default when env not set",
+			want: DefaultCacheDir,
+		},
+		{
+			name:   "returns empty when env set to empty",
+			envVal: "",
+			setEnv: true,
+			want:   "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.setEnv {
+				t.Setenv(OptionCacheDir, tt.envVal)
+			}
+			if got := getCacheDir(); got != tt.want {
+				t.Errorf("getCacheDir() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestAutoReload(t *testing.T) {
 	t.Run("handles non-existent file gracefully", func(t *testing.T) {
 		mock := &mockConfigUpdater{}
