@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add IP database cache to reduce startup time ([#391](https://github.com/danroc/geoblock/pull/391))
+
 ## [0.5.4] - 2026-02-05
 
 ### Added
