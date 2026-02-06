@@ -104,6 +104,13 @@ func getCacheDir() string {
 	return DefaultCacheDir
 }
 
+// cacheLogger implements ipinfo.CacheLogger using zerolog.
+type cacheLogger struct{}
+
+func (cacheLogger) Warn(msg, path string, err error) {
+	log.Warn().Err(err).Str("path", path).Msg(msg)
+}
+
 // runEvery executes fn at the given interval until the context is canceled.
 func runEvery(ctx context.Context, interval time.Duration, fn func()) {
 	ticker := time.NewTicker(interval)
@@ -297,6 +304,7 @@ func configureLogger(logFormat, level string) {
 		log.Warn().Str("format", logFormat).Msg("Invalid log format")
 	}
 
+	// If the log level is invalid, default to info level.
 	if parsedLevel, err := parseLogLevel(level); err != nil {
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 		log.Warn().Str("level", level).Msg("Invalid log level")
@@ -335,6 +343,7 @@ func main() {
 			getCacheDir(),
 			maxCacheAge,
 			ipinfo.NewHTTPFetcher(),
+			cacheLogger{},
 		),
 	)
 	if err := resolver.Update(ctx); err != nil {
