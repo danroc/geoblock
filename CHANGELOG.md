@@ -7,9 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.5] - 2026-02-06
+
 ### Added
 
 - Add IP database cache to reduce startup time ([#391](https://github.com/danroc/geoblock/pull/391))
+
+### Changed
+
+- Create cache directory in container image ([#394](https://github.com/danroc/geoblock/pull/394))
+- Rename container user from `app` to `geoblock` ([#395](https://github.com/danroc/geoblock/pull/395))
+- Update Go to v1.25.7 ([#390](https://github.com/danroc/geoblock/pull/390))
 
 ## [0.5.4] - 2026-02-05
 
@@ -287,7 +295,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add CIDR unmarshalling and validation
 - Add autonomous systems to configuration
 
-[Unreleased]: https://github.com/danroc/geoblock/compare/v0.5.4...HEAD
+[Unreleased]: https://github.com/danroc/geoblock/compare/v0.5.5...HEAD
+[0.5.5]: https://github.com/danroc/geoblock/compare/v0.5.4...v0.5.5
 [0.5.4]: https://github.com/danroc/geoblock/compare/v0.5.3...v0.5.4
 [0.5.3]: https://github.com/danroc/geoblock/compare/v0.5.2...v0.5.3
 [0.5.2]: https://github.com/danroc/geoblock/compare/v0.5.1...v0.5.2
