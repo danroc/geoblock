@@ -3,10 +3,10 @@ package server
 import (
 	"bytes"
 	"context"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/netip"
+	"strings"
 	"testing"
 	"time"
 
@@ -34,6 +34,30 @@ func (nopRequestCollector) RecordRequest(
 }
 
 func (nopRequestCollector) RecordInvalidRequest(_ time.Duration) {}
+
+// mapFetcher returns CSV records from a URL-keyed map.
+type mapFetcher struct {
+	dbs map[string]string
+}
+
+func (m *mapFetcher) Fetch(
+	_ context.Context,
+	url string,
+) ([][]string, error) {
+	return parseCSVString(m.dbs[url]), nil
+}
+
+// parseCSVString splits a raw CSV string into records.
+func parseCSVString(s string) [][]string {
+	if s == "" {
+		return nil
+	}
+	var records [][]string
+	for _, line := range strings.Split(strings.TrimRight(s, "\n"), "\n") {
+		records = append(records, strings.Split(line, ","))
+	}
+	return records
+}
 
 // Test helpers
 
@@ -65,48 +89,23 @@ func newAllowEngine() *rules.Engine {
 	})
 }
 
-// testRoundTripper allows mocking HTTP responses for resolver testing.
-type testRoundTripper struct {
-	responses map[string]string
-}
-
-func (rt *testRoundTripper) RoundTrip(
-	req *http.Request,
-) (*http.Response, error) {
-	return &http.Response{
-		StatusCode: http.StatusOK,
-		Body: io.NopCloser(
-			bytes.NewBufferString(rt.responses[req.URL.String()]),
-		),
-	}, nil
-}
-
-// withTestTransport temporarily sets http.DefaultTransport to a test transport for the
-// duration of fn.
-func withTestTransport(testData map[string]string, fn func()) {
-	originalTransport := http.DefaultTransport
-	defer func() {
-		http.DefaultTransport = originalTransport
-	}()
-
-	http.DefaultTransport = &testRoundTripper{
-		responses: testData,
-	}
-	fn()
-}
-
-// createTestResolver creates a resolver with mocked HTTP responses.
-func createTestResolver(testData map[string]string) *ipinfo.Resolver {
-	var resolver *ipinfo.Resolver
-	withTestTransport(testData, func() {
-		resolver = ipinfo.NewResolver(nopDBUpdateCollector{})
-		_ = resolver.Update(context.Background())
-	})
+// createTestResolver creates a resolver with the given test data.
+func createTestResolver(
+	testData map[string]string,
+) *ipinfo.Resolver {
+	resolver := ipinfo.NewResolver(
+		nopDBUpdateCollector{},
+		&mapFetcher{dbs: testData},
+	)
+	_ = resolver.Update(context.Background())
 	return resolver
 }
 
 func TestGetForwardAuth(t *testing.T) {
-	resolver := ipinfo.NewResolver(nopDBUpdateCollector{})
+	resolver := ipinfo.NewResolver(
+		nopDBUpdateCollector{},
+		&mapFetcher{},
+	)
 	engine := newAllowEngine()
 	tests := []struct {
 		name    string
@@ -243,7 +242,10 @@ func TestGetHealth(t *testing.T) {
 
 func TestGetPrometheusMetrics(t *testing.T) {
 	collector := metrics.NewCollector()
-	resolver := ipinfo.NewResolver(nopDBUpdateCollector{})
+	resolver := ipinfo.NewResolver(
+		nopDBUpdateCollector{},
+		&mapFetcher{},
+	)
 	engine := newAllowEngine()
 	server := New(":8080", engine, resolver, collector, metrics.Handler())
 
@@ -277,7 +279,10 @@ func TestGetPrometheusMetrics(t *testing.T) {
 }
 
 func TestNewServer(t *testing.T) {
-	resolver := ipinfo.NewResolver(nopDBUpdateCollector{})
+	resolver := ipinfo.NewResolver(
+		nopDBUpdateCollector{},
+		&mapFetcher{},
+	)
 	engine := newAllowEngine()
 	server := New(":8080", engine, resolver, nopRequestCollector{}, metrics.Handler())
 
@@ -299,7 +304,10 @@ func TestNewServer(t *testing.T) {
 }
 
 func TestServerEndpoints(t *testing.T) {
-	resolver := ipinfo.NewResolver(nopDBUpdateCollector{})
+	resolver := ipinfo.NewResolver(
+		nopDBUpdateCollector{},
+		&mapFetcher{},
+	)
 	engine := newAllowEngine()
 	server := New(":8080", engine, resolver, nopRequestCollector{}, metrics.Handler())
 	tests := []struct {
@@ -543,7 +551,10 @@ func TestGetForwardAuthMultipleForwardedIPs(t *testing.T) {
 }
 
 func TestServerHandlerSetup(t *testing.T) {
-	resolver := ipinfo.NewResolver(nopDBUpdateCollector{})
+	resolver := ipinfo.NewResolver(
+		nopDBUpdateCollector{},
+		&mapFetcher{},
+	)
 	engine := newAllowEngine()
 	server := New(":8080", engine, resolver, nopRequestCollector{}, metrics.Handler())
 

@@ -60,6 +60,7 @@ make format             # Run before committing
 
 ## Environment Variables
 
+- `GEOBLOCK_CACHE_DIR`: IP database cache directory (default: `/var/cache/geoblock`, empty to disable)
 - `GEOBLOCK_CONFIG_FILE`: Config path (default: `/etc/geoblock/config.yaml`)
 - `GEOBLOCK_PORT`: Server port (default: `8080`)
 - `GEOBLOCK_LOG_LEVEL`: trace|debug|info|warn|error|fatal|panic (default: `info`)
