@@ -37,7 +37,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=semver,pattern={{version}}
-            type=raw,value=develop,enable=${{ github.ref_type == 'branch' }}
+            type=raw,value=develop
 
       - name: Require clean working directory
         shell: bash
