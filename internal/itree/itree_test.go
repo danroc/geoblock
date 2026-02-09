@@ -368,7 +368,7 @@ func TestCompact(t *testing.T) {
 
 	t.Run("empty tree", func(t *testing.T) {
 		tree := itree.NewITree[ComparableInt, int]()
-		compacted := tree.Compact(sumMerge)
+		compacted := tree.Compacted(sumMerge)
 		if got := compacted.Size(); got != 0 {
 			t.Errorf("Size() = %d, want 0", got)
 		}
@@ -380,7 +380,7 @@ func TestCompact(t *testing.T) {
 		tree.Insert(itree.NewInterval[ComparableInt](3, 4), 20)
 		tree.Insert(itree.NewInterval[ComparableInt](5, 6), 30)
 
-		compacted := tree.Compact(sumMerge)
+		compacted := tree.Compacted(sumMerge)
 
 		results := make(map[int]int)
 		compacted.Traverse(func(interval itree.Interval[ComparableInt], value int) {
@@ -402,7 +402,7 @@ func TestCompact(t *testing.T) {
 		tree.Insert(itree.NewInterval[ComparableInt](1, 2), 30)
 		tree.Insert(itree.NewInterval[ComparableInt](3, 4), 5)
 
-		compacted := tree.Compact(sumMerge)
+		compacted := tree.Compacted(sumMerge)
 
 		if got := compacted.Size(); got != 2 {
 			t.Errorf("Size() = %d, want 2", got)
@@ -432,7 +432,7 @@ func TestCompact(t *testing.T) {
 		tree.Insert(itree.NewInterval[ComparableInt](1, 5), 20)
 		tree.Insert(itree.NewInterval[ComparableInt](3, 7), 100)
 
-		compacted := tree.Compact(sumMerge)
+		compacted := tree.Compacted(sumMerge)
 
 		// Query at point 4 should match both [1,5] (merged: 30) and [3,7] (100)
 		results := compacted.Query(4)
