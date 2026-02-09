@@ -138,7 +138,7 @@ func (r *Resolver) Update(ctx context.Context) error {
 	}
 
 	// Combine identical intervals into single entries.
-	r.db.Store(db.Compact(mergeResolutions))
+	r.db.Store(db.Compacted(mergeResolutions))
 	r.collector.RecordDBUpdate(entries, time.Since(start))
 	return nil
 }

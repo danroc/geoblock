@@ -243,9 +243,9 @@ func (t *ITree[K, V]) Entries() []Entry[K, V] {
 	return entries
 }
 
-// Compact merges nodes with identical intervals using the provided merge function.
+// Compacted merges nodes with identical intervals using the provided merge function.
 // Returns a new tree where each unique interval appears exactly once.
-func (t *ITree[K, V]) Compact(merge func([]V) V) *ITree[K, V] {
+func (t *ITree[K, V]) Compacted(merge func([]V) V) *ITree[K, V] {
 	entries := t.Entries()
 
 	slices.SortFunc(entries, func(a, b Entry[K, V]) int {
