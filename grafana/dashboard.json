@@ -93,6 +93,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
+  "id": null,
   "links": [],
   "liveNow": true,
   "panels": [
@@ -2189,7 +2190,7 @@
           "exemplar": false,
           "expr": "geoblock_db_entries",
           "instant": true,
-          "legendFormat": "{{database}} ({{ip_version}})",
+          "legendFormat": "{{database}} (IPv{{ip_version}})",
           "range": false,
           "refId": "A"
         }
@@ -2590,7 +2591,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "sum(increase(geoblock_requests_total{status=\"allowed\"}[$__range])) / sum(increase(geoblock_requests_total[$__range])) * 100",
+          "expr": "(sum(increase(geoblock_requests_total{status=\"allowed\"}[$__range])) / sum(increase(geoblock_requests_total[$__range])) * 100) or vector(0)",
           "instant": true,
           "legendFormat": "__auto",
           "range": false,
@@ -2665,7 +2666,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "sum(increase(geoblock_requests_total{status=\"invalid\"}[$__range])) / sum(increase(geoblock_requests_total[$__range])) * 100",
+          "expr": "(sum(increase(geoblock_requests_total{status=\"invalid\"}[$__range])) / sum(increase(geoblock_requests_total[$__range])) * 100) or vector(0)",
           "instant": true,
           "legendFormat": "__auto",
           "range": false,
@@ -2740,7 +2741,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "sum(increase(geoblock_requests_total{status=\"denied\"}[$__range])) / sum(increase(geoblock_requests_total[$__range])) * 100",
+          "expr": "(sum(increase(geoblock_requests_total{status=\"denied\"}[$__range])) / sum(increase(geoblock_requests_total[$__range])) * 100) or vector(0)",
           "instant": true,
           "legendFormat": "__auto",
           "range": false,
@@ -2789,14 +2790,14 @@
       },
       {
         "current": {
-          "text": ".*",
-          "value": ".*"
+          "text": "false",
+          "value": "false"
         },
         "label": "Clients",
         "name": "clients",
         "options": [
           {
-            "selected": true,
+            "selected": false,
             "text": "All",
             "value": ".*"
           },
@@ -2806,7 +2807,7 @@
             "value": "true"
           },
           {
-            "selected": false,
+            "selected": true,
             "text": "Remote",
             "value": "false"
           }
@@ -2824,7 +2825,6 @@
   "timezone": "browser",
   "title": "Geoblock",
   "uid": "geoblock",
-  "version": 4,
-  "weekStart": "",
-  "id": null
+  "version": 9,
+  "weekStart": ""
 }
