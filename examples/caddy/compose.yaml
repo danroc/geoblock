@@ -14,6 +14,7 @@ services:
     image: ghcr.io/danroc/geoblock:latest
     volumes:
       - ./config.yaml:/etc/geoblock/config.yaml
+      - geoblock-cache:/var/cache/geoblock
 
   caddy:
     image: caddy
@@ -23,3 +24,6 @@ services:
       - geoblock
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
+
+volumes:
+  geoblock-cache:
