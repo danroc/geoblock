@@ -15,24 +15,27 @@ import (
 	"github.com/danroc/geoblock/internal/version"
 )
 
-// collector is a package-level test collector.
-var collector = NewCollector()
-
-// setupTest resets metrics and registers cleanup to reset after test.
-func setupTest(t *testing.T) {
+// newTestCollector creates a fresh collector and resets metrics for the test.
+func newTestCollector(t *testing.T) *PrometheusCollector {
 	t.Helper()
 	Reset()
 	t.Cleanup(Reset)
+	return NewCollector()
+}
+
+// Record a request with sensible defaults for tests that don't care about specific
+// country, method, duration, or rule values.
+func record(c *PrometheusCollector, status string) {
+	action := config.PolicyAllow
+	if status == StatusDenied {
+		action = config.PolicyDeny
+	}
+	c.RecordRequest(status, "FR", "GET", time.Millisecond, 0, action, false)
 }
 
 // getCounterValue returns the current value of a counter with the given label.
 func getCounterValue(status string) float64 {
 	return testutil.ToFloat64(requestsTotal.WithLabelValues(status))
-}
-
-// recordTestRequest is a helper that calls RecordRequest with common test values.
-func recordTestRequest(status, action string) {
-	collector.RecordRequest(status, "US", "GET", time.Millisecond, 0, action, false)
 }
 
 // assertCounterValue asserts that a counter metric has the expected value.
@@ -60,8 +63,12 @@ func TestRecordRequest(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			setupTest(t)
-			recordTestRequest(tt.status, tt.action)
+			c := newTestCollector(t)
+
+			c.RecordRequest(
+				tt.status, "FR", "GET", time.Millisecond, 0, tt.action, false,
+			)
+
 			if got := getCounterValue(tt.status); got != 1 {
 				t.Errorf("Expected %s count to be 1, got %v", tt.status, got)
 			}
@@ -70,16 +77,10 @@ func TestRecordRequest(t *testing.T) {
 }
 
 func TestRecordRequestEmptyCountry(t *testing.T) {
-	setupTest(t)
+	c := newTestCollector(t)
 
-	collector.RecordRequest(
-		StatusAllowed,
-		"",
-		"GET",
-		time.Millisecond,
-		0,
-		config.PolicyAllow,
-		false,
+	c.RecordRequest(
+		StatusAllowed, "", "GET", time.Millisecond, 0, config.PolicyAllow, false,
 	)
 
 	// Request should still be counted
@@ -94,16 +95,10 @@ func TestRecordRequestEmptyCountry(t *testing.T) {
 }
 
 func TestRecordRequestEmptyMethod(t *testing.T) {
-	setupTest(t)
+	c := newTestCollector(t)
 
-	collector.RecordRequest(
-		StatusAllowed,
-		"US",
-		"",
-		time.Millisecond,
-		0,
-		config.PolicyAllow,
-		false,
+	c.RecordRequest(
+		StatusAllowed, "FR", "", time.Millisecond, 0, config.PolicyAllow, false,
 	)
 
 	// Request should still be counted
@@ -118,16 +113,10 @@ func TestRecordRequestEmptyMethod(t *testing.T) {
 }
 
 func TestRecordRequestDefaultPolicy(t *testing.T) {
-	setupTest(t)
+	c := newTestCollector(t)
 
-	collector.RecordRequest(
-		StatusAllowed,
-		"US",
-		"GET",
-		time.Millisecond,
-		0,
-		config.PolicyAllow,
-		true,
+	c.RecordRequest(
+		StatusAllowed, "FR", "GET", time.Millisecond, 0, config.PolicyAllow, true,
 	)
 
 	// Request should be counted
@@ -151,69 +140,33 @@ func TestRecordRequestDefaultPolicy(t *testing.T) {
 }
 
 func TestRecordRequestByCountry(t *testing.T) {
-	setupTest(t)
+	c := newTestCollector(t)
 
-	collector.RecordRequest(
-		StatusAllowed,
-		"US",
-		"GET",
-		time.Millisecond,
-		0,
-		config.PolicyAllow,
-		false,
+	c.RecordRequest(
+		StatusAllowed, "FR", "GET", time.Millisecond, 0, config.PolicyAllow, false,
 	)
-	collector.RecordRequest(
-		StatusAllowed,
-		"US",
-		"GET",
-		time.Millisecond,
-		0,
-		config.PolicyAllow,
-		false,
+	c.RecordRequest(
+		StatusAllowed, "FR", "GET", time.Millisecond, 0, config.PolicyAllow, false,
 	)
-	collector.RecordRequest(
-		StatusAllowed,
-		"DE",
-		"GET",
-		time.Millisecond,
-		0,
-		config.PolicyAllow,
-		false,
+	c.RecordRequest(
+		StatusAllowed, "BR", "GET", time.Millisecond, 0, config.PolicyAllow, false,
 	)
 
-	assertCounterValue(t, requestsByCountry.WithLabelValues("US"), 2, "US count")
-	assertCounterValue(t, requestsByCountry.WithLabelValues("DE"), 1, "DE count")
+	assertCounterValue(t, requestsByCountry.WithLabelValues("FR"), 2, "FR count")
+	assertCounterValue(t, requestsByCountry.WithLabelValues("BR"), 1, "BR count")
 }
 
 func TestRecordRequestByMethod(t *testing.T) {
-	setupTest(t)
+	c := newTestCollector(t)
 
-	collector.RecordRequest(
-		StatusAllowed,
-		"US",
-		"GET",
-		time.Millisecond,
-		0,
-		config.PolicyAllow,
-		false,
+	c.RecordRequest(
+		StatusAllowed, "FR", "GET", time.Millisecond, 0, config.PolicyAllow, false,
 	)
-	collector.RecordRequest(
-		StatusAllowed,
-		"US",
-		"POST",
-		time.Millisecond,
-		0,
-		config.PolicyAllow,
-		false,
+	c.RecordRequest(
+		StatusAllowed, "FR", "POST", time.Millisecond, 0, config.PolicyAllow, false,
 	)
-	collector.RecordRequest(
-		StatusAllowed,
-		"US",
-		"GET",
-		time.Millisecond,
-		0,
-		config.PolicyAllow,
-		false,
+	c.RecordRequest(
+		StatusAllowed, "FR", "GET", time.Millisecond, 0, config.PolicyAllow, false,
 	)
 
 	assertCounterValue(t, requestsByMethod.WithLabelValues("GET"), 2, "GET count")
@@ -221,43 +174,19 @@ func TestRecordRequestByMethod(t *testing.T) {
 }
 
 func TestRecordRequestRuleMatches(t *testing.T) {
-	setupTest(t)
+	c := newTestCollector(t)
 
-	collector.RecordRequest(
-		StatusAllowed,
-		"US",
-		"GET",
-		time.Millisecond,
-		0,
-		config.PolicyAllow,
-		false,
+	c.RecordRequest(
+		StatusAllowed, "FR", "GET", time.Millisecond, 0, config.PolicyAllow, false,
 	)
-	collector.RecordRequest(
-		StatusDenied,
-		"US",
-		"GET",
-		time.Millisecond,
-		1,
-		config.PolicyDeny,
-		false,
+	c.RecordRequest(
+		StatusDenied, "FR", "GET", time.Millisecond, 1, config.PolicyDeny, false,
 	)
-	collector.RecordRequest(
-		StatusDenied,
-		"US",
-		"GET",
-		time.Millisecond,
-		1,
-		config.PolicyDeny,
-		false,
+	c.RecordRequest(
+		StatusDenied, "FR", "GET", time.Millisecond, 1, config.PolicyDeny, false,
 	)
-	collector.RecordRequest(
-		StatusAllowed,
-		"US",
-		"GET",
-		time.Millisecond,
-		2,
-		config.PolicyAllow,
-		false,
+	c.RecordRequest(
+		StatusAllowed, "FR", "GET", time.Millisecond, 2, config.PolicyAllow, false,
 	)
 
 	assertCounterValue(
@@ -281,29 +210,17 @@ func TestRecordRequestRuleMatches(t *testing.T) {
 }
 
 func TestRecordRequestDuration(t *testing.T) {
-	setupTest(t)
+	c := newTestCollector(t)
 
-	collector.RecordRequest(
-		StatusAllowed,
-		"US",
-		"GET",
-		50*time.Millisecond,
-		0,
-		config.PolicyAllow,
-		false,
+	c.RecordRequest(
+		StatusAllowed, "FR", "GET", 50*time.Millisecond, 0, config.PolicyAllow, false,
 	)
-	collector.RecordRequest(
-		StatusDenied,
-		"US",
-		"GET",
-		100*time.Millisecond,
-		0,
-		config.PolicyDeny,
-		false,
+	c.RecordRequest(
+		StatusDenied, "FR", "GET", 100*time.Millisecond, 0, config.PolicyDeny, false,
 	)
 
-	// Verify histogram has recorded observations by checking the collector count
-	// Each histogram label creates multiple metrics (one per bucket + sum + count)
+	// Verify histogram has recorded observations by checking the collector count. Each
+	// histogram label creates multiple metrics (one per bucket + sum + count).
 	count := testutil.CollectAndCount(requestDuration)
 	if count == 0 {
 		t.Error("Expected request duration histogram to have recorded metrics")
@@ -311,24 +228,26 @@ func TestRecordRequestDuration(t *testing.T) {
 }
 
 func TestRecordInvalidRequest(t *testing.T) {
-	setupTest(t)
-	collector.RecordInvalidRequest(time.Millisecond)
+	c := newTestCollector(t)
+
+	c.RecordInvalidRequest(time.Millisecond)
+
 	if got := getCounterValue(StatusInvalid); got != 1 {
 		t.Errorf("Expected invalid count to be 1, got %v", got)
 	}
 }
 
 func TestMultipleRequests(t *testing.T) {
-	setupTest(t)
+	c := newTestCollector(t)
 
 	for range 5 {
-		recordTestRequest(StatusDenied, config.PolicyDeny)
+		record(c, StatusDenied)
 	}
 	for range 3 {
-		recordTestRequest(StatusAllowed, config.PolicyAllow)
+		record(c, StatusAllowed)
 	}
 	for range 2 {
-		collector.RecordInvalidRequest(time.Millisecond)
+		c.RecordInvalidRequest(time.Millisecond)
 	}
 
 	if got := getCounterValue("denied"); got != 5 {
@@ -343,7 +262,7 @@ func TestMultipleRequests(t *testing.T) {
 }
 
 func TestConcurrentRequests(t *testing.T) {
-	setupTest(t)
+	c := newTestCollector(t)
 
 	const numGoroutines = 100
 	const requestsPerGoroutine = 10
@@ -351,32 +270,27 @@ func TestConcurrentRequests(t *testing.T) {
 	var wg sync.WaitGroup
 	wg.Add(numGoroutines * 3)
 
-	// Concurrent denied requests
 	for range numGoroutines {
 		go func() {
 			defer wg.Done()
 			for range requestsPerGoroutine {
-				recordTestRequest(StatusDenied, config.PolicyDeny)
+				record(c, StatusDenied)
 			}
 		}()
 	}
-
-	// Concurrent allowed requests
 	for range numGoroutines {
 		go func() {
 			defer wg.Done()
 			for range requestsPerGoroutine {
-				recordTestRequest(StatusAllowed, config.PolicyAllow)
+				record(c, StatusAllowed)
 			}
 		}()
 	}
-
-	// Concurrent invalid requests
 	for range numGoroutines {
 		go func() {
 			defer wg.Done()
 			for range requestsPerGoroutine {
-				collector.RecordInvalidRequest(time.Millisecond)
+				c.RecordInvalidRequest(time.Millisecond)
 			}
 		}()
 	}
@@ -392,12 +306,12 @@ func TestConcurrentRequests(t *testing.T) {
 }
 
 func TestHandler(t *testing.T) {
-	setupTest(t)
+	c := newTestCollector(t)
 
-	recordTestRequest(StatusAllowed, config.PolicyAllow)
-	recordTestRequest(StatusAllowed, config.PolicyAllow)
-	recordTestRequest(StatusDenied, config.PolicyDeny)
-	collector.RecordInvalidRequest(time.Millisecond)
+	record(c, StatusAllowed)
+	record(c, StatusAllowed)
+	record(c, StatusDenied)
+	c.RecordInvalidRequest(time.Millisecond)
 
 	req := httptest.NewRequest("GET", "/metrics", nil)
 	rec := httptest.NewRecorder()
@@ -432,9 +346,11 @@ func TestHandler(t *testing.T) {
 }
 
 func TestReset(t *testing.T) {
-	recordTestRequest(StatusAllowed, config.PolicyAllow)
-	recordTestRequest(StatusDenied, config.PolicyDeny)
-	collector.RecordInvalidRequest(time.Millisecond)
+	c := NewCollector()
+
+	record(c, StatusAllowed)
+	record(c, StatusDenied)
+	c.RecordInvalidRequest(time.Millisecond)
 
 	Reset()
 
@@ -467,10 +383,10 @@ func TestRecordConfigReload(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			setupTest(t)
+			c := newTestCollector(t)
 
 			before := time.Now().Unix()
-			collector.RecordConfigReload(tt.success, tt.rulesCount)
+			c.RecordConfigReload(tt.success, tt.rulesCount)
 			after := time.Now().Unix()
 
 			got := testutil.ToFloat64(configReloadTotal.WithLabelValues(tt.wantResult))
@@ -513,7 +429,7 @@ func TestRecordConfigReload(t *testing.T) {
 }
 
 func TestRecordDBUpdate(t *testing.T) {
-	setupTest(t)
+	c := newTestCollector(t)
 
 	entries := map[ipinfo.DBSource]uint64{
 		{DBType: ipinfo.DBTypeCountry, IPVersion: ipinfo.IPVersion4}: 1000,
@@ -524,7 +440,7 @@ func TestRecordDBUpdate(t *testing.T) {
 	duration := 2 * time.Second
 
 	before := time.Now().Unix()
-	collector.RecordDBUpdate(entries, duration)
+	c.RecordDBUpdate(entries, duration)
 	after := time.Now().Unix()
 
 	countryV4Got := testutil.ToFloat64(dbEntries.WithLabelValues("country", "4"))
@@ -565,23 +481,26 @@ func TestRecordDBUpdate(t *testing.T) {
 }
 
 func BenchmarkRecordRequest(b *testing.B) {
+	c := NewCollector()
 	for range b.N {
-		recordTestRequest(StatusAllowed, config.PolicyAllow)
+		record(c, StatusAllowed)
 	}
 }
 
 func BenchmarkRecordInvalidRequest(b *testing.B) {
+	c := NewCollector()
 	for range b.N {
-		collector.RecordInvalidRequest(time.Millisecond)
+		c.RecordInvalidRequest(time.Millisecond)
 	}
 }
 
 func BenchmarkConcurrentRequests(b *testing.B) {
+	c := NewCollector()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			recordTestRequest(StatusDenied, config.PolicyDeny)
-			recordTestRequest(StatusAllowed, config.PolicyAllow)
-			collector.RecordInvalidRequest(time.Millisecond)
+			record(c, StatusDenied)
+			record(c, StatusAllowed)
+			c.RecordInvalidRequest(time.Millisecond)
 		}
 	})
 }

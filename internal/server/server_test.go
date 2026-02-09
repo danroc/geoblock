@@ -91,13 +91,17 @@ func newAllowEngine() *rules.Engine {
 
 // createTestResolver creates a resolver with the given test data.
 func createTestResolver(
+	t testing.TB,
 	testData map[string]string,
 ) *ipinfo.Resolver {
+	t.Helper()
 	resolver := ipinfo.NewResolver(
 		nopDBUpdateCollector{},
 		&mapFetcher{dbs: testData},
 	)
-	_ = resolver.Update(context.Background())
+	if err := resolver.Update(context.Background()); err != nil {
+		t.Fatalf("resolver.Update() error: %v", err)
+	}
 	return resolver
 }
 
@@ -185,7 +189,7 @@ func TestGetForwardAuthWithSpecificRules(t *testing.T) {
 			},
 		},
 	})
-	resolver := createTestResolver(testData)
+	resolver := createTestResolver(t, testData)
 
 	tests := []struct {
 		name   string
@@ -488,7 +492,7 @@ func TestGetForwardAuthValidRequests(t *testing.T) {
 		ipinfo.ASNIPv4URL:     "8.8.8.8,8.8.8.8,15169,Google LLC\n",
 		ipinfo.ASNIPv6URL:     "",
 	}
-	resolver := createTestResolver(testData)
+	resolver := createTestResolver(t, testData)
 	engine := newAllowEngine()
 	headers := map[string]string{
 		headerForwardedFor:    "8.8.8.8",
@@ -509,7 +513,7 @@ func TestGetForwardAuthMultipleForwardedIPs(t *testing.T) {
 		ipinfo.ASNIPv4URL:     "8.8.8.8,8.8.8.8,15169,Google LLC\n",
 		ipinfo.ASNIPv6URL:     "",
 	}
-	resolver := createTestResolver(testData)
+	resolver := createTestResolver(t, testData)
 	engine := newAllowEngine()
 
 	tests := []struct {

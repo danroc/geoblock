@@ -46,27 +46,6 @@ func testContextCancellation(t *testing.T, fn func(ctx context.Context)) {
 	}
 }
 
-// testCompletion runs fn and verifies it completes within testTimeout. If verify is
-// non-nil, it's called after fn completes to check post-conditions.
-func testCompletion(t *testing.T, fn func(), verify func(t *testing.T)) {
-	t.Helper()
-	done := make(chan struct{})
-
-	go func() {
-		fn()
-		close(done)
-	}()
-
-	select {
-	case <-done:
-		if verify != nil {
-			verify(t)
-		}
-	case <-time.After(testTimeout):
-		t.Fatal("function did not complete in time")
-	}
-}
-
 // Test doubles
 
 // fakeFileInfo implements os.FileInfo for testing file stat comparisons.
@@ -111,8 +90,6 @@ func (m *mockUpdater) Update(_ context.Context) error {
 type nopConfigReloadCollector struct{}
 
 func (nopConfigReloadCollector) RecordConfigReload(_ bool, _ int) {}
-
-// Tests
 
 func TestGetEnv(t *testing.T) {
 	tests := []struct {
@@ -465,19 +442,26 @@ func TestRunEvery(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		callCount := 0
 		wantCallCount := 3
+		done := make(chan struct{})
 
-		testCompletion(t, func() {
+		go func() {
 			runEvery(ctx, testTickInterval, func() {
 				callCount++
 				if callCount == wantCallCount {
 					cancel()
 				}
 			})
-		}, func(t *testing.T) {
+			close(done)
+		}()
+
+		select {
+		case <-done:
 			if callCount != wantCallCount {
 				t.Errorf("callCount = %d, want %d", callCount, wantCallCount)
 			}
-		})
+		case <-time.After(testTimeout):
+			t.Fatal("function did not complete in time")
+		}
 	})
 
 	t.Run("stops when context is canceled", func(t *testing.T) {
@@ -622,16 +606,24 @@ func TestGetCacheDir(t *testing.T) {
 func TestAutoReload(t *testing.T) {
 	t.Run("handles non-existent file gracefully", func(t *testing.T) {
 		mock := &mockConfigUpdater{}
-		testCompletion(t, func() {
-			// autoReload should fail to load the non-existent file and return promptly,
-			// causing testCompletion to complete before the timeout.
+		done := make(chan struct{})
+
+		go func() {
 			autoReload(
 				context.Background(),
 				mock,
 				"testdata/non-existent-config.yaml",
 				nopConfigReloadCollector{},
 			)
-		}, nil)
+			close(done)
+		}()
+
+		select {
+		case <-done:
+			// autoReload returned promptly after failing to load the file
+		case <-time.After(testTimeout):
+			t.Fatal("function did not complete in time")
+		}
 	})
 
 	t.Run("stops when context is canceled", func(t *testing.T) {
