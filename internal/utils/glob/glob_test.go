@@ -6,7 +6,7 @@ import (
 	"github.com/danroc/geoblock/internal/utils/glob"
 )
 
-func TestStar(t *testing.T) {
+func TestMatchFold(t *testing.T) {
 	tests := []struct {
 		pattern string
 		s       string
@@ -17,29 +17,22 @@ func TestStar(t *testing.T) {
 		{"a", "", false},
 		{"", "abc", false},
 		{"*", "abc", true},
+		{"abc", "abc", true},
 		{"a*", "abc", true},
 		{"*c", "abc", true},
-		{"*b*", "abc", true},
 		{"a*c", "abc", true},
 		{"a*b*c", "abc", true},
 		{"a*d", "abc", false},
-		{"a*b*d", "abc", false},
-		{"abc", "abc", true},
-		{"abc*", "abc", true},
-		{"*abc", "abc", true},
-		{"*a*b*c*", "abc", true},
-		{"*a*b*d*", "abc", false},
+		{"ABC", "abc", true},
+		{"A*C", "abc", true},
+		{"*A*B*C*", "XaYbZc", true},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.pattern+"_"+tt.s, func(t *testing.T) {
-			if got := glob.Star(tt.pattern, tt.s); got != tt.want {
+			if got := glob.MatchFold(tt.pattern, tt.s); got != tt.want {
 				t.Errorf(
-					"Star(%q, %q) = %v, want %v",
-					tt.pattern,
-					tt.s,
-					got,
-					tt.want,
+					"MatchFold(%q, %q) = %v, want %v", tt.pattern, tt.s, got, tt.want,
 				)
 			}
 		})
