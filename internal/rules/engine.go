@@ -56,10 +56,7 @@ func match[T any](conditions []T, matchFunc func(T) bool) bool {
 // Domains, methods and countries are case-insensitive.
 func ruleApplies(rule *config.AccessControlRule, query *Query) bool {
 	matchDomain := match(rule.Domains, func(domain string) bool {
-		return glob.Star(
-			strings.ToLower(domain),
-			strings.ToLower(query.RequestedDomain),
-		)
+		return glob.MatchFold(domain, query.RequestedDomain)
 	})
 
 	matchMethod := match(rule.Methods, func(method string) bool {
