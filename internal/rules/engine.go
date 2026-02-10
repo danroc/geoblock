@@ -37,7 +37,8 @@ type Query struct {
 	SourceASN       uint32
 }
 
-// match checks if any of the conditions match the given matchFunc.
+// match checks if any of the conditions match the given matchFunc. If the conditions
+// slice is empty, it returns true (match all).
 func match[T any](conditions []T, matchFunc func(T) bool) bool {
 	for _, condition := range conditions {
 		if matchFunc(condition) {
