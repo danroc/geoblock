@@ -39,6 +39,12 @@ linters:
     gosec:
       severity: medium
       confidence: medium
+  exclusions:
+    rules:
+      - linters:
+          - revive
+        path: "internal/(version|metrics)/"
+        text: "var-naming: avoid package names"
 
 formatters:
   enable:

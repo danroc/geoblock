@@ -22,7 +22,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6
         with:
-          go-version: '1.25.7'
+          go-version: '1.26.0'
           cache: true
 
       - name: Install tools
@@ -31,7 +31,7 @@ jobs:
       - name: Install golangci-lint
         uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20 # v9
         with:
-          version: v2.8.0
+          version: v2.9.0
           install-only: true
 
       - name: Lint
