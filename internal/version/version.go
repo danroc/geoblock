@@ -1,5 +1,5 @@
 // Package version provides version information for the application.
-package version
+package version //nolint:revive // Package name intentionally matches stdlib
 
 import (
 	"fmt"

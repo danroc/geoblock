@@ -1,4 +1,4 @@
-package metrics
+package metrics //nolint:revive // Package name intentionally matches stdlib
 
 import (
 	"net/http/httptest"
