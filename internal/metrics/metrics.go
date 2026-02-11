@@ -1,5 +1,5 @@
 // Package metrics provides Prometheus metrics for the application.
-package metrics //nolint:revive // Package name intentionally matches stdlib
+package metrics //nolint:revive // Package name acceptable for internal package
 
 import (
 	"net/http"

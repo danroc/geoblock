@@ -1,4 +1,4 @@
-package version //nolint:revive // Package name intentionally matches stdlib
+package version //nolint:revive // Package name acceptable for internal package
 
 import (
 	"testing"
