@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.6] - 2026-02-13
+
+### Changed
+
+- Simplify version management ([#414](https://github.com/danroc/geoblock/pull/414))
+- Replace `Star` with allocation-free `MatchFold` ([#403](https://github.com/danroc/geoblock/pull/403))
+- Rename `Compact` to `Compacted` ([#402](https://github.com/danroc/geoblock/pull/402))
+- Add cache volume to compose examples ([#401](https://github.com/danroc/geoblock/pull/401))
+- Small dashboard improvements ([#400](https://github.com/danroc/geoblock/pull/400))
+- Improve unit tests ([#399](https://github.com/danroc/geoblock/pull/399))
+- Update Go to v1.26.0 ([#412](https://github.com/danroc/geoblock/pull/412))
+
 ## [0.5.5] - 2026-02-06
 
 ### Added
@@ -295,7 +307,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add CIDR unmarshalling and validation
 - Add autonomous systems to configuration
 
-[Unreleased]: https://github.com/danroc/geoblock/compare/v0.5.5...HEAD
+[Unreleased]: https://github.com/danroc/geoblock/compare/v0.5.6...HEAD
+[0.5.6]: https://github.com/danroc/geoblock/compare/v0.5.5...v0.5.6
 [0.5.5]: https://github.com/danroc/geoblock/compare/v0.5.4...v0.5.5
 [0.5.4]: https://github.com/danroc/geoblock/compare/v0.5.3...v0.5.4
 [0.5.3]: https://github.com/danroc/geoblock/compare/v0.5.2...v0.5.3
