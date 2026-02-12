@@ -201,8 +201,8 @@ echo "PASSED"
 echo ""
 echo "=== Verifying Logs ==="
 echo -n ":: Comparing logs ... "
-diff <(jq --sort-keys 'del(.time, .version)' e2e/expected.log) \
-     <(jq --sort-keys 'del(.time, .version)' geoblock.log)
+diff <(jq --sort-keys 'del(.time, .version, .commit)' e2e/expected.log) \
+     <(jq --sort-keys 'del(.time, .version, .commit)' geoblock.log)
 echo "PASSED"
 
 echo ""
