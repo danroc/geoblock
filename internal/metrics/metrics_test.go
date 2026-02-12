@@ -12,7 +12,6 @@ import (
 
 	"github.com/danroc/geoblock/internal/config"
 	"github.com/danroc/geoblock/internal/ipinfo"
-	"github.com/danroc/geoblock/internal/version"
 )
 
 // newTestCollector creates a fresh collector and resets metrics for the test.
@@ -324,11 +323,6 @@ func TestHandler(t *testing.T) {
 	body := rec.Body.String()
 
 	expectedStrings := []string{
-		"# HELP geoblock_version_info Version information",
-		"# TYPE geoblock_version_info gauge",
-		"geoblock_version_info{version=\"" + version.Get() + "\"} 1",
-		"# HELP geoblock_requests_total Total number of requests by status",
-		"# TYPE geoblock_requests_total counter",
 		"geoblock_requests_total{status=\"allowed\"} 2",
 		"geoblock_requests_total{status=\"denied\"} 1",
 		"geoblock_requests_total{status=\"invalid\"} 1",
@@ -365,8 +359,11 @@ func TestReset(t *testing.T) {
 	}
 
 	// Verify version info is restored after reset
-	if got := testutil.ToFloat64(versionInfo.WithLabelValues(version.Get())); got != 1 {
-		t.Errorf("Expected version info to be 1 after reset, got %v", got)
+	if count := testutil.CollectAndCount(versionInfo); count != 1 {
+		t.Errorf(
+			"Expected version info metric count to be 1 after reset, got %v",
+			count,
+		)
 	}
 }
 

@@ -1,4 +1,4 @@
-{"level":"info","version":"0.3.3-dev.g2e031c8","time":"2025-11-27T08:23:39.837Z","message":"Starting Geoblock"}
+{"level":"info","version":"dev","commit":"unknown","time":"2025-11-27T08:23:39.837Z","message":"Starting Geoblock"}
 {"level":"info","time":"2025-11-27T08:23:39.837Z","message":"Loading configuration file"}
 {"level":"info","time":"2025-11-27T08:23:39.837Z","message":"Initializing database"}
 {"level":"info","address":":8080","time":"2025-11-27T08:23:41.743Z","message":"Starting server"}

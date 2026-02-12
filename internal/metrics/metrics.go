@@ -44,7 +44,7 @@ var (
 			Name: "geoblock_version_info",
 			Help: "Version information",
 		},
-		[]string{"version"},
+		[]string{"version", "commit"},
 	)
 
 	// startTime records when the process started.
@@ -169,7 +169,7 @@ func init() {
 		dbLoadDuration,
 	)
 
-	versionInfo.WithLabelValues(version.Get()).Set(1)
+	versionInfo.WithLabelValues(version.Version, version.Commit).Set(1)
 	startTime.Set(float64(time.Now().Unix()))
 }
 
@@ -258,5 +258,5 @@ func Reset() {
 	dbLastUpdate.Set(0)
 	dbLoadDuration.Set(0)
 	versionInfo.Reset()
-	versionInfo.WithLabelValues(version.Get()).Set(1)
+	versionInfo.WithLabelValues(version.Version, version.Commit).Set(1)
 }

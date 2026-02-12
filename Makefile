@@ -10,14 +10,14 @@ DESCRIPTION := A simple IP-based geoblocking service
 ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 DIST_DIR := $(ROOT_DIR)/dist
 
-# Version information from git describe
-VERSION := $(shell \
-  git update-index -q --refresh && \
-  git describe --tags --dirty --broken --long \
-)
+# Version components from git
+COMMIT  := $(shell git describe --always --dirty --exclude='*')
+TAG     := $(shell git tag --points-at HEAD --sort=-v:refname 'v*')
+VERSION := $(or $(patsubst v%,%,$(TAG)),dev)
 
 # Build flags
 LDFLAGS := -X 'github.com/danroc/geoblock/internal/version.Version=$(VERSION)'
+LDFLAGS += -X 'github.com/danroc/geoblock/internal/version.Commit=$(COMMIT)'
 LDFLAGS += -s -w
 
 # Colors
