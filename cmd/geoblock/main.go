@@ -324,7 +324,10 @@ func main() {
 	)
 	defer stop()
 
-	log.Info().Str("version", version.Get()).Msg("Starting Geoblock")
+	log.Info().
+		Str("version", version.Version).
+		Str("commit", version.Commit).
+		Msg("Starting Geoblock")
 	log.Info().Msg("Loading configuration file")
 	cfg, err := loadConfig(options.configPath)
 	if err != nil {
