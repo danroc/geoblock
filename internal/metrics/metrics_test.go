@@ -29,7 +29,13 @@ func record(c *PrometheusCollector, status string) {
 	if status == StatusDenied {
 		action = config.PolicyDeny
 	}
-	c.RecordRequest(status, "FR", "GET", time.Millisecond, 0, action, false)
+	c.RecordRequest(RequestRecord{
+		Status:   status,
+		Country:  "FR",
+		Method:   "GET",
+		Duration: time.Millisecond,
+		Action:   action,
+	})
 }
 
 // getCounterValue returns the current value of a counter with the given label.
@@ -64,9 +70,13 @@ func TestRecordRequest(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			c := newTestCollector(t)
 
-			c.RecordRequest(
-				tt.status, "FR", "GET", time.Millisecond, 0, tt.action, false,
-			)
+			c.RecordRequest(RequestRecord{
+				Status:   tt.status,
+				Country:  "FR",
+				Method:   "GET",
+				Duration: time.Millisecond,
+				Action:   tt.action,
+			})
 
 			if got := getCounterValue(tt.status); got != 1 {
 				t.Errorf("Expected %s count to be 1, got %v", tt.status, got)
@@ -78,9 +88,12 @@ func TestRecordRequest(t *testing.T) {
 func TestRecordRequestEmptyCountry(t *testing.T) {
 	c := newTestCollector(t)
 
-	c.RecordRequest(
-		StatusAllowed, "", "GET", time.Millisecond, 0, config.PolicyAllow, false,
-	)
+	c.RecordRequest(RequestRecord{
+		Status:   StatusAllowed,
+		Method:   "GET",
+		Duration: time.Millisecond,
+		Action:   config.PolicyAllow,
+	})
 
 	// Request should still be counted
 	if got := getCounterValue(StatusAllowed); got != 1 {
@@ -96,9 +109,12 @@ func TestRecordRequestEmptyCountry(t *testing.T) {
 func TestRecordRequestEmptyMethod(t *testing.T) {
 	c := newTestCollector(t)
 
-	c.RecordRequest(
-		StatusAllowed, "FR", "", time.Millisecond, 0, config.PolicyAllow, false,
-	)
+	c.RecordRequest(RequestRecord{
+		Status:   StatusAllowed,
+		Country:  "FR",
+		Duration: time.Millisecond,
+		Action:   config.PolicyAllow,
+	})
 
 	// Request should still be counted
 	if got := getCounterValue(StatusAllowed); got != 1 {
@@ -114,9 +130,14 @@ func TestRecordRequestEmptyMethod(t *testing.T) {
 func TestRecordRequestDefaultPolicy(t *testing.T) {
 	c := newTestCollector(t)
 
-	c.RecordRequest(
-		StatusAllowed, "FR", "GET", time.Millisecond, 0, config.PolicyAllow, true,
-	)
+	c.RecordRequest(RequestRecord{
+		Status:          StatusAllowed,
+		Country:         "FR",
+		Method:          "GET",
+		Duration:        time.Millisecond,
+		Action:          config.PolicyAllow,
+		IsDefaultPolicy: true,
+	})
 
 	// Request should be counted
 	if got := getCounterValue(StatusAllowed); got != 1 {
@@ -141,15 +162,18 @@ func TestRecordRequestDefaultPolicy(t *testing.T) {
 func TestRecordRequestByCountry(t *testing.T) {
 	c := newTestCollector(t)
 
-	c.RecordRequest(
-		StatusAllowed, "FR", "GET", time.Millisecond, 0, config.PolicyAllow, false,
-	)
-	c.RecordRequest(
-		StatusAllowed, "FR", "GET", time.Millisecond, 0, config.PolicyAllow, false,
-	)
-	c.RecordRequest(
-		StatusAllowed, "BR", "GET", time.Millisecond, 0, config.PolicyAllow, false,
-	)
+	c.RecordRequest(RequestRecord{
+		Status: StatusAllowed, Country: "FR", Method: "GET",
+		Duration: time.Millisecond, Action: config.PolicyAllow,
+	})
+	c.RecordRequest(RequestRecord{
+		Status: StatusAllowed, Country: "FR", Method: "GET",
+		Duration: time.Millisecond, Action: config.PolicyAllow,
+	})
+	c.RecordRequest(RequestRecord{
+		Status: StatusAllowed, Country: "BR", Method: "GET",
+		Duration: time.Millisecond, Action: config.PolicyAllow,
+	})
 
 	assertCounterValue(t, requestsByCountry.WithLabelValues("FR"), 2, "FR count")
 	assertCounterValue(t, requestsByCountry.WithLabelValues("BR"), 1, "BR count")
@@ -158,15 +182,18 @@ func TestRecordRequestByCountry(t *testing.T) {
 func TestRecordRequestByMethod(t *testing.T) {
 	c := newTestCollector(t)
 
-	c.RecordRequest(
-		StatusAllowed, "FR", "GET", time.Millisecond, 0, config.PolicyAllow, false,
-	)
-	c.RecordRequest(
-		StatusAllowed, "FR", "POST", time.Millisecond, 0, config.PolicyAllow, false,
-	)
-	c.RecordRequest(
-		StatusAllowed, "FR", "GET", time.Millisecond, 0, config.PolicyAllow, false,
-	)
+	c.RecordRequest(RequestRecord{
+		Status: StatusAllowed, Country: "FR", Method: "GET",
+		Duration: time.Millisecond, Action: config.PolicyAllow,
+	})
+	c.RecordRequest(RequestRecord{
+		Status: StatusAllowed, Country: "FR", Method: "POST",
+		Duration: time.Millisecond, Action: config.PolicyAllow,
+	})
+	c.RecordRequest(RequestRecord{
+		Status: StatusAllowed, Country: "FR", Method: "GET",
+		Duration: time.Millisecond, Action: config.PolicyAllow,
+	})
 
 	assertCounterValue(t, requestsByMethod.WithLabelValues("GET"), 2, "GET count")
 	assertCounterValue(t, requestsByMethod.WithLabelValues("POST"), 1, "POST count")
@@ -175,18 +202,25 @@ func TestRecordRequestByMethod(t *testing.T) {
 func TestRecordRequestRuleMatches(t *testing.T) {
 	c := newTestCollector(t)
 
-	c.RecordRequest(
-		StatusAllowed, "FR", "GET", time.Millisecond, 0, config.PolicyAllow, false,
-	)
-	c.RecordRequest(
-		StatusDenied, "FR", "GET", time.Millisecond, 1, config.PolicyDeny, false,
-	)
-	c.RecordRequest(
-		StatusDenied, "FR", "GET", time.Millisecond, 1, config.PolicyDeny, false,
-	)
-	c.RecordRequest(
-		StatusAllowed, "FR", "GET", time.Millisecond, 2, config.PolicyAllow, false,
-	)
+	c.RecordRequest(RequestRecord{
+		Status: StatusAllowed, Country: "FR", Method: "GET",
+		Duration: time.Millisecond, Action: config.PolicyAllow,
+	})
+	c.RecordRequest(RequestRecord{
+		Status: StatusDenied, Country: "FR", Method: "GET",
+		Duration: time.Millisecond, RuleIndex: 1,
+		Action: config.PolicyDeny,
+	})
+	c.RecordRequest(RequestRecord{
+		Status: StatusDenied, Country: "FR", Method: "GET",
+		Duration: time.Millisecond, RuleIndex: 1,
+		Action: config.PolicyDeny,
+	})
+	c.RecordRequest(RequestRecord{
+		Status: StatusAllowed, Country: "FR", Method: "GET",
+		Duration: time.Millisecond, RuleIndex: 2,
+		Action: config.PolicyAllow,
+	})
 
 	assertCounterValue(
 		t,
@@ -211,12 +245,14 @@ func TestRecordRequestRuleMatches(t *testing.T) {
 func TestRecordRequestDuration(t *testing.T) {
 	c := newTestCollector(t)
 
-	c.RecordRequest(
-		StatusAllowed, "FR", "GET", 50*time.Millisecond, 0, config.PolicyAllow, false,
-	)
-	c.RecordRequest(
-		StatusDenied, "FR", "GET", 100*time.Millisecond, 0, config.PolicyDeny, false,
-	)
+	c.RecordRequest(RequestRecord{
+		Status: StatusAllowed, Country: "FR", Method: "GET",
+		Duration: 50 * time.Millisecond, Action: config.PolicyAllow,
+	})
+	c.RecordRequest(RequestRecord{
+		Status: StatusDenied, Country: "FR", Method: "GET",
+		Duration: 100 * time.Millisecond, Action: config.PolicyDeny,
+	})
 
 	// Verify histogram has recorded observations by checking the collector count. Each
 	// histogram label creates multiple metrics (one per bucket + sum + count).
