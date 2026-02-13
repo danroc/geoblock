@@ -91,7 +91,7 @@ type nopConfigReloadCollector struct{}
 
 func (nopConfigReloadCollector) RecordConfigReload(_ bool, _ int) {}
 
-func TestGetEnv(t *testing.T) {
+func TestEnvOrDefault(t *testing.T) {
 	tests := []struct {
 		name     string
 		key      string
@@ -120,10 +120,10 @@ func TestGetEnv(t *testing.T) {
 			if tt.setValue != "" {
 				t.Setenv(tt.key, tt.setValue)
 			}
-			got := getEnv(tt.key, tt.fallback)
+			got := envOrDefault(tt.key, tt.fallback)
 			if got != tt.want {
 				t.Errorf(
-					"getEnv(%q, %q) = %q, want %q",
+					"envOrDefault(%q, %q) = %q, want %q",
 					tt.key, tt.fallback, got, tt.want,
 				)
 			}
@@ -131,7 +131,7 @@ func TestGetEnv(t *testing.T) {
 	}
 }
 
-func TestGetOptions(t *testing.T) {
+func TestLoadOptions(t *testing.T) {
 	tests := []struct {
 		name    string
 		envVars map[string]string
@@ -140,39 +140,39 @@ func TestGetOptions(t *testing.T) {
 		{
 			name: "all custom values",
 			envVars: map[string]string{
-				OptionConfigPath: "/tmp/test.yaml",
-				OptionServerPort: "1234",
-				OptionLogLevel:   LogLevelDebug,
-				OptionLogFormat:  LogFormatText,
+				optionConfigPath: "/tmp/test.yaml",
+				optionServerPort: "1234",
+				optionLogLevel:   logLevelDebug,
+				optionLogFormat:  logFormatText,
 			},
 			want: &appOptions{
 				configPath: "/tmp/test.yaml",
 				serverPort: "1234",
-				logLevel:   LogLevelDebug,
-				logFormat:  LogFormatText,
+				logLevel:   logLevelDebug,
+				logFormat:  logFormatText,
 			},
 		},
 		{
 			name:    "default values",
 			envVars: map[string]string{},
 			want: &appOptions{
-				configPath: DefaultConfigPath,
-				serverPort: DefaultServerPort,
-				logLevel:   DefaultLogLevel,
-				logFormat:  DefaultLogFormat,
+				configPath: defaultConfigPath,
+				serverPort: defaultServerPort,
+				logLevel:   defaultLogLevel,
+				logFormat:  defaultLogFormat,
 			},
 		},
 		{
 			name: "mixed values",
 			envVars: map[string]string{
-				OptionConfigPath: "/custom/config.yaml",
-				OptionLogLevel:   LogLevelDebug,
+				optionConfigPath: "/custom/config.yaml",
+				optionLogLevel:   logLevelDebug,
 			},
 			want: &appOptions{
 				configPath: "/custom/config.yaml",
-				serverPort: DefaultServerPort,
-				logLevel:   LogLevelDebug,
-				logFormat:  DefaultLogFormat,
+				serverPort: defaultServerPort,
+				logLevel:   logLevelDebug,
+				logFormat:  defaultLogFormat,
 			},
 		},
 	}
@@ -183,9 +183,9 @@ func TestGetOptions(t *testing.T) {
 				t.Setenv(key, value)
 			}
 
-			got := getOptions()
+			got := loadOptions()
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("getOptions() = %+v, want %+v", got, tt.want)
+				t.Errorf("loadOptions() = %+v, want %+v", got, tt.want)
 			}
 		})
 	}
@@ -239,50 +239,50 @@ func TestConfigureLogger(t *testing.T) {
 	}{
 		{
 			name:      "json format with valid level",
-			format:    LogFormatJSON,
-			level:     LogLevelDebug,
+			format:    logFormatJSON,
+			level:     logLevelDebug,
 			wantLevel: zerolog.DebugLevel,
 		},
 		{
 			name:      "text format with valid level",
-			format:    LogFormatText,
-			level:     LogLevelWarn,
+			format:    logFormatText,
+			level:     logLevelWarn,
 			wantLevel: zerolog.WarnLevel,
 		},
 		{
 			name:      "invalid format defaults to text",
 			format:    "invalid",
-			level:     LogLevelError,
+			level:     logLevelError,
 			wantLevel: zerolog.ErrorLevel,
 		},
 		{
 			name:      "invalid level defaults to info",
-			format:    LogFormatJSON,
+			format:    logFormatJSON,
 			level:     "invalid",
 			wantLevel: zerolog.InfoLevel,
 		},
 		{
 			name:      "trace level",
-			format:    LogFormatJSON,
-			level:     LogLevelTrace,
+			format:    logFormatJSON,
+			level:     logLevelTrace,
 			wantLevel: zerolog.TraceLevel,
 		},
 		{
 			name:      "info level",
-			format:    LogFormatJSON,
-			level:     LogLevelInfo,
+			format:    logFormatJSON,
+			level:     logLevelInfo,
 			wantLevel: zerolog.InfoLevel,
 		},
 		{
 			name:      "fatal level",
-			format:    LogFormatJSON,
-			level:     LogLevelFatal,
+			format:    logFormatJSON,
+			level:     logLevelFatal,
 			wantLevel: zerolog.FatalLevel,
 		},
 		{
 			name:      "panic level",
-			format:    LogFormatJSON,
-			level:     LogLevelPanic,
+			format:    logFormatJSON,
+			level:     logLevelPanic,
 			wantLevel: zerolog.PanicLevel,
 		},
 	}
@@ -566,7 +566,7 @@ func TestNewConfigReloader(t *testing.T) {
 	}
 }
 
-func TestGetCacheDir(t *testing.T) {
+func TestCacheDir(t *testing.T) {
 	tests := []struct {
 		name   string
 		envVal string
@@ -581,7 +581,7 @@ func TestGetCacheDir(t *testing.T) {
 		},
 		{
 			name: "returns default when env not set",
-			want: DefaultCacheDir,
+			want: defaultCacheDir,
 		},
 		{
 			name:   "returns empty when env set to empty",
@@ -594,10 +594,10 @@ func TestGetCacheDir(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.setEnv {
-				t.Setenv(OptionCacheDir, tt.envVal)
+				t.Setenv(optionCacheDir, tt.envVal)
 			}
-			if got := getCacheDir(); got != tt.want {
-				t.Errorf("getCacheDir() = %q, want %q", got, tt.want)
+			if got := cacheDir(); got != tt.want {
+				t.Errorf("cacheDir() = %q, want %q", got, tt.want)
 			}
 		})
 	}

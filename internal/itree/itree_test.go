@@ -16,7 +16,7 @@ func (t ComparableInt) Compare(other ComparableInt) int {
 }
 
 func TestQuery(t *testing.T) {
-	tree := itree.NewITree[ComparableInt, int]()
+	tree := itree.New[ComparableInt, int]()
 
 	// Default cases
 	//
@@ -75,8 +75,8 @@ func TestQuery(t *testing.T) {
 	}
 }
 
-func TestQueryDuplicate(t *testing.T) {
-	tree := itree.NewITree[ComparableInt, int]()
+func TestQuery_Duplicate(t *testing.T) {
+	tree := itree.New[ComparableInt, int]()
 	tree.Insert(itree.NewInterval[ComparableInt](1, 2), 1)
 	tree.Insert(itree.NewInterval[ComparableInt](1, 2), 1)
 
@@ -106,7 +106,7 @@ func TestQueryDuplicate(t *testing.T) {
 func TestRotations(t *testing.T) {
 	t.Run("LeftRotation", func(t *testing.T) {
 		// Insert in ascending order to trigger left rotations
-		tree := itree.NewITree[ComparableInt, int]()
+		tree := itree.New[ComparableInt, int]()
 		tree.Insert(itree.NewInterval[ComparableInt](1, 1), 1)
 		tree.Insert(itree.NewInterval[ComparableInt](2, 2), 2)
 		tree.Insert(itree.NewInterval[ComparableInt](3, 3), 3)
@@ -124,7 +124,7 @@ func TestRotations(t *testing.T) {
 
 	t.Run("RightRotation", func(t *testing.T) {
 		// Insert in descending order to trigger right rotations
-		tree := itree.NewITree[ComparableInt, int]()
+		tree := itree.New[ComparableInt, int]()
 		tree.Insert(itree.NewInterval[ComparableInt](3, 3), 3)
 		tree.Insert(itree.NewInterval[ComparableInt](2, 2), 2)
 		tree.Insert(itree.NewInterval[ComparableInt](1, 1), 1)
@@ -142,7 +142,7 @@ func TestRotations(t *testing.T) {
 
 	t.Run("LeftRightRotation", func(t *testing.T) {
 		// Insert to trigger left-right rotation
-		tree := itree.NewITree[ComparableInt, int]()
+		tree := itree.New[ComparableInt, int]()
 		tree.Insert(itree.NewInterval[ComparableInt](3, 3), 3)
 		tree.Insert(itree.NewInterval[ComparableInt](1, 1), 1)
 		tree.Insert(itree.NewInterval[ComparableInt](2, 2), 2)
@@ -160,7 +160,7 @@ func TestRotations(t *testing.T) {
 
 	t.Run("RightLeftRotation", func(t *testing.T) {
 		// Insert to trigger right-left rotation
-		tree := itree.NewITree[ComparableInt, int]()
+		tree := itree.New[ComparableInt, int]()
 		tree.Insert(itree.NewInterval[ComparableInt](1, 1), 1)
 		tree.Insert(itree.NewInterval[ComparableInt](3, 3), 3)
 		tree.Insert(itree.NewInterval[ComparableInt](2, 2), 2)
@@ -178,7 +178,7 @@ func TestRotations(t *testing.T) {
 
 	t.Run("SameLowValueDifferentHigh", func(t *testing.T) {
 		// Insert 3 intervals with the same low value
-		tree := itree.NewITree[ComparableInt, int]()
+		tree := itree.New[ComparableInt, int]()
 		tree.Insert(itree.NewInterval[ComparableInt](1, 1), 1)
 		tree.Insert(itree.NewInterval[ComparableInt](1, 2), 2)
 		tree.Insert(itree.NewInterval[ComparableInt](1, 3), 3)
@@ -195,7 +195,7 @@ func TestRotations(t *testing.T) {
 	})
 }
 
-func TestIntervalEqual(t *testing.T) {
+func TestInterval_Equal(t *testing.T) {
 	tests := []struct {
 		name string
 		a    itree.Interval[ComparableInt]
@@ -237,7 +237,7 @@ func TestIntervalEqual(t *testing.T) {
 	}
 }
 
-func TestIntervalCompare(t *testing.T) {
+func TestInterval_Compare(t *testing.T) {
 	tests := []struct {
 		name string
 		a    itree.Interval[ComparableInt]
@@ -295,7 +295,7 @@ func compareEntries(
 }
 
 func TestEntries(t *testing.T) {
-	tree := itree.NewITree[ComparableInt, int]()
+	tree := itree.New[ComparableInt, int]()
 	tree.Insert(itree.NewInterval[ComparableInt](1, 2), 10)
 	tree.Insert(itree.NewInterval[ComparableInt](3, 4), 20)
 	tree.Insert(itree.NewInterval[ComparableInt](5, 6), 30)
@@ -332,14 +332,14 @@ func TestEntries(t *testing.T) {
 
 func TestSize(t *testing.T) {
 	t.Run("empty tree", func(t *testing.T) {
-		tree := itree.NewITree[ComparableInt, int]()
+		tree := itree.New[ComparableInt, int]()
 		if got := tree.Size(); got != 0 {
 			t.Errorf("Size() = %d, want 0", got)
 		}
 	})
 
 	t.Run("single node", func(t *testing.T) {
-		tree := itree.NewITree[ComparableInt, int]()
+		tree := itree.New[ComparableInt, int]()
 		tree.Insert(itree.NewInterval[ComparableInt](1, 5), 10)
 		if got := tree.Size(); got != 1 {
 			t.Errorf("Size() = %d, want 1", got)
@@ -347,7 +347,7 @@ func TestSize(t *testing.T) {
 	})
 
 	t.Run("multiple nodes", func(t *testing.T) {
-		tree := itree.NewITree[ComparableInt, int]()
+		tree := itree.New[ComparableInt, int]()
 		tree.Insert(itree.NewInterval[ComparableInt](1, 5), 10)
 		tree.Insert(itree.NewInterval[ComparableInt](2, 6), 20)
 		tree.Insert(itree.NewInterval[ComparableInt](3, 7), 30)
@@ -367,7 +367,7 @@ func TestCompact(t *testing.T) {
 	}
 
 	t.Run("empty tree", func(t *testing.T) {
-		tree := itree.NewITree[ComparableInt, int]()
+		tree := itree.New[ComparableInt, int]()
 		compacted := tree.Compacted(sumMerge)
 		if got := compacted.Size(); got != 0 {
 			t.Errorf("Size() = %d, want 0", got)
@@ -375,7 +375,7 @@ func TestCompact(t *testing.T) {
 	})
 
 	t.Run("no duplicates", func(t *testing.T) {
-		tree := itree.NewITree[ComparableInt, int]()
+		tree := itree.New[ComparableInt, int]()
 		tree.Insert(itree.NewInterval[ComparableInt](1, 2), 10)
 		tree.Insert(itree.NewInterval[ComparableInt](3, 4), 20)
 		tree.Insert(itree.NewInterval[ComparableInt](5, 6), 30)
@@ -396,7 +396,7 @@ func TestCompact(t *testing.T) {
 	})
 
 	t.Run("with duplicates", func(t *testing.T) {
-		tree := itree.NewITree[ComparableInt, int]()
+		tree := itree.New[ComparableInt, int]()
 		tree.Insert(itree.NewInterval[ComparableInt](1, 2), 10)
 		tree.Insert(itree.NewInterval[ComparableInt](1, 2), 20)
 		tree.Insert(itree.NewInterval[ComparableInt](1, 2), 30)
@@ -427,7 +427,7 @@ func TestCompact(t *testing.T) {
 	})
 
 	t.Run("query after compact", func(t *testing.T) {
-		tree := itree.NewITree[ComparableInt, int]()
+		tree := itree.New[ComparableInt, int]()
 		tree.Insert(itree.NewInterval[ComparableInt](1, 5), 10)
 		tree.Insert(itree.NewInterval[ComparableInt](1, 5), 20)
 		tree.Insert(itree.NewInterval[ComparableInt](3, 7), 100)

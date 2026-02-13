@@ -102,7 +102,7 @@ func createTestResolver(
 	return resolver
 }
 
-func TestGetForwardAuth(t *testing.T) {
+func TestHandleForwardAuth(t *testing.T) {
 	resolver := ipinfo.NewResolver(
 		nopDBUpdateCollector{},
 		&mapFetcher{},
@@ -162,13 +162,13 @@ func TestGetForwardAuth(t *testing.T) {
 			req := newTestRequest("GET", "/v1/forward-auth", tt.headers)
 			w := httptest.NewRecorder()
 
-			getForwardAuth(w, req, resolver, engine, nopRequestCollector{})
+			handleForwardAuth(w, req, resolver, engine, nopRequestCollector{})
 			assertStatus(t, w.Code, tt.want)
 		})
 	}
 }
 
-func TestGetForwardAuthWithSpecificRules(t *testing.T) {
+func TestHandleForwardAuth_WithSpecificRules(t *testing.T) {
 	testData := map[string]string{
 		ipinfo.CountryIPv4URL: "8.8.8.8,8.8.8.8,US\n",
 		ipinfo.CountryIPv6URL: "",
@@ -228,20 +228,20 @@ func TestGetForwardAuthWithSpecificRules(t *testing.T) {
 			req := newTestRequest("GET", "/v1/forward-auth", headers)
 			w := httptest.NewRecorder()
 
-			getForwardAuth(w, req, resolver, engine, nopRequestCollector{})
+			handleForwardAuth(w, req, resolver, engine, nopRequestCollector{})
 			assertStatus(t, w.Code, tt.want)
 		})
 	}
 }
 
-func TestGetHealth(t *testing.T) {
+func TestHandleHealth(t *testing.T) {
 	req := httptest.NewRequest("GET", "/v1/health", nil)
 	w := httptest.NewRecorder()
-	getHealth(w, req)
+	handleHealth(w, req)
 	assertStatus(t, w.Code, http.StatusNoContent)
 }
 
-func TestGetPrometheusMetrics(t *testing.T) {
+func TestPrometheusMetrics(t *testing.T) {
 	collector := metrics.NewCollector()
 	resolver := ipinfo.NewResolver(
 		nopDBUpdateCollector{},
@@ -309,7 +309,7 @@ func TestNewServer(t *testing.T) {
 	}
 }
 
-func TestServerEndpoints(t *testing.T) {
+func TestServer_Endpoints(t *testing.T) {
 	resolver := ipinfo.NewResolver(
 		nopDBUpdateCollector{},
 		&mapFetcher{},
@@ -487,7 +487,7 @@ func TestParseForwardedFor(t *testing.T) {
 	}
 }
 
-func TestGetForwardAuthValidRequests(t *testing.T) {
+func TestHandleForwardAuth_ValidRequests(t *testing.T) {
 	testData := map[string]string{
 		ipinfo.CountryIPv4URL: "8.8.8.8,8.8.8.8,US\n",
 		ipinfo.CountryIPv6URL: "",
@@ -504,11 +504,11 @@ func TestGetForwardAuthValidRequests(t *testing.T) {
 	req := newTestRequest("GET", "/v1/forward-auth", headers)
 	w := httptest.NewRecorder()
 
-	getForwardAuth(w, req, resolver, engine, nopRequestCollector{})
+	handleForwardAuth(w, req, resolver, engine, nopRequestCollector{})
 	assertStatus(t, w.Code, http.StatusNoContent)
 }
 
-func TestGetForwardAuthMultipleForwardedIPs(t *testing.T) {
+func TestHandleForwardAuth_MultipleForwardedIPs(t *testing.T) {
 	testData := map[string]string{
 		ipinfo.CountryIPv4URL: "8.8.8.8,8.8.8.8,US\n",
 		ipinfo.CountryIPv6URL: "",
@@ -550,13 +550,13 @@ func TestGetForwardAuthMultipleForwardedIPs(t *testing.T) {
 			req := newTestRequest("GET", "/v1/forward-auth", headers)
 			w := httptest.NewRecorder()
 
-			getForwardAuth(w, req, resolver, engine, nopRequestCollector{})
+			handleForwardAuth(w, req, resolver, engine, nopRequestCollector{})
 			assertStatus(t, w.Code, tt.expectedStatus)
 		})
 	}
 }
 
-func TestServerHandlerSetup(t *testing.T) {
+func TestServer_HandlerSetup(t *testing.T) {
 	resolver := ipinfo.NewResolver(
 		nopDBUpdateCollector{},
 		&mapFetcher{},
