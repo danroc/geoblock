@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.7] - 2026-02-13
+
+### Changed
+
+- Improve naming conventions across codebase ([#423](https://github.com/danroc/geoblock/pull/423))
+- Replace fields with computed methods on AuthorizationResult ([#422](https://github.com/danroc/geoblock/pull/422))
+- Move RequestRecord and RequestCollector to metrics package ([#421](https://github.com/danroc/geoblock/pull/421))
+- Replace status map with function ([#420](https://github.com/danroc/geoblock/pull/420))
+- Short-circuit rule condition evaluation ([#419](https://github.com/danroc/geoblock/pull/419))
+- Add major and minor semver Docker tags ([#418](https://github.com/danroc/geoblock/pull/418))
+- Add multi-platform Docker builds (amd64, arm64) ([#417](https://github.com/danroc/geoblock/pull/417))
+- Select only first git tag when multiple tags point at HEAD ([#416](https://github.com/danroc/geoblock/pull/416))
+
 ## [0.5.6] - 2026-02-13
 
 ### Changed
@@ -307,7 +320,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add CIDR unmarshalling and validation
 - Add autonomous systems to configuration
 
-[Unreleased]: https://github.com/danroc/geoblock/compare/v0.5.6...HEAD
+[Unreleased]: https://github.com/danroc/geoblock/compare/v0.5.7...HEAD
+[0.5.7]: https://github.com/danroc/geoblock/compare/v0.5.6...v0.5.7
 [0.5.6]: https://github.com/danroc/geoblock/compare/v0.5.5...v0.5.6
 [0.5.5]: https://github.com/danroc/geoblock/compare/v0.5.4...v0.5.5
 [0.5.4]: https://github.com/danroc/geoblock/compare/v0.5.3...v0.5.4
