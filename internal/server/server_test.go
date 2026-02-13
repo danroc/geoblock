@@ -28,10 +28,7 @@ func (nopDBUpdateCollector) RecordDBUpdate(
 // nopRequestCollector is a no-op collector for server tests.
 type nopRequestCollector struct{}
 
-func (nopRequestCollector) RecordRequest(
-	_, _, _ string, _ time.Duration, _ int, _ string, _ bool,
-) {
-}
+func (nopRequestCollector) RecordRequest(_ metrics.RequestRecord) {}
 
 func (nopRequestCollector) RecordInvalidRequest(_ time.Duration) {}
 
@@ -254,7 +251,12 @@ func TestGetPrometheusMetrics(t *testing.T) {
 	server := New(":8080", engine, resolver, collector, metrics.Handler())
 
 	// Record a request so that the requests_total metric appears in output
-	collector.RecordRequest("allowed", "US", "GET", 0, 0, "allow", false)
+	collector.RecordRequest(metrics.RequestRecord{
+		Status:  "allowed",
+		Country: "US",
+		Method:  "GET",
+		Action:  "allow",
+	})
 
 	req := httptest.NewRequest("GET", "/metrics", nil)
 	w := httptest.NewRecorder()

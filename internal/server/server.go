@@ -11,22 +11,9 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/danroc/geoblock/internal/ipinfo"
+	"github.com/danroc/geoblock/internal/metrics"
 	"github.com/danroc/geoblock/internal/rules"
 )
-
-// RequestCollector collects metrics for HTTP requests.
-type RequestCollector interface {
-	RecordRequest(
-		status string,
-		country string,
-		method string,
-		duration time.Duration,
-		ruleIndex int,
-		action string,
-		isDefaultPolicy bool,
-	)
-	RecordInvalidRequest(duration time.Duration)
-}
 
 // HTTP server timeout constants
 const (
@@ -115,7 +102,7 @@ func getForwardAuth(
 	request *http.Request,
 	resolver *ipinfo.Resolver,
 	engine *rules.Engine,
-	collector RequestCollector,
+	collector metrics.RequestCollector,
 ) {
 	start := time.Now()
 
@@ -185,15 +172,15 @@ func getForwardAuth(
 		writer.WriteHeader(http.StatusForbidden)
 	}
 
-	collector.RecordRequest(
-		status,
-		resolved.CountryCode,
-		method,
-		duration,
-		result.RuleIndex,
-		result.Action,
-		result.IsDefaultPolicy,
-	)
+	collector.RecordRequest(metrics.RequestRecord{
+		Status:          status,
+		Country:         resolved.CountryCode,
+		Method:          method,
+		Duration:        duration,
+		RuleIndex:       result.RuleIndex,
+		Action:          result.Action,
+		IsDefaultPolicy: result.IsDefaultPolicy,
+	})
 }
 
 // getHealth returns a 204 status code to indicate that the server is running.
@@ -206,7 +193,7 @@ func New(
 	address string,
 	engine *rules.Engine,
 	resolver *ipinfo.Resolver,
-	collector RequestCollector,
+	collector metrics.RequestCollector,
 	metricsHandler http.Handler,
 ) *http.Server {
 	mux := http.NewServeMux()
