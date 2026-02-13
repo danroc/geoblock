@@ -87,19 +87,20 @@ func parseForwardedFor(header string) string {
 	return strings.TrimSpace(ip)
 }
 
-// getLogEvent returns a zerolog event based on the authorization result.
-func getLogEvent(isAllowed bool) *zerolog.Event {
+// logEvent returns a zerolog event based on the authorization result.
+func logEvent(isAllowed bool) *zerolog.Event {
 	if isAllowed {
 		return log.Info()
 	}
 	return log.Warn()
 }
 
-// getForwardAuth checks if the request is authorized to access the requested resource.
-// It uses the reverse proxy headers to determine the source IP and requested domain.
-func getForwardAuth(
-	writer http.ResponseWriter,
-	request *http.Request,
+// handleForwardAuth checks if the request is authorized to access the requested
+// resource. It uses the reverse proxy headers to determine the source IP and requested
+// domain.
+func handleForwardAuth(
+	w http.ResponseWriter,
+	r *http.Request,
 	resolver *ipinfo.Resolver,
 	engine *rules.Engine,
 	collector metrics.RequestCollector,
@@ -107,13 +108,13 @@ func getForwardAuth(
 	start := time.Now()
 
 	var (
-		origin = parseForwardedFor(request.Header.Get(headerForwardedFor))
-		domain = request.Header.Get(headerForwardedHost)
-		method = request.Header.Get(headerForwardedMethod)
+		origin = parseForwardedFor(r.Header.Get(headerForwardedFor))
+		domain = r.Header.Get(headerForwardedHost)
+		method = r.Header.Get(headerForwardedMethod)
 	)
 
-	// Block the request if one or more of the required headers are missing. It
-	// probably means that the request didn't come from the reverse proxy.
+	// Block the request if one or more of the required headers are missing. It probably
+	// means that the request didn't come from the reverse proxy.
 	if origin == "" || domain == "" || method == "" {
 		log.Error().
 			Str(fieldRequestDomain, domain).
@@ -121,13 +122,13 @@ func getForwardAuth(
 			Str(fieldRequestStatus, requestStatusInvalid).
 			Str(fieldSourceIP, origin).
 			Msg("Missing required headers")
-		writer.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
 		collector.RecordInvalidRequest(time.Since(start))
 		return
 	}
 
-	// For sanity, we check if the source IP is a valid IP address. If the IP
-	// is invalid, we deny the request regardless of the default policy.
+	// For sanity, we check if the source IP is a valid IP address. If the IP is
+	// invalid, we deny the request regardless of the default policy.
 	sourceIP, err := netip.ParseAddr(origin)
 	if err != nil {
 		log.Error().
@@ -136,7 +137,7 @@ func getForwardAuth(
 			Str(fieldRequestStatus, requestStatusInvalid).
 			Str(fieldSourceIP, origin).
 			Msg("Invalid source IP")
-		writer.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
 		collector.RecordInvalidRequest(time.Since(start))
 		return
 	}
@@ -154,7 +155,7 @@ func getForwardAuth(
 	status := statusString(result.Allowed())
 
 	// Prepare a zerolog event for structured logging
-	event := getLogEvent(result.Allowed()).
+	event := logEvent(result.Allowed()).
 		Str(fieldRequestDomain, domain).
 		Str(fieldRequestMethod, method).
 		Str(fieldRequestStatus, status).
@@ -166,10 +167,10 @@ func getForwardAuth(
 
 	if result.Allowed() {
 		event.Msg("Request allowed")
-		writer.WriteHeader(http.StatusNoContent)
+		w.WriteHeader(http.StatusNoContent)
 	} else {
 		event.Msg("Request denied")
-		writer.WriteHeader(http.StatusForbidden)
+		w.WriteHeader(http.StatusForbidden)
 	}
 
 	collector.RecordRequest(metrics.RequestRecord{
@@ -183,9 +184,9 @@ func getForwardAuth(
 	})
 }
 
-// getHealth returns a 204 status code to indicate that the server is running.
-func getHealth(writer http.ResponseWriter, _ *http.Request) {
-	writer.WriteHeader(http.StatusNoContent)
+// handleHealth returns a 204 status code to indicate that the server is running.
+func handleHealth(w http.ResponseWriter, _ *http.Request) {
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // New creates a new HTTP server that listens on the given address.
@@ -199,11 +200,11 @@ func New(
 	mux := http.NewServeMux()
 	mux.HandleFunc(
 		"GET /v1/forward-auth",
-		func(writer http.ResponseWriter, request *http.Request) {
-			getForwardAuth(writer, request, resolver, engine, collector)
+		func(w http.ResponseWriter, r *http.Request) {
+			handleForwardAuth(w, r, resolver, engine, collector)
 		},
 	)
-	mux.HandleFunc("GET /v1/health", getHealth)
+	mux.HandleFunc("GET /v1/health", handleHealth)
 	mux.Handle("GET /metrics", metricsHandler)
 
 	return &http.Server{

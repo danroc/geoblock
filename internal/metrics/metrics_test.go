@@ -85,7 +85,7 @@ func TestRecordRequest(t *testing.T) {
 	}
 }
 
-func TestRecordRequestEmptyCountry(t *testing.T) {
+func TestRecordRequest_EmptyCountry(t *testing.T) {
 	c := newTestCollector(t)
 
 	c.RecordRequest(RequestRecord{
@@ -106,7 +106,7 @@ func TestRecordRequestEmptyCountry(t *testing.T) {
 	}
 }
 
-func TestRecordRequestEmptyMethod(t *testing.T) {
+func TestRecordRequest_EmptyMethod(t *testing.T) {
 	c := newTestCollector(t)
 
 	c.RecordRequest(RequestRecord{
@@ -127,7 +127,7 @@ func TestRecordRequestEmptyMethod(t *testing.T) {
 	}
 }
 
-func TestRecordRequestDefaultPolicy(t *testing.T) {
+func TestRecordRequest_DefaultPolicy(t *testing.T) {
 	c := newTestCollector(t)
 
 	c.RecordRequest(RequestRecord{
@@ -159,7 +159,7 @@ func TestRecordRequestDefaultPolicy(t *testing.T) {
 	}
 }
 
-func TestRecordRequestByCountry(t *testing.T) {
+func TestRecordRequest_ByCountry(t *testing.T) {
 	c := newTestCollector(t)
 
 	c.RecordRequest(RequestRecord{
@@ -179,7 +179,7 @@ func TestRecordRequestByCountry(t *testing.T) {
 	assertCounterValue(t, requestsByCountry.WithLabelValues("BR"), 1, "BR count")
 }
 
-func TestRecordRequestByMethod(t *testing.T) {
+func TestRecordRequest_ByMethod(t *testing.T) {
 	c := newTestCollector(t)
 
 	c.RecordRequest(RequestRecord{
@@ -199,7 +199,7 @@ func TestRecordRequestByMethod(t *testing.T) {
 	assertCounterValue(t, requestsByMethod.WithLabelValues("POST"), 1, "POST count")
 }
 
-func TestRecordRequestRuleMatches(t *testing.T) {
+func TestRecordRequest_RuleMatches(t *testing.T) {
 	c := newTestCollector(t)
 
 	c.RecordRequest(RequestRecord{
@@ -242,7 +242,7 @@ func TestRecordRequestRuleMatches(t *testing.T) {
 	)
 }
 
-func TestRecordRequestDuration(t *testing.T) {
+func TestRecordRequest_Duration(t *testing.T) {
 	c := newTestCollector(t)
 
 	c.RecordRequest(RequestRecord{

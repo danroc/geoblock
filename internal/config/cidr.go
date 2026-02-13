@@ -10,7 +10,7 @@ type CIDR struct {
 }
 
 // UnmarshalYAML unmarshals a CIDR network from YAML.
-func (n *CIDR) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (c *CIDR) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var network string
 	if err := unmarshal(&network); err != nil {
 		return err
@@ -21,6 +21,6 @@ func (n *CIDR) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		return err
 	}
 
-	n.Prefix = prefix
+	c.Prefix = prefix
 	return nil
 }

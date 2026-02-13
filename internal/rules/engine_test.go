@@ -8,7 +8,7 @@ import (
 	"github.com/danroc/geoblock/internal/rules"
 )
 
-func TestEngineAuthorize(t *testing.T) {
+func TestEngine_Authorize(t *testing.T) {
 	tests := []struct {
 		name   string
 		config *config.AccessControl
@@ -403,7 +403,7 @@ func TestEngineAuthorize(t *testing.T) {
 	}
 }
 
-func TestAuthorizationResultAllowed(t *testing.T) {
+func TestAuthorizationResult_Allowed(t *testing.T) {
 	tests := []struct {
 		name   string
 		action string
@@ -424,7 +424,7 @@ func TestAuthorizationResultAllowed(t *testing.T) {
 	}
 }
 
-func TestAuthorizationResultIsDefaultPolicy(t *testing.T) {
+func TestAuthorizationResult_IsDefaultPolicy(t *testing.T) {
 	tests := []struct {
 		name      string
 		ruleIndex int
@@ -444,7 +444,7 @@ func TestAuthorizationResultIsDefaultPolicy(t *testing.T) {
 	}
 }
 
-func TestEngineUpdateConfig(t *testing.T) {
+func TestEngine_UpdateConfig(t *testing.T) {
 	e := rules.NewEngine(&config.AccessControl{
 		DefaultPolicy: config.PolicyAllow,
 	})

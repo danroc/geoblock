@@ -7,7 +7,7 @@ import (
 	"github.com/goccy/go-yaml"
 )
 
-func TestUnmarshalYAML(t *testing.T) {
+func TestCIDR_UnmarshalYAML(t *testing.T) {
 	tests := []struct {
 		name    string
 		input   string

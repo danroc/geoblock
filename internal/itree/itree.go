@@ -58,7 +58,7 @@ func NewNode[K Comparable[K], V any](interval Interval[K], value V) *Node[K, V] 
 	}
 }
 
-// getHeight returns the height of the node.
+// getHeight returns the height of the node, or -1 if the node is nil.
 func (n *Node[K, V]) getHeight() int {
 	if n == nil {
 		return -1
@@ -145,34 +145,34 @@ func insert[K Comparable[K], V any](
 	return node.balance()
 }
 
-// ITree represents an interval tree.
-type ITree[K Comparable[K], V any] struct {
+// Tree represents an interval tree.
+type Tree[K Comparable[K], V any] struct {
 	root *Node[K, V]
 }
 
-// NewITree creates a new interval tree.
-func NewITree[K Comparable[K], V any]() *ITree[K, V] {
-	return &ITree[K, V]{}
+// New creates a new interval tree.
+func New[K Comparable[K], V any]() *Tree[K, V] {
+	return &Tree[K, V]{}
 }
 
 // Insert adds an interval to the interval tree.
-func (t *ITree[K, V]) Insert(interval Interval[K], value V) {
+func (t *Tree[K, V]) Insert(interval Interval[K], value V) {
 	t.root = insert(t.root, interval, value)
 }
 
 // Query returns the values associated with the intervals that contain the given key.
-func (t *ITree[K, V]) Query(key K) []V {
+func (t *Tree[K, V]) Query(key K) []V {
 	return query(t.root, key, nil)
 }
 
 // Traverse walks the tree in pre-order (root, left, right) and calls the provided
 // function for each node with its interval and value.
-func (t *ITree[K, V]) Traverse(fn func(interval Interval[K], value V)) {
+func (t *Tree[K, V]) Traverse(fn func(interval Interval[K], value V)) {
 	traverse(t.root, fn)
 }
 
 // Size returns the number of nodes in the tree.
-func (t *ITree[K, V]) Size() int {
+func (t *Tree[K, V]) Size() int {
 	return size(t.root)
 }
 
@@ -232,7 +232,7 @@ type Entry[K Comparable[K], V any] struct {
 }
 
 // Entries returns all entries in the tree as a slice of Entry structs.
-func (t *ITree[K, V]) Entries() []Entry[K, V] {
+func (t *Tree[K, V]) Entries() []Entry[K, V] {
 	var entries []Entry[K, V]
 	t.Traverse(func(interval Interval[K], value V) {
 		entries = append(entries, Entry[K, V]{
@@ -245,14 +245,14 @@ func (t *ITree[K, V]) Entries() []Entry[K, V] {
 
 // Compacted merges nodes with identical intervals using the provided merge function.
 // Returns a new tree where each unique interval appears exactly once.
-func (t *ITree[K, V]) Compacted(merge func([]V) V) *ITree[K, V] {
+func (t *Tree[K, V]) Compacted(merge func([]V) V) *Tree[K, V] {
 	entries := t.Entries()
 
 	slices.SortFunc(entries, func(a, b Entry[K, V]) int {
 		return a.Interval.Compare(b.Interval)
 	})
 
-	result := NewITree[K, V]()
+	result := New[K, V]()
 	for i := 0; i < len(entries); {
 		interval := entries[i].Interval
 		values := []V{entries[i].Value}

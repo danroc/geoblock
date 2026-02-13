@@ -66,7 +66,7 @@ func newDummyFetcher() ipinfo.Fetcher {
 	}
 }
 
-func TestUpdateError(t *testing.T) {
+func TestUpdate_Error(t *testing.T) {
 	r := ipinfo.NewResolver(
 		nopDBUpdateCollector{},
 		&errFetcher{err: context.DeadlineExceeded},
@@ -113,7 +113,7 @@ func TestResolve(t *testing.T) {
 	}
 }
 
-func TestUpdateInvalidData(t *testing.T) {
+func TestUpdate_InvalidData(t *testing.T) {
 	tests := []struct {
 		name   string
 		dbs    map[string]string

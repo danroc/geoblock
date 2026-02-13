@@ -144,7 +144,7 @@ access_control:
         - INVALID
 `
 
-func TestReadConfigValid(t *testing.T) {
+func TestReadConfig_Valid(t *testing.T) {
 	reader := strings.NewReader(validConfig)
 
 	cfg, err := config.ReadConfig(reader)
@@ -195,7 +195,7 @@ func TestReadConfigValid(t *testing.T) {
 	}
 }
 
-func TestReadConfigErr(t *testing.T) {
+func TestReadConfig_Err(t *testing.T) {
 	tests := []struct {
 		name string
 		data string
@@ -222,7 +222,7 @@ func TestReadConfigErr(t *testing.T) {
 	}
 }
 
-func TestReadConfigValidationErrors(t *testing.T) {
+func TestReadConfig_ValidationErrors(t *testing.T) {
 	tests := []struct {
 		name string
 		data string
@@ -250,7 +250,7 @@ func (r *errReader) Read(_ []byte) (n int, err error) {
 	return 0, errors.New("read error")
 }
 
-func TestReadConfigErrReader(t *testing.T) {
+func TestReadConfig_ErrReader(t *testing.T) {
 	_, err := config.ReadConfig(&errReader{})
 	if err == nil {
 		t.Error("expected an error but got nil")
