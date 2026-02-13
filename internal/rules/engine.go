@@ -55,28 +55,41 @@ func match[T any](conditions []T, matchFunc func(T) bool) bool {
 // domains, it will match all domains.
 //
 // Domains, methods and countries are case-insensitive.
-func ruleApplies(rule *config.AccessControlRule, query *Query) bool {
-	matchDomain := match(rule.Domains, func(domain string) bool {
+func ruleApplies(
+	rule *config.AccessControlRule,
+	query *Query,
+) bool {
+	if !match(rule.Domains, func(domain string) bool {
 		return glob.MatchFold(domain, query.RequestedDomain)
-	})
+	}) {
+		return false
+	}
 
-	matchMethod := match(rule.Methods, func(method string) bool {
+	if !match(rule.Methods, func(method string) bool {
 		return strings.EqualFold(method, query.RequestedMethod)
-	})
+	}) {
+		return false
+	}
 
-	matchIP := match(rule.Networks, func(network config.CIDR) bool {
+	if !match(rule.Networks, func(network config.CIDR) bool {
 		return network.Contains(query.SourceIP)
-	})
+	}) {
+		return false
+	}
 
-	matchCountry := match(rule.Countries, func(country string) bool {
+	if !match(rule.Countries, func(country string) bool {
 		return strings.EqualFold(country, query.SourceCountry)
-	})
+	}) {
+		return false
+	}
 
-	matchASN := match(rule.AutonomousSystems, func(asn uint32) bool {
+	if !match(rule.AutonomousSystems, func(asn uint32) bool {
 		return asn == query.SourceASN
-	})
+	}) {
+		return false
+	}
 
-	return matchDomain && matchMethod && matchIP && matchCountry && matchASN
+	return true
 }
 
 // UpdateConfig updates the engine's configuration with the given access control

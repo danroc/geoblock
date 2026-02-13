@@ -48,10 +48,12 @@ const (
 	requestStatusInvalid = "invalid"
 )
 
-// isAllowedStatus maps the boolean authorization result to a string status.
-var isAllowedStatus = map[bool]string{
-	true:  requestStatusAllowed,
-	false: requestStatusDenied,
+// statusString returns the status label for an authorization result.
+func statusString(allowed bool) string {
+	if allowed {
+		return requestStatusAllowed
+	}
+	return requestStatusDenied
 }
 
 // localNetworkCIDRs contains the list of local networks CIDRs.
@@ -149,7 +151,7 @@ func getForwardAuth(
 	})
 
 	duration := time.Since(start)
-	status := isAllowedStatus[result.Allowed]
+	status := statusString(result.Allowed)
 
 	// Prepare a zerolog event for structured logging
 	event := getLogEvent(result.Allowed).
