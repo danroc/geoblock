@@ -151,10 +151,10 @@ func getForwardAuth(
 	})
 
 	duration := time.Since(start)
-	status := statusString(result.Allowed)
+	status := statusString(result.Allowed())
 
 	// Prepare a zerolog event for structured logging
-	event := getLogEvent(result.Allowed).
+	event := getLogEvent(result.Allowed()).
 		Str(fieldRequestDomain, domain).
 		Str(fieldRequestMethod, method).
 		Str(fieldRequestStatus, status).
@@ -164,7 +164,7 @@ func getForwardAuth(
 		Uint32(fieldSourceASN, resolved.ASN).
 		Str(fieldSourceOrg, resolved.Organization)
 
-	if result.Allowed {
+	if result.Allowed() {
 		event.Msg("Request allowed")
 		writer.WriteHeader(http.StatusNoContent)
 	} else {
@@ -179,7 +179,7 @@ func getForwardAuth(
 		Duration:        duration,
 		RuleIndex:       result.RuleIndex,
 		Action:          result.Action,
-		IsDefaultPolicy: result.IsDefaultPolicy,
+		IsDefaultPolicy: result.IsDefaultPolicy(),
 	})
 }
 

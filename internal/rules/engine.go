@@ -101,21 +101,18 @@ func (e *Engine) UpdateConfig(config *config.AccessControl) {
 // AuthorizationResult contains the result of an authorization check with metadata.
 // RuleIndex is NoMatchingRuleIndex if the default policy was used.
 type AuthorizationResult struct {
-	Allowed         bool
-	RuleIndex       int
-	Action          string
-	IsDefaultPolicy bool
+	RuleIndex int
+	Action    string
 }
 
-// NewAuthorizationResult creates a new AuthorizationResult from a rule index and
-// action.
-func NewAuthorizationResult(ruleIndex int, action string) AuthorizationResult {
-	return AuthorizationResult{
-		Allowed:         action == config.PolicyAllow,
-		RuleIndex:       ruleIndex,
-		Action:          action,
-		IsDefaultPolicy: ruleIndex == NoMatchingRuleIndex,
-	}
+// Allowed reports whether the result permits access.
+func (r AuthorizationResult) Allowed() bool {
+	return r.Action == config.PolicyAllow
+}
+
+// IsDefaultPolicy reports whether the default policy was applied.
+func (r AuthorizationResult) IsDefaultPolicy() bool {
+	return r.RuleIndex == NoMatchingRuleIndex
 }
 
 // Authorize checks if the given query is allowed by the engine's rules and returns
@@ -125,10 +122,16 @@ func (e *Engine) Authorize(query *Query) AuthorizationResult {
 	cfg := e.config.Load()
 	for i, rule := range cfg.Rules {
 		if ruleApplies(&rule, query) {
-			return NewAuthorizationResult(i, rule.Policy)
+			return AuthorizationResult{
+				RuleIndex: i,
+				Action:    rule.Policy,
+			}
 		}
 	}
 
 	// No rule matched, apply default policy.
-	return NewAuthorizationResult(NoMatchingRuleIndex, cfg.DefaultPolicy)
+	return AuthorizationResult{
+		RuleIndex: NoMatchingRuleIndex,
+		Action:    cfg.DefaultPolicy,
+	}
 }
