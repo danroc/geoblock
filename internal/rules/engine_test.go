@@ -396,98 +396,49 @@ func TestEngineAuthorize(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			e := rules.NewEngine(tt.config)
-			if got := e.Authorize(tt.query).Allowed; got != tt.want {
-				t.Errorf("Engine.Authorize().Allowed = %v, want %v", got, tt.want)
+			if got := e.Authorize(tt.query).Allowed(); got != tt.want {
+				t.Errorf("Engine.Authorize().Allowed() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestNewAuthorizationResult(t *testing.T) {
+func TestAuthorizationResultAllowed(t *testing.T) {
 	tests := []struct {
-		name          string
-		ruleIndex     int
-		action        string
-		wantAllowed   bool
-		wantRuleIndex int
-		wantAction    string
-		wantIsDefault bool
+		name   string
+		action string
+		want   bool
 	}{
-		{
-			name:          "allow action with rule match",
-			ruleIndex:     0,
-			action:        config.PolicyAllow,
-			wantAllowed:   true,
-			wantRuleIndex: 0,
-			wantAction:    config.PolicyAllow,
-			wantIsDefault: false,
-		},
-		{
-			name:          "deny action with rule match",
-			ruleIndex:     0,
-			action:        config.PolicyDeny,
-			wantAllowed:   false,
-			wantRuleIndex: 0,
-			wantAction:    config.PolicyDeny,
-			wantIsDefault: false,
-		},
-		{
-			name:          "allow action with default policy",
-			ruleIndex:     rules.NoMatchingRuleIndex,
-			action:        config.PolicyAllow,
-			wantAllowed:   true,
-			wantRuleIndex: rules.NoMatchingRuleIndex,
-			wantAction:    config.PolicyAllow,
-			wantIsDefault: true,
-		},
-		{
-			name:          "deny action with default policy",
-			ruleIndex:     rules.NoMatchingRuleIndex,
-			action:        config.PolicyDeny,
-			wantAllowed:   false,
-			wantRuleIndex: rules.NoMatchingRuleIndex,
-			wantAction:    config.PolicyDeny,
-			wantIsDefault: true,
-		},
-		{
-			name:          "allow action with higher rule index",
-			ruleIndex:     5,
-			action:        config.PolicyAllow,
-			wantAllowed:   true,
-			wantRuleIndex: 5,
-			wantAction:    config.PolicyAllow,
-			wantIsDefault: false,
-		},
-		{
-			name:          "unknown action treated as deny",
-			ruleIndex:     0,
-			action:        "unknown",
-			wantAllowed:   false,
-			wantRuleIndex: 0,
-			wantAction:    "unknown",
-			wantIsDefault: false,
-		},
+		{"allow", config.PolicyAllow, true},
+		{"deny", config.PolicyDeny, false},
+		{"unknown", "unknown", false},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := rules.NewAuthorizationResult(tt.ruleIndex, tt.action)
+			r := rules.AuthorizationResult{Action: tt.action}
+			if got := r.Allowed(); got != tt.want {
+				t.Errorf("Allowed() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
 
-			if got.Allowed != tt.wantAllowed {
-				t.Errorf("Allowed = %v, want %v", got.Allowed, tt.wantAllowed)
-			}
-			if got.RuleIndex != tt.wantRuleIndex {
-				t.Errorf("RuleIndex = %v, want %v", got.RuleIndex, tt.wantRuleIndex)
-			}
-			if got.Action != tt.wantAction {
-				t.Errorf("Action = %v, want %v", got.Action, tt.wantAction)
-			}
-			if got.IsDefaultPolicy != tt.wantIsDefault {
-				t.Errorf(
-					"IsDefaultPolicy = %v, want %v",
-					got.IsDefaultPolicy,
-					tt.wantIsDefault,
-				)
+func TestAuthorizationResultIsDefaultPolicy(t *testing.T) {
+	tests := []struct {
+		name      string
+		ruleIndex int
+		want      bool
+	}{
+		{"rule matched", 0, false},
+		{"no match", rules.NoMatchingRuleIndex, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := rules.AuthorizationResult{RuleIndex: tt.ruleIndex}
+			if got := r.IsDefaultPolicy(); got != tt.want {
+				t.Errorf("IsDefaultPolicy() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -498,15 +449,15 @@ func TestEngineUpdateConfig(t *testing.T) {
 		DefaultPolicy: config.PolicyAllow,
 	})
 
-	if got := e.Authorize(&rules.Query{}).Allowed; got != true {
-		t.Errorf("Engine.Authorize().Allowed = %v, want %v", got, true)
+	if got := e.Authorize(&rules.Query{}).Allowed(); got != true {
+		t.Errorf("Authorize().Allowed() = %v, want %v", got, true)
 	}
 
 	e.UpdateConfig(&config.AccessControl{
 		DefaultPolicy: config.PolicyDeny,
 	})
 
-	if got := e.Authorize(&rules.Query{}).Allowed; got != false {
-		t.Errorf("Engine.Authorize().Allowed = %v, want %v", got, false)
+	if got := e.Authorize(&rules.Query{}).Allowed(); got != false {
+		t.Errorf("Authorize().Allowed() = %v, want %v", got, false)
 	}
 }
