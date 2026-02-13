@@ -12,7 +12,7 @@ DIST_DIR := $(ROOT_DIR)/dist
 
 # Version components from git
 COMMIT  := $(shell git describe --always --dirty --exclude='*')
-TAG     := $(shell git tag --points-at HEAD --sort=-v:refname 'v*')
+TAG     := $(shell git tag --points-at HEAD --sort=-v:refname 'v*' | head -n1)
 VERSION := $(or $(patsubst v%,%,$(TAG)),dev)
 
 # Build flags
