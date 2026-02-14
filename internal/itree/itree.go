@@ -150,8 +150,8 @@ type Tree[K Comparable[K], V any] struct {
 	root *Node[K, V]
 }
 
-// New creates a new interval tree.
-func New[K Comparable[K], V any]() *Tree[K, V] {
+// NewTree creates a new interval tree.
+func NewTree[K Comparable[K], V any]() *Tree[K, V] {
 	return &Tree[K, V]{}
 }
 
@@ -252,7 +252,7 @@ func (t *Tree[K, V]) Compacted(merge func([]V) V) *Tree[K, V] {
 		return a.Interval.Compare(b.Interval)
 	})
 
-	result := New[K, V]()
+	result := NewTree[K, V]()
 	for i := 0; i < len(entries); {
 		interval := entries[i].Interval
 		values := []V{entries[i].Value}

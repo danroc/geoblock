@@ -120,7 +120,7 @@ func NewResolver(
 // next database and returns all the errors at the end.
 func (r *Resolver) Update(ctx context.Context) error {
 	start := time.Now()
-	db := itree.New[netip.Addr, Resolution]()
+	db := itree.NewTree[netip.Addr, Resolution]()
 	loader := NewLoader(r.fetcher)
 
 	var errs []error
