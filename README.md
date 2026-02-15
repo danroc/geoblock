@@ -11,7 +11,6 @@
 - [Introduction](#introduction)
 - [Features](#features)
 - [Installation](#installation)
-  - [Quick Start](#quick-start)
   - [Reverse Proxy Integration](#reverse-proxy-integration)
 - [Configuration](#configuration)
 - [Environment Variables](#environment-variables)
@@ -70,21 +69,6 @@ flowchart TD
 
   style Geoblock stroke:#f76,stroke-width:3px
 ```
-
-### Quick Start
-
-Create a [configuration file](#configuration) and start the container:
-
-```bash
-docker run -d \
-  -p 8080:8080 \
-  -v ./config.yaml:/etc/geoblock/config.yaml \
-  -v geoblock-cache:/var/cache/geoblock \
-  ghcr.io/danroc/geoblock:latest
-```
-
-On first start, Geoblock downloads IP geolocation databases. The cache volume persists
-them across restarts. Databases are automatically updated every 24 hours.
 
 ### Reverse Proxy Integration
 
