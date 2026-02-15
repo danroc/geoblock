@@ -65,6 +65,8 @@ flowchart TD
   Geoblock -..->|Yes / No| Proxy
   Proxy -..->|Return error if not authorized| Client
   Proxy --->|Forward request if authorized| App
+
+  style Geoblock stroke:#f76,stroke-width:3px
 ```
 
 **Examples:**
