@@ -11,8 +11,10 @@
 - [Introduction](#introduction)
 - [Features](#features)
 - [Installation](#installation)
+  - [Quick Start](#quick-start)
+  - [Reverse Proxy Integration](#reverse-proxy-integration)
 - [Configuration](#configuration)
-- [Environment variables](#environment-variables)
+- [Environment Variables](#environment-variables)
 - [HTTP API](#http-api)
   - [`GET /v1/forward-auth`](#get-v1forward-auth)
   - [`GET /v1/health`](#get-v1health)
@@ -69,11 +71,28 @@ flowchart TD
   style Geoblock stroke:#f76,stroke-width:3px
 ```
 
-**Examples:**
+### Quick Start
 
-- [Example using Traefik](./examples/traefik/)
-- [Example using Caddy](./examples/caddy/)
-- [Example using NGINX](./examples/nginx/)
+Create a [configuration file](#configuration) and start the container:
+
+```bash
+docker run -d \
+  -p 8080:8080 \
+  -v ./config.yaml:/etc/geoblock/config.yaml \
+  -v geoblock-cache:/var/cache/geoblock \
+  ghcr.io/danroc/geoblock:latest
+```
+
+On first start, Geoblock downloads IP geolocation databases. The cache volume persists
+them across restarts. Databases are automatically updated every 24 hours.
+
+### Reverse Proxy Integration
+
+For complete deployment examples with a reverse proxy, see:
+
+- [Traefik](./examples/traefik/)
+- [Caddy](./examples/caddy/)
+- [NGINX](./examples/nginx/)
 
 ## Configuration
 
@@ -142,7 +161,7 @@ access_control:
       policy: allow
 ```
 
-## Environment variables
+## Environment Variables
 
 The following environment variables can be used to configure Geoblock:
 
