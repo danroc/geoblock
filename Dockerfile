@@ -31,6 +31,6 @@ HEALTHCHECK \
     --start-period=30s \
     --start-interval=5s \
     --retries=3 \
-    CMD wget -qO- http://localhost:8080/v1/health || exit 1
+    CMD wget --spider --no-verbose --tries=1 http://localhost:8080/v1/health || exit 1
 
 ENTRYPOINT ["/usr/bin/geoblock"]
