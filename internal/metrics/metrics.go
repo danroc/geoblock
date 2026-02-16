@@ -13,6 +13,23 @@ import (
 	"github.com/danroc/geoblock/internal/version"
 )
 
+// RequestRecord contains all data needed to record metrics for a single request.
+type RequestRecord struct {
+	Status          string
+	Country         string
+	Method          string
+	Duration        time.Duration
+	RuleIndex       int
+	Action          string
+	IsDefaultPolicy bool
+}
+
+// RequestCollector collects metrics for HTTP requests.
+type RequestCollector interface {
+	RecordRequest(record RequestRecord)
+	RecordInvalidRequest(duration time.Duration)
+}
+
 // Status label values for the requests counter.
 const (
 	StatusAllowed = "allowed"
@@ -44,7 +61,7 @@ var (
 			Name: "geoblock_version_info",
 			Help: "Version information",
 		},
-		[]string{"version"},
+		[]string{"version", "commit"},
 	)
 
 	// startTime records when the process started.
@@ -169,7 +186,7 @@ func init() {
 		dbLoadDuration,
 	)
 
-	versionInfo.WithLabelValues(version.Get()).Set(1)
+	versionInfo.WithLabelValues(version.Version, version.Commit).Set(1)
 	startTime.Set(float64(time.Now().Unix()))
 }
 
@@ -182,29 +199,23 @@ func NewCollector() *PrometheusCollector {
 }
 
 // RecordRequest records comprehensive metrics for a request.
-func (c *PrometheusCollector) RecordRequest(
-	status string,
-	country string,
-	method string,
-	duration time.Duration,
-	ruleIndex int,
-	action string,
-	isDefaultPolicy bool,
-) {
-	requestsTotal.WithLabelValues(status).Inc()
-	requestDuration.WithLabelValues(status).Observe(duration.Seconds())
+func (c *PrometheusCollector) RecordRequest(r RequestRecord) {
+	requestsTotal.WithLabelValues(r.Status).Inc()
+	requestDuration.WithLabelValues(r.Status).Observe(r.Duration.Seconds())
 
-	if country != "" {
-		requestsByCountry.WithLabelValues(country).Inc()
+	if r.Country != "" {
+		requestsByCountry.WithLabelValues(r.Country).Inc()
 	}
-	if method != "" {
-		requestsByMethod.WithLabelValues(method).Inc()
+	if r.Method != "" {
+		requestsByMethod.WithLabelValues(r.Method).Inc()
 	}
 
-	if isDefaultPolicy {
-		defaultPolicyMatches.WithLabelValues(action).Inc()
+	if r.IsDefaultPolicy {
+		defaultPolicyMatches.WithLabelValues(r.Action).Inc()
 	} else {
-		ruleMatches.WithLabelValues(strconv.Itoa(ruleIndex), action).Inc()
+		ruleMatches.WithLabelValues(
+			strconv.Itoa(r.RuleIndex), r.Action,
+		).Inc()
 	}
 }
 
@@ -258,5 +269,5 @@ func Reset() {
 	dbLastUpdate.Set(0)
 	dbLoadDuration.Set(0)
 	versionInfo.Reset()
-	versionInfo.WithLabelValues(version.Get()).Set(1)
+	versionInfo.WithLabelValues(version.Version, version.Commit).Set(1)
 }

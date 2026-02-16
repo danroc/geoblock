@@ -23,8 +23,8 @@ import (
 	"github.com/danroc/geoblock/internal/version"
 )
 
-// RFC3339Milli is the RFC3339 format with milliseconds precision.
-const RFC3339Milli = "2006-01-02T15:04:05.000Z07:00"
+// rfc3339Milli is the RFC3339 format with milliseconds precision.
+const rfc3339Milli = "2006-01-02T15:04:05.000Z07:00"
 
 // Auto-reload, auto-update, and shutdown intervals
 const (
@@ -36,42 +36,42 @@ const (
 
 // Log levels
 const (
-	LogLevelTrace = "trace"
-	LogLevelDebug = "debug"
-	LogLevelInfo  = "info"
-	LogLevelWarn  = "warn"
-	LogLevelError = "error"
-	LogLevelFatal = "fatal"
-	LogLevelPanic = "panic"
+	logLevelTrace = "trace"
+	logLevelDebug = "debug"
+	logLevelInfo  = "info"
+	logLevelWarn  = "warn"
+	logLevelError = "error"
+	logLevelFatal = "fatal"
+	logLevelPanic = "panic"
 )
 
 // Log formats
 const (
-	LogFormatJSON = "json"
-	LogFormatText = "text"
+	logFormatJSON = "json"
+	logFormatText = "text"
 )
 
 // Default options
 const (
-	DefaultCacheDir   = "/var/cache/geoblock"
-	DefaultConfigPath = "/etc/geoblock/config.yaml"
-	DefaultLogFormat  = LogFormatJSON
-	DefaultLogLevel   = LogLevelInfo
-	DefaultServerPort = "8080"
+	defaultCacheDir   = "/var/cache/geoblock"
+	defaultConfigPath = "/etc/geoblock/config.yaml"
+	defaultLogFormat  = logFormatJSON
+	defaultLogLevel   = logLevelInfo
+	defaultServerPort = "8080"
 )
 
 // Environment variable names
 const (
-	OptionCacheDir   = "GEOBLOCK_CACHE_DIR"
-	OptionConfigPath = "GEOBLOCK_CONFIG_FILE"
-	OptionLogFormat  = "GEOBLOCK_LOG_FORMAT"
-	OptionLogLevel   = "GEOBLOCK_LOG_LEVEL"
-	OptionServerPort = "GEOBLOCK_PORT"
+	optionCacheDir   = "GEOBLOCK_CACHE_DIR"
+	optionConfigPath = "GEOBLOCK_CONFIG_FILE"
+	optionLogFormat  = "GEOBLOCK_LOG_FORMAT"
+	optionLogLevel   = "GEOBLOCK_LOG_LEVEL"
+	optionServerPort = "GEOBLOCK_PORT"
 )
 
-// getEnv retrieves the value of the environment variable key. If it is not set, it
-// returns the fallback value.
-func getEnv(key, fallback string) string {
+// envOrDefault retrieves the value of the environment variable key. If it is not set,
+// it returns the fallback value.
+func envOrDefault(key, fallback string) string {
 	if value := os.Getenv(key); value != "" {
 		return value
 	}
@@ -85,23 +85,23 @@ type appOptions struct {
 	logFormat  string
 }
 
-// getOptions returns the application options from the environment variables.
-func getOptions() *appOptions {
+// loadOptions returns the application options from the environment variables.
+func loadOptions() *appOptions {
 	return &appOptions{
-		configPath: getEnv(OptionConfigPath, DefaultConfigPath),
-		serverPort: getEnv(OptionServerPort, DefaultServerPort),
-		logLevel:   getEnv(OptionLogLevel, DefaultLogLevel),
-		logFormat:  getEnv(OptionLogFormat, DefaultLogFormat),
+		configPath: envOrDefault(optionConfigPath, defaultConfigPath),
+		serverPort: envOrDefault(optionServerPort, defaultServerPort),
+		logLevel:   envOrDefault(optionLogLevel, defaultLogLevel),
+		logFormat:  envOrDefault(optionLogFormat, defaultLogFormat),
 	}
 }
 
-// getCacheDir returns the database cache directory. Set env var to empty string to
+// cacheDir returns the database cache directory. Set env var to empty string to
 // disable caching.
-func getCacheDir() string {
-	if val, ok := os.LookupEnv(OptionCacheDir); ok {
+func cacheDir() string {
+	if val, ok := os.LookupEnv(optionCacheDir); ok {
 		return val
 	}
-	return DefaultCacheDir
+	return defaultCacheDir
 }
 
 // cacheLogger implements ipinfo.CacheLogger using zerolog.
@@ -126,13 +126,13 @@ func runEvery(ctx context.Context, interval time.Duration, fn func()) {
 	}
 }
 
-// Updater is the interface for types that can update their databases.
-type Updater interface {
+// updater is the interface for types that can update their databases.
+type updater interface {
 	Update(ctx context.Context) error
 }
 
 // autoUpdate updates the databases at regular intervals.
-func autoUpdate(ctx context.Context, resolver Updater) {
+func autoUpdate(ctx context.Context, resolver updater) {
 	runEvery(ctx, autoUpdateInterval, func() {
 		if err := resolver.Update(ctx); err != nil {
 			log.Error().Err(err).Msg("Cannot update databases")
@@ -151,8 +151,8 @@ func loadConfig(path string) (*config.Configuration, error) {
 	return config.ReadConfig(bytes.NewReader(file))
 }
 
-// ConfigUpdater is the interface for types that can update their configuration.
-type ConfigUpdater interface {
+// configUpdater is the interface for types that can update their configuration.
+type configUpdater interface {
 	UpdateConfig(config *config.AccessControl)
 }
 
@@ -191,7 +191,7 @@ func (r *configReloader) hasChanged(stat os.FileInfo) bool {
 
 // reloadIfChanged checks if the config file changed and updates the engine if so.
 // Returns (reloaded, rulesCount, error).
-func (r *configReloader) reloadIfChanged(engine ConfigUpdater) (bool, int, error) {
+func (r *configReloader) reloadIfChanged(engine configUpdater) (bool, int, error) {
 	stat, err := r.stat(r.path)
 	if err != nil {
 		return false, 0, fmt.Errorf("stat config file: %w", err)
@@ -213,8 +213,8 @@ func (r *configReloader) reloadIfChanged(engine ConfigUpdater) (bool, int, error
 	return true, len(cfg.AccessControl.Rules), nil
 }
 
-// ConfigReloadCollector collects metrics for config reloads.
-type ConfigReloadCollector interface {
+// configReloadCollector collects metrics for config reloads.
+type configReloadCollector interface {
 	RecordConfigReload(success bool, rulesCount int)
 }
 
@@ -222,9 +222,9 @@ type ConfigReloadCollector interface {
 // happens. It stops when the context is canceled.
 func autoReload(
 	ctx context.Context,
-	engine ConfigUpdater,
+	engine configUpdater,
 	path string,
-	collector ConfigReloadCollector,
+	collector configReloadCollector,
 ) {
 	reloader, err := newConfigReloader(path)
 	if err != nil {
@@ -246,13 +246,13 @@ func autoReload(
 	})
 }
 
-// Shutdowner is the interface for types that can be shut down.
-type Shutdowner interface {
+// shutdowner is the interface for types that can be shut down.
+type shutdowner interface {
 	Shutdown(context.Context) error
 }
 
 // stopServer waits for the context to be canceled and then shuts down the server.
-func stopServer(ctx context.Context, srv Shutdowner) {
+func stopServer(ctx context.Context, srv shutdowner) {
 	<-ctx.Done()
 	log.Info().Msg("Shutting down server")
 
@@ -268,19 +268,19 @@ func stopServer(ctx context.Context, srv Shutdowner) {
 // level if the provided level is invalid.
 func parseLogLevel(level string) (zerolog.Level, error) {
 	switch level {
-	case LogLevelTrace:
+	case logLevelTrace:
 		return zerolog.TraceLevel, nil
-	case LogLevelDebug:
+	case logLevelDebug:
 		return zerolog.DebugLevel, nil
-	case LogLevelInfo:
+	case logLevelInfo:
 		return zerolog.InfoLevel, nil
-	case LogLevelWarn:
+	case logLevelWarn:
 		return zerolog.WarnLevel, nil
-	case LogLevelError:
+	case logLevelError:
 		return zerolog.ErrorLevel, nil
-	case LogLevelFatal:
+	case logLevelFatal:
 		return zerolog.FatalLevel, nil
-	case LogLevelPanic:
+	case logLevelPanic:
 		return zerolog.PanicLevel, nil
 	default:
 		return zerolog.InfoLevel, errors.New("invalid log level")
@@ -291,9 +291,9 @@ func parseLogLevel(level string) (zerolog.Level, error) {
 func configureLogger(logFormat, level string) {
 	// Configure log format before emitting any log messages.
 	switch logFormat {
-	case LogFormatJSON:
-		zerolog.TimeFieldFormat = RFC3339Milli
-	case LogFormatText:
+	case logFormatJSON:
+		zerolog.TimeFieldFormat = rfc3339Milli
+	case logFormatText:
 		log.Logger = log.Output(
 			zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339},
 		)
@@ -314,7 +314,7 @@ func configureLogger(logFormat, level string) {
 }
 
 func main() {
-	options := getOptions()
+	options := loadOptions()
 	configureLogger(options.logFormat, options.logLevel)
 
 	ctx, stop := signal.NotifyContext(
@@ -324,7 +324,10 @@ func main() {
 	)
 	defer stop()
 
-	log.Info().Str("version", version.Get()).Msg("Starting Geoblock")
+	log.Info().
+		Str("version", version.Version).
+		Str("commit", version.Commit).
+		Msg("Starting Geoblock")
 	log.Info().Msg("Loading configuration file")
 	cfg, err := loadConfig(options.configPath)
 	if err != nil {
@@ -340,7 +343,7 @@ func main() {
 	resolver := ipinfo.NewResolver(
 		collector,
 		ipinfo.NewCachedFetcher(
-			getCacheDir(),
+			cacheDir(),
 			maxCacheAge,
 			ipinfo.NewHTTPFetcher(),
 			cacheLogger{},

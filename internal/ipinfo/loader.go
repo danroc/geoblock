@@ -31,8 +31,8 @@ type DBRecord struct {
 	Resolution Resolution
 }
 
-// ParserFn is a function that parses a CSV record into a database record.
-type ParserFn func([]string) (*DBRecord, error)
+// ParserFunc is a function that parses a CSV record into a database record.
+type ParserFunc func([]string) (*DBRecord, error)
 
 // Loader loads database records from a source into an interval tree.
 type Loader struct {

@@ -37,7 +37,8 @@ type Query struct {
 	SourceASN       uint32
 }
 
-// match checks if any of the conditions match the given matchFunc.
+// match checks if any of the conditions match the given matchFunc. If the conditions
+// slice is empty, it returns true (match all).
 func match[T any](conditions []T, matchFunc func(T) bool) bool {
 	for _, condition := range conditions {
 		if matchFunc(condition) {
@@ -54,31 +55,41 @@ func match[T any](conditions []T, matchFunc func(T) bool) bool {
 // domains, it will match all domains.
 //
 // Domains, methods and countries are case-insensitive.
-func ruleApplies(rule *config.AccessControlRule, query *Query) bool {
-	matchDomain := match(rule.Domains, func(domain string) bool {
-		return glob.Star(
-			strings.ToLower(domain),
-			strings.ToLower(query.RequestedDomain),
-		)
-	})
+func ruleApplies(
+	rule *config.AccessControlRule,
+	query *Query,
+) bool {
+	if !match(rule.Domains, func(domain string) bool {
+		return glob.MatchFold(domain, query.RequestedDomain)
+	}) {
+		return false
+	}
 
-	matchMethod := match(rule.Methods, func(method string) bool {
+	if !match(rule.Methods, func(method string) bool {
 		return strings.EqualFold(method, query.RequestedMethod)
-	})
+	}) {
+		return false
+	}
 
-	matchIP := match(rule.Networks, func(network config.CIDR) bool {
+	if !match(rule.Networks, func(network config.CIDR) bool {
 		return network.Contains(query.SourceIP)
-	})
+	}) {
+		return false
+	}
 
-	matchCountry := match(rule.Countries, func(country string) bool {
+	if !match(rule.Countries, func(country string) bool {
 		return strings.EqualFold(country, query.SourceCountry)
-	})
+	}) {
+		return false
+	}
 
-	matchASN := match(rule.AutonomousSystems, func(asn uint32) bool {
+	if !match(rule.AutonomousSystems, func(asn uint32) bool {
 		return asn == query.SourceASN
-	})
+	}) {
+		return false
+	}
 
-	return matchDomain && matchMethod && matchIP && matchCountry && matchASN
+	return true
 }
 
 // UpdateConfig updates the engine's configuration with the given access control
@@ -90,21 +101,18 @@ func (e *Engine) UpdateConfig(config *config.AccessControl) {
 // AuthorizationResult contains the result of an authorization check with metadata.
 // RuleIndex is NoMatchingRuleIndex if the default policy was used.
 type AuthorizationResult struct {
-	Allowed         bool
-	RuleIndex       int
-	Action          string
-	IsDefaultPolicy bool
+	RuleIndex int
+	Action    string
 }
 
-// NewAuthorizationResult creates a new AuthorizationResult from a rule index and
-// action.
-func NewAuthorizationResult(ruleIndex int, action string) AuthorizationResult {
-	return AuthorizationResult{
-		Allowed:         action == config.PolicyAllow,
-		RuleIndex:       ruleIndex,
-		Action:          action,
-		IsDefaultPolicy: ruleIndex == NoMatchingRuleIndex,
-	}
+// Allowed reports whether the result permits access.
+func (r AuthorizationResult) Allowed() bool {
+	return r.Action == config.PolicyAllow
+}
+
+// IsDefaultPolicy reports whether the default policy was applied.
+func (r AuthorizationResult) IsDefaultPolicy() bool {
+	return r.RuleIndex == NoMatchingRuleIndex
 }
 
 // Authorize checks if the given query is allowed by the engine's rules and returns
@@ -114,10 +122,16 @@ func (e *Engine) Authorize(query *Query) AuthorizationResult {
 	cfg := e.config.Load()
 	for i, rule := range cfg.Rules {
 		if ruleApplies(&rule, query) {
-			return NewAuthorizationResult(i, rule.Policy)
+			return AuthorizationResult{
+				RuleIndex: i,
+				Action:    rule.Policy,
+			}
 		}
 	}
 
 	// No rule matched, apply default policy.
-	return NewAuthorizationResult(NoMatchingRuleIndex, cfg.DefaultPolicy)
+	return AuthorizationResult{
+		RuleIndex: NoMatchingRuleIndex,
+		Action:    cfg.DefaultPolicy,
+	}
 }

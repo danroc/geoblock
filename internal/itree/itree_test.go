@@ -1,6 +1,7 @@
 package itree_test
 
 import (
+	"cmp"
 	"fmt"
 	"slices"
 	"testing"
@@ -14,39 +15,8 @@ func (t ComparableInt) Compare(other ComparableInt) int {
 	return int(t - other)
 }
 
-type set[E comparable] map[E]bool
-
-func newSet[E comparable]() set[E] {
-	return make(map[E]bool)
-}
-
-func (s set[E]) add(e ...E) {
-	for _, v := range e {
-		s[v] = true
-	}
-}
-
-func (s set[E]) contains(e E) bool {
-	_, ok := s[e]
-	return ok
-}
-
-func (s set[E]) equal(other set[E]) bool {
-	for k := range s {
-		if !other.contains(k) {
-			return false
-		}
-	}
-	for k := range other {
-		if !s.contains(k) {
-			return false
-		}
-	}
-	return true
-}
-
 func TestQuery(t *testing.T) {
-	tree := itree.NewITree[ComparableInt, int]()
+	tree := itree.NewTree[ComparableInt, int]()
 
 	// Default cases
 	//
@@ -90,24 +60,23 @@ func TestQuery(t *testing.T) {
 		{14, []int{}},
 	}
 
-	for _, test := range tests {
-		t.Run(fmt.Sprintf("Query(%d)", test.key), func(t *testing.T) {
-			matches := tree.Query(test.key)
-			got := newSet[int]()
-			got.add(matches...)
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("Query(%d)", tt.key), func(t *testing.T) {
+			got := slices.Clone(tree.Query(tt.key))
+			slices.Sort(got)
 
-			want := newSet[int]()
-			want.add(test.matches...)
+			want := slices.Clone(tt.matches)
+			slices.Sort(want)
 
-			if !want.equal(got) {
-				t.Errorf("expected %v, got %v", test.matches, matches)
+			if !slices.Equal(got, want) {
+				t.Errorf("expected %v, got %v", tt.matches, got)
 			}
 		})
 	}
 }
 
-func TestQueryDuplicate(t *testing.T) {
-	tree := itree.NewITree[ComparableInt, int]()
+func TestQuery_Duplicate(t *testing.T) {
+	tree := itree.NewTree[ComparableInt, int]()
 	tree.Insert(itree.NewInterval[ComparableInt](1, 2), 1)
 	tree.Insert(itree.NewInterval[ComparableInt](1, 2), 1)
 
@@ -124,11 +93,11 @@ func TestQueryDuplicate(t *testing.T) {
 		{3, []int{2, 2}},
 	}
 
-	for _, test := range tests {
-		t.Run(fmt.Sprintf("Query(%d)", test.key), func(t *testing.T) {
-			matches := tree.Query(test.key)
-			if !slices.Equal(test.matches, matches) {
-				t.Errorf("expected %v, got %v", test.matches, matches)
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("Query(%d)", tt.key), func(t *testing.T) {
+			matches := tree.Query(tt.key)
+			if !slices.Equal(tt.matches, matches) {
+				t.Errorf("expected %v, got %v", tt.matches, matches)
 			}
 		})
 	}
@@ -137,7 +106,7 @@ func TestQueryDuplicate(t *testing.T) {
 func TestRotations(t *testing.T) {
 	t.Run("LeftRotation", func(t *testing.T) {
 		// Insert in ascending order to trigger left rotations
-		tree := itree.NewITree[ComparableInt, int]()
+		tree := itree.NewTree[ComparableInt, int]()
 		tree.Insert(itree.NewInterval[ComparableInt](1, 1), 1)
 		tree.Insert(itree.NewInterval[ComparableInt](2, 2), 2)
 		tree.Insert(itree.NewInterval[ComparableInt](3, 3), 3)
@@ -155,7 +124,7 @@ func TestRotations(t *testing.T) {
 
 	t.Run("RightRotation", func(t *testing.T) {
 		// Insert in descending order to trigger right rotations
-		tree := itree.NewITree[ComparableInt, int]()
+		tree := itree.NewTree[ComparableInt, int]()
 		tree.Insert(itree.NewInterval[ComparableInt](3, 3), 3)
 		tree.Insert(itree.NewInterval[ComparableInt](2, 2), 2)
 		tree.Insert(itree.NewInterval[ComparableInt](1, 1), 1)
@@ -173,7 +142,7 @@ func TestRotations(t *testing.T) {
 
 	t.Run("LeftRightRotation", func(t *testing.T) {
 		// Insert to trigger left-right rotation
-		tree := itree.NewITree[ComparableInt, int]()
+		tree := itree.NewTree[ComparableInt, int]()
 		tree.Insert(itree.NewInterval[ComparableInt](3, 3), 3)
 		tree.Insert(itree.NewInterval[ComparableInt](1, 1), 1)
 		tree.Insert(itree.NewInterval[ComparableInt](2, 2), 2)
@@ -191,7 +160,7 @@ func TestRotations(t *testing.T) {
 
 	t.Run("RightLeftRotation", func(t *testing.T) {
 		// Insert to trigger right-left rotation
-		tree := itree.NewITree[ComparableInt, int]()
+		tree := itree.NewTree[ComparableInt, int]()
 		tree.Insert(itree.NewInterval[ComparableInt](1, 1), 1)
 		tree.Insert(itree.NewInterval[ComparableInt](3, 3), 3)
 		tree.Insert(itree.NewInterval[ComparableInt](2, 2), 2)
@@ -209,7 +178,7 @@ func TestRotations(t *testing.T) {
 
 	t.Run("SameLowValueDifferentHigh", func(t *testing.T) {
 		// Insert 3 intervals with the same low value
-		tree := itree.NewITree[ComparableInt, int]()
+		tree := itree.NewTree[ComparableInt, int]()
 		tree.Insert(itree.NewInterval[ComparableInt](1, 1), 1)
 		tree.Insert(itree.NewInterval[ComparableInt](1, 2), 2)
 		tree.Insert(itree.NewInterval[ComparableInt](1, 3), 3)
@@ -226,7 +195,7 @@ func TestRotations(t *testing.T) {
 	})
 }
 
-func TestIntervalEqual(t *testing.T) {
+func TestInterval_Equal(t *testing.T) {
 	tests := []struct {
 		name string
 		a    itree.Interval[ComparableInt]
@@ -259,16 +228,16 @@ func TestIntervalEqual(t *testing.T) {
 		},
 	}
 
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			if got := test.a.Equal(test.b); got != test.want {
-				t.Errorf("%v.Equal(%v) = %v, want %v", test.a, test.b, got, test.want)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.a.Equal(tt.b); got != tt.want {
+				t.Errorf("%v.Equal(%v) = %v, want %v", tt.a, tt.b, got, tt.want)
 			}
 		})
 	}
 }
 
-func TestIntervalCompare(t *testing.T) {
+func TestInterval_Compare(t *testing.T) {
 	tests := []struct {
 		name string
 		a    itree.Interval[ComparableInt]
@@ -307,70 +276,70 @@ func TestIntervalCompare(t *testing.T) {
 		},
 	}
 
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			if got := test.a.Compare(test.b); got != test.want {
-				t.Errorf("%v.Compare(%v) = %v, want %v", test.a, test.b, got, test.want)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.a.Compare(tt.b); got != tt.want {
+				t.Errorf("%v.Compare(%v) = %v, want %v", tt.a, tt.b, got, tt.want)
 			}
 		})
 	}
 }
 
+func compareEntries(
+	a, b itree.Entry[ComparableInt, int],
+) int {
+	if c := a.Interval.Compare(b.Interval); c != 0 {
+		return c
+	}
+	return cmp.Compare(a.Value, b.Value)
+}
+
 func TestEntries(t *testing.T) {
-	t.Run("empty tree", func(t *testing.T) {
-		tree := itree.NewITree[ComparableInt, int]()
-		if got := tree.Size(); got != 0 {
-			t.Errorf("Size() = %d, want 0", got)
-		}
-	})
+	tree := itree.NewTree[ComparableInt, int]()
+	tree.Insert(itree.NewInterval[ComparableInt](1, 2), 10)
+	tree.Insert(itree.NewInterval[ComparableInt](3, 4), 20)
+	tree.Insert(itree.NewInterval[ComparableInt](5, 6), 30)
 
-	t.Run("returns all entries", func(t *testing.T) {
-		tree := itree.NewITree[ComparableInt, int]()
-		tree.Insert(itree.NewInterval[ComparableInt](1, 2), 10)
-		tree.Insert(itree.NewInterval[ComparableInt](3, 4), 20)
-		tree.Insert(itree.NewInterval[ComparableInt](5, 6), 30)
+	if got := tree.Size(); got != 3 {
+		t.Errorf("Size() = %d, want 3", got)
+	}
 
-		if got := tree.Size(); got != 3 {
-			t.Errorf("Size() = %d, want 3", got)
-		}
+	got := tree.Entries()
+	slices.SortFunc(got, compareEntries)
 
-		got := newSet[itree.Entry[ComparableInt, int]]()
-		for _, e := range tree.Entries() {
-			got.add(e)
-		}
+	want := []itree.Entry[ComparableInt, int]{
+		{
+			Interval: itree.NewInterval[ComparableInt](1, 2),
+			Value:    10,
+		},
+		{
+			Interval: itree.NewInterval[ComparableInt](3, 4),
+			Value:    20,
+		},
+		{
+			Interval: itree.NewInterval[ComparableInt](5, 6),
+			Value:    30,
+		},
+	}
+	slices.SortFunc(want, compareEntries)
 
-		want := newSet[itree.Entry[ComparableInt, int]]()
-		want.add(
-			itree.Entry[ComparableInt, int]{
-				Interval: itree.NewInterval[ComparableInt](1, 2),
-				Value:    10,
-			},
-			itree.Entry[ComparableInt, int]{
-				Interval: itree.NewInterval[ComparableInt](3, 4),
-				Value:    20,
-			},
-			itree.Entry[ComparableInt, int]{
-				Interval: itree.NewInterval[ComparableInt](5, 6),
-				Value:    30,
-			},
-		)
-
-		if !got.equal(want) {
-			t.Errorf("Entries() = %v, want %v", got, want)
-		}
-	})
+	if !slices.EqualFunc(got, want, func(a, b itree.Entry[ComparableInt, int]) bool {
+		return compareEntries(a, b) == 0
+	}) {
+		t.Errorf("Entries() = %v, want %v", got, want)
+	}
 }
 
 func TestSize(t *testing.T) {
 	t.Run("empty tree", func(t *testing.T) {
-		tree := itree.NewITree[ComparableInt, int]()
+		tree := itree.NewTree[ComparableInt, int]()
 		if got := tree.Size(); got != 0 {
 			t.Errorf("Size() = %d, want 0", got)
 		}
 	})
 
 	t.Run("single node", func(t *testing.T) {
-		tree := itree.NewITree[ComparableInt, int]()
+		tree := itree.NewTree[ComparableInt, int]()
 		tree.Insert(itree.NewInterval[ComparableInt](1, 5), 10)
 		if got := tree.Size(); got != 1 {
 			t.Errorf("Size() = %d, want 1", got)
@@ -378,7 +347,7 @@ func TestSize(t *testing.T) {
 	})
 
 	t.Run("multiple nodes", func(t *testing.T) {
-		tree := itree.NewITree[ComparableInt, int]()
+		tree := itree.NewTree[ComparableInt, int]()
 		tree.Insert(itree.NewInterval[ComparableInt](1, 5), 10)
 		tree.Insert(itree.NewInterval[ComparableInt](2, 6), 20)
 		tree.Insert(itree.NewInterval[ComparableInt](3, 7), 30)
@@ -398,20 +367,20 @@ func TestCompact(t *testing.T) {
 	}
 
 	t.Run("empty tree", func(t *testing.T) {
-		tree := itree.NewITree[ComparableInt, int]()
-		compacted := tree.Compact(sumMerge)
+		tree := itree.NewTree[ComparableInt, int]()
+		compacted := tree.Compacted(sumMerge)
 		if got := compacted.Size(); got != 0 {
 			t.Errorf("Size() = %d, want 0", got)
 		}
 	})
 
 	t.Run("no duplicates", func(t *testing.T) {
-		tree := itree.NewITree[ComparableInt, int]()
+		tree := itree.NewTree[ComparableInt, int]()
 		tree.Insert(itree.NewInterval[ComparableInt](1, 2), 10)
 		tree.Insert(itree.NewInterval[ComparableInt](3, 4), 20)
 		tree.Insert(itree.NewInterval[ComparableInt](5, 6), 30)
 
-		compacted := tree.Compact(sumMerge)
+		compacted := tree.Compacted(sumMerge)
 
 		results := make(map[int]int)
 		compacted.Traverse(func(interval itree.Interval[ComparableInt], value int) {
@@ -427,13 +396,13 @@ func TestCompact(t *testing.T) {
 	})
 
 	t.Run("with duplicates", func(t *testing.T) {
-		tree := itree.NewITree[ComparableInt, int]()
+		tree := itree.NewTree[ComparableInt, int]()
 		tree.Insert(itree.NewInterval[ComparableInt](1, 2), 10)
 		tree.Insert(itree.NewInterval[ComparableInt](1, 2), 20)
 		tree.Insert(itree.NewInterval[ComparableInt](1, 2), 30)
 		tree.Insert(itree.NewInterval[ComparableInt](3, 4), 5)
 
-		compacted := tree.Compact(sumMerge)
+		compacted := tree.Compacted(sumMerge)
 
 		if got := compacted.Size(); got != 2 {
 			t.Errorf("Size() = %d, want 2", got)
@@ -458,12 +427,12 @@ func TestCompact(t *testing.T) {
 	})
 
 	t.Run("query after compact", func(t *testing.T) {
-		tree := itree.NewITree[ComparableInt, int]()
+		tree := itree.NewTree[ComparableInt, int]()
 		tree.Insert(itree.NewInterval[ComparableInt](1, 5), 10)
 		tree.Insert(itree.NewInterval[ComparableInt](1, 5), 20)
 		tree.Insert(itree.NewInterval[ComparableInt](3, 7), 100)
 
-		compacted := tree.Compact(sumMerge)
+		compacted := tree.Compacted(sumMerge)
 
 		// Query at point 4 should match both [1,5] (merged: 30) and [3,7] (100)
 		results := compacted.Query(4)
@@ -471,10 +440,12 @@ func TestCompact(t *testing.T) {
 			t.Errorf("expected 2 results, got %d", len(results))
 		}
 
-		resultSet := newSet[int]()
-		resultSet.add(results...)
-		if !resultSet.contains(30) || !resultSet.contains(100) {
-			t.Errorf("expected values 30 and 100, got %v", results)
+		got := slices.Clone(results)
+		slices.Sort(got)
+
+		want := []int{30, 100}
+		if !slices.Equal(got, want) {
+			t.Errorf("expected values %v, got %v", want, got)
 		}
 	})
 }

@@ -1,19 +1,13 @@
-// FILE: pkg/config/cidr_test.go
 package config
 
 import (
-	"errors"
 	"net/netip"
 	"testing"
 
 	"github.com/goccy/go-yaml"
 )
 
-func equalCIDR(a, b netip.Prefix) bool {
-	return a.String() == b.String()
-}
-
-func TestUnmarshalYAML(t *testing.T) {
+func TestCIDR_UnmarshalYAML(t *testing.T) {
 	tests := []struct {
 		name    string
 		input   string
@@ -25,6 +19,12 @@ func TestUnmarshalYAML(t *testing.T) {
 			input:   "192.168.1.0/24",
 			want:    netip.MustParsePrefix("192.168.1.0/24"),
 			wantErr: false,
+		},
+		{
+			name:    "non-string value",
+			input:   "[1, 2]",
+			want:    netip.Prefix{},
+			wantErr: true,
 		},
 		{
 			name:    "invalid CIDR",
@@ -52,7 +52,7 @@ func TestUnmarshalYAML(t *testing.T) {
 				)
 				return
 			}
-			if !equalCIDR(cidr.Prefix, tt.want) {
+			if cidr.Prefix != tt.want {
 				t.Errorf(
 					"UnmarshalYAML() got = %v, want %v",
 					cidr.Prefix,
@@ -60,19 +60,5 @@ func TestUnmarshalYAML(t *testing.T) {
 				)
 			}
 		})
-	}
-}
-
-// TestUnmarshalYAMLErrorHandling tests error handling in UnmarshalYAML
-func TestUnmarshalYAMLErrorHandling(t *testing.T) {
-	var cidr CIDR
-	// Create a custom unmarshaler that always fails
-	failingUnmarshal := func(interface{}) error {
-		return errors.New("test unmarshal error")
-	}
-
-	err := cidr.UnmarshalYAML(failingUnmarshal)
-	if err == nil {
-		t.Error("Expected unmarshal error but got nil")
 	}
 }

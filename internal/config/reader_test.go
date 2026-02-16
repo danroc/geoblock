@@ -144,70 +144,58 @@ access_control:
         - INVALID
 `
 
-func TestReadConfigValid(t *testing.T) {
-	tests := []struct {
-		name     string
-		data     string
-		expected *config.Configuration
-	}{
-		{
-			"valid configuration",
-			validConfig,
-			&config.Configuration{
-				AccessControl: config.AccessControl{
-					DefaultPolicy: "allow",
-					Rules: []config.AccessControlRule{
+func TestReadConfig_Valid(t *testing.T) {
+	reader := strings.NewReader(validConfig)
+
+	cfg, err := config.ReadConfig(reader)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	expected := &config.Configuration{
+		AccessControl: config.AccessControl{
+			DefaultPolicy: "allow",
+			Rules: []config.AccessControlRule{
+				{
+					Policy: "allow",
+					Networks: []config.CIDR{
 						{
-							Policy: "allow",
-							Networks: []config.CIDR{
-								{
-									Prefix: netip.MustParsePrefix(
-										"10.0.0.0/8",
-									),
-								},
-								{
-									Prefix: netip.MustParsePrefix(
-										"127.0.0.0/8",
-									),
-								},
-							},
-							Domains: []string{
-								"example.com",
-								"*.example.com",
-							},
-							Methods:           []string{"GET", "POST"},
-							Countries:         []string{"US", "FR"},
-							AutonomousSystems: []uint32{1234, 5678},
+							Prefix: netip.MustParsePrefix(
+								"10.0.0.0/8",
+							),
 						},
 						{
-							Policy:            "deny",
-							Networks:          nil,
-							Domains:           nil,
-							Methods:           nil,
-							Countries:         nil,
-							AutonomousSystems: nil,
+							Prefix: netip.MustParsePrefix(
+								"127.0.0.0/8",
+							),
 						},
 					},
+					Domains: []string{
+						"example.com",
+						"*.example.com",
+					},
+					Methods:           []string{"GET", "POST"},
+					Countries:         []string{"US", "FR"},
+					AutonomousSystems: []uint32{1234, 5678},
+				},
+				{
+					Policy:            "deny",
+					Networks:          nil,
+					Domains:           nil,
+					Methods:           nil,
+					Countries:         nil,
+					AutonomousSystems: nil,
 				},
 			},
 		},
 	}
 
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			reader := strings.NewReader(test.data)
-			cfg, err := config.ReadConfig(reader)
-			if err != nil {
-				t.Errorf("unexpected error: %v", err)
-			}
-			if !reflect.DeepEqual(*cfg, *test.expected) {
-				t.Errorf("expected %v, got %v", test.expected, cfg)
-			}
-		})
+	if !reflect.DeepEqual(*cfg, *expected) {
+		t.Errorf("expected %v, got %v", expected, cfg)
 	}
 }
 
-func TestReadConfigErr(t *testing.T) {
+func TestReadConfig_Err(t *testing.T) {
 	tests := []struct {
 		name string
 		data string
@@ -223,9 +211,9 @@ func TestReadConfigErr(t *testing.T) {
 		{"invalid domain string", invalidDomainString},
 	}
 
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			reader := strings.NewReader(test.data)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			reader := strings.NewReader(tt.data)
 			_, err := config.ReadConfig(reader)
 			if err == nil {
 				t.Error("expected an error but got nil")
@@ -234,7 +222,7 @@ func TestReadConfigErr(t *testing.T) {
 	}
 }
 
-func TestReadConfigValidationErrors(t *testing.T) {
+func TestReadConfig_ValidationErrors(t *testing.T) {
 	tests := []struct {
 		name string
 		data string
@@ -245,9 +233,9 @@ func TestReadConfigValidationErrors(t *testing.T) {
 		{"invalid country code", invalidCountryCode},
 	}
 
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			reader := strings.NewReader(test.data)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			reader := strings.NewReader(tt.data)
 			_, err := config.ReadConfig(reader)
 			if err == nil {
 				t.Error("expected validation error but got nil")
@@ -262,7 +250,7 @@ func (r *errReader) Read(_ []byte) (n int, err error) {
 	return 0, errors.New("read error")
 }
 
-func TestReadConfigErrReader(t *testing.T) {
+func TestReadConfig_ErrReader(t *testing.T) {
 	_, err := config.ReadConfig(&errReader{})
 	if err == nil {
 		t.Error("expected an error but got nil")

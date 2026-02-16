@@ -19,8 +19,8 @@ func (f *fakeFetcher) Fetch(_ context.Context, _ string) ([][]string, error) {
 	return f.records, f.err
 }
 
-func TestDefaultLoader_LoadCountry(t *testing.T) {
-	db := itree.NewITree[netip.Addr, ipinfo.Resolution]()
+func TestLoader_LoadCountry(t *testing.T) {
+	db := itree.NewTree[netip.Addr, ipinfo.Resolution]()
 	fetcher := &fakeFetcher{
 		records: [][]string{
 			{"1.1.1.0", "1.1.1.255", "AU"},
@@ -47,8 +47,8 @@ func TestDefaultLoader_LoadCountry(t *testing.T) {
 	}
 }
 
-func TestDefaultLoader_LoadASN(t *testing.T) {
-	db := itree.NewITree[netip.Addr, ipinfo.Resolution]()
+func TestLoader_LoadASN(t *testing.T) {
+	db := itree.NewTree[netip.Addr, ipinfo.Resolution]()
 	fetcher := &fakeFetcher{
 		records: [][]string{
 			{"8.8.8.0", "8.8.8.255", "15169", "Google LLC"},
@@ -78,8 +78,8 @@ func TestDefaultLoader_LoadASN(t *testing.T) {
 	}
 }
 
-func TestDefaultLoader_LoadFetchError(t *testing.T) {
-	db := itree.NewITree[netip.Addr, ipinfo.Resolution]()
+func TestLoader_LoadFetchError(t *testing.T) {
+	db := itree.NewTree[netip.Addr, ipinfo.Resolution]()
 	fetchErr := errors.New("network error")
 	fetcher := &fakeFetcher{err: fetchErr}
 
@@ -95,8 +95,8 @@ func TestDefaultLoader_LoadFetchError(t *testing.T) {
 	}
 }
 
-func TestDefaultLoader_LoadParseError(t *testing.T) {
-	db := itree.NewITree[netip.Addr, ipinfo.Resolution]()
+func TestLoader_LoadParseError(t *testing.T) {
+	db := itree.NewTree[netip.Addr, ipinfo.Resolution]()
 	fetcher := &fakeFetcher{
 		records: [][]string{
 			{"1.1.1.0", "1.1.1.255", "AU"}, // valid

@@ -12,7 +12,7 @@ import (
 )
 
 // ResTree is a type alias for an interval tree that maps IP addresses to resolutions.
-type ResTree = itree.ITree[netip.Addr, Resolution]
+type ResTree = itree.Tree[netip.Addr, Resolution]
 
 // Resolution contains the result of resolving an IP address.
 type Resolution struct {
@@ -67,7 +67,7 @@ type DBSource struct {
 type DBSourceSpec struct {
 	Source DBSource
 	URL    string
-	Parser ParserFn
+	Parser ParserFunc
 }
 
 // defaultSources defines all database sources to fetch during updates.
@@ -120,7 +120,7 @@ func NewResolver(
 // next database and returns all the errors at the end.
 func (r *Resolver) Update(ctx context.Context) error {
 	start := time.Now()
-	db := itree.NewITree[netip.Addr, Resolution]()
+	db := itree.NewTree[netip.Addr, Resolution]()
 	loader := NewLoader(r.fetcher)
 
 	var errs []error
@@ -138,7 +138,7 @@ func (r *Resolver) Update(ctx context.Context) error {
 	}
 
 	// Combine identical intervals into single entries.
-	r.db.Store(db.Compact(mergeResolutions))
+	r.db.Store(db.Compacted(mergeResolutions))
 	r.collector.RecordDBUpdate(entries, time.Since(start))
 	return nil
 }

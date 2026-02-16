@@ -66,7 +66,7 @@ func newDummyFetcher() ipinfo.Fetcher {
 	}
 }
 
-func TestUpdateError(t *testing.T) {
+func TestUpdate_Error(t *testing.T) {
 	r := ipinfo.NewResolver(
 		nopDBUpdateCollector{},
 		&errFetcher{err: context.DeadlineExceeded},
@@ -78,24 +78,27 @@ func TestUpdateError(t *testing.T) {
 
 func TestResolve(t *testing.T) {
 	tests := []struct {
+		name    string
 		ip      string
 		country string
 		org     string
 		asn     uint32
 	}{
-		{"1.0.1.1", "US", "Test1", 1},
-		{"1.1.1.1", "FR", "Test2", 2},
-		{"1.2.1.1", "", "", ipinfo.AS0},
-		{"1:0::", "US", "Test3", 3},
-		{"1:2::", "FR", "Test4", 4},
-		{"1:4::", "", "", ipinfo.AS0},
+		{"IPv4 in US range", "1.0.1.1", "US", "Test1", 1},
+		{"IPv4 in FR range", "1.1.1.1", "FR", "Test2", 2},
+		{"IPv4 not found", "1.2.1.1", "", "", ipinfo.AS0},
+		{"IPv6 in US range", "1:0::", "US", "Test3", 3},
+		{"IPv6 in FR range", "1:2::", "FR", "Test4", 4},
+		{"IPv6 not found", "1:4::", "", "", ipinfo.AS0},
 	}
+
 	r := ipinfo.NewResolver(nopDBUpdateCollector{}, newDummyFetcher())
 	if err := r.Update(context.Background()); err != nil {
 		t.Fatal(err)
 	}
+
 	for _, tt := range tests {
-		t.Run(tt.ip, func(t *testing.T) {
+		t.Run(tt.name, func(t *testing.T) {
 			result := r.Resolve(netip.MustParseAddr(tt.ip))
 			if result.CountryCode != tt.country {
 				t.Errorf("got %q, want %q", result.CountryCode, tt.country)
@@ -110,7 +113,7 @@ func TestResolve(t *testing.T) {
 	}
 }
 
-func TestUpdateInvalidData(t *testing.T) {
+func TestUpdate_InvalidData(t *testing.T) {
 	tests := []struct {
 		name   string
 		dbs    map[string]string
