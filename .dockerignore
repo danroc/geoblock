@@ -1,0 +1,13 @@
+.cache/
+.claude/
+.git/
+.github/
+.vscode/
+dist/
+e2e/
+examples/
+grafana/
+scripts/
+coverage.txt
+coverage.out
+coverage.xml
