@@ -4,7 +4,6 @@
 .github/
 .vscode/
 dist/
-e2e/
 examples/
 grafana/
 scripts/
