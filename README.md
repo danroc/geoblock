@@ -35,7 +35,7 @@ Geoblock is a lightweight authorization service that restricts client access bas
 - Requested domain
 - Requested method
 
-It works as a forward-authentication service that can be used with reverse proxies such
+It works as a forward authentication service that can be used with reverse proxies such
 as Traefik, NGINX, and Caddy.
 
 ## Features
@@ -153,10 +153,9 @@ The following environment variables can be used to configure Geoblock:
 | `GEOBLOCK_LOG_LEVEL`   | Log level                      | `info`                      |
 | `GEOBLOCK_LOG_FORMAT`  | Log format                     | `json`                      |
 
-- Set `GEOBLOCK_CACHE_DIR` to an empty string to disable caching.
-- Supported log levels are: `trace`, `debug`, `info`, `warn`, `error`, `fatal`, or
-  `panic`.
-- Supported log formats are: `json`, and `text`.
+- Set `GEOBLOCK_CACHE_DIR` to empty string to disable caching
+- Supported log levels: `trace`, `debug`, `info`, `warn`, `error`, `fatal`, or `panic`
+- Supported log formats: `json` and `text`
 
 ## HTTP API
 
