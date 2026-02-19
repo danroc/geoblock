@@ -42,11 +42,8 @@ as Traefik, NGINX, and Caddy.
 
 - **Flexible:** Allows you to define access control rules based on countries, domains,
   methods, networks, and ASNs.
-
 - **Auto-reload:** Automatically reloads the configuration file when it changes.
-
 - **Auto-update:** Automatically updates the GeoLite2 databases every day.
-
 - **Metrics:** Exposes simple metrics to monitor the service and build dashboards.
 
 ## Installation
@@ -158,10 +155,8 @@ The following environment variables can be used to configure Geoblock:
 | `GEOBLOCK_LOG_FORMAT`  | Log format                     | `json`                      |
 
 - Set `GEOBLOCK_CACHE_DIR` to an empty string to disable caching.
-
 - Supported log levels are: `trace`, `debug`, `info`, `warn`, `error`, `fatal`, or
   `panic`.
-
 - Supported log formats are: `json`, and `text`.
 
 ## HTTP API
@@ -204,20 +199,18 @@ Returns metrics in Prometheus format.
 **Response:**
 
 - MIME type: `text/plain; version=0.0.4; charset=utf-8`
-
 - Example:
 
-```prometheus
-# HELP geoblock_version_info Version information
-# TYPE geoblock_version_info gauge
-geoblock_version_info{version="0.3.0"} 1
-
-# HELP geoblock_requests_total Total number of requests by status
-# TYPE geoblock_requests_total counter
-geoblock_requests_total{status="allowed"} 3
-geoblock_requests_total{status="denied"} 2
-geoblock_requests_total{status="invalid"} 1
-```
+  ```prometheus
+  # HELP geoblock_version_info Version information
+  # TYPE geoblock_version_info gauge
+  geoblock_version_info{version="0.5.0"} 1
+  # HELP geoblock_requests_total Total number of requests by status
+  # TYPE geoblock_requests_total counter
+  geoblock_requests_total{status="allowed"} 3
+  geoblock_requests_total{status="denied"} 2
+  geoblock_requests_total{status="invalid"} 1
+  ```
 
 ## Monitoring
 
@@ -231,7 +224,6 @@ service and create dashboards.
 ## Attribution
 
 - This project uses the [GeoLite2][geolite2] databases provided by [MaxMind][maxmind].
-
 - This project uses the database files provided by the [ip-location-db][ip-location-db]
   project.
 
