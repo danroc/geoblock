@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add integration tests for reverse proxies ([#435](https://github.com/danroc/geoblock/pull/435))
+
+### Changed
+
+- Rename `New` to `NewTree` ([#425](https://github.com/danroc/geoblock/pull/425))
+- Add `.dockerignore` and cache dependency layer ([#431](https://github.com/danroc/geoblock/pull/431))
+- Improve healthcheck wget options ([#430](https://github.com/danroc/geoblock/pull/430))
+- Update Go dependencies ([#429](https://github.com/danroc/geoblock/pull/429))
+
 ## [0.5.7] - 2026-02-13
 
 ### Changed

@@ -18,7 +18,7 @@ Go-based forward auth service for geoblocking. Works with reverse proxies (Traef
 1. Proxy sends headers (`X-Forwarded-For`, `X-Forwarded-Host`, `X-Forwarded-Method`)
 2. Server extracts IP, resolves country/ASN via interval tree
 3. Rules engine evaluates sequentially until first match
-4. Returns `204 No Content` (allowed) or `403 Forbidden` (denied)
+4. Returns `204 No Content` (allowed), `403 Forbidden` (denied), or `400 Bad Request` (invalid)
 
 ## Commands
 
@@ -26,9 +26,10 @@ Go-based forward auth service for geoblocking. Works with reverse proxies (Traef
 make build              # Build to dist/geoblock
 make run                # Run with go run
 make docker             # Build Docker image
-make test               # Unit + e2e tests
+make test               # Unit + e2e + integration tests
 make test-unit          # Unit tests with coverage
-make test-e2e           # Dockerized e2e tests (e2e/run.sh)
+make test-e2e           # Dockerized e2e tests (tests/e2e/)
+make test-integration   # Integration tests with reverse proxies
 make lint               # All linters (tidy + format + golangci-lint)
 make format             # Run before committing
 ```
@@ -49,13 +50,13 @@ make format             # Run before committing
 - ALL conditions must match (AND logic)
 - First matching rule wins
 - Case-insensitive for domains, methods, countries
-- Wildcards via `glob.Star()` (simple `*` matching)
+- Wildcards via `glob.MatchFold()` (simple `*` matching, case-insensitive)
 
 ## IP Resolution
 
-- Two interval trees: countries and ASN/org
+- One unified interval tree built from four sources (country IPv4/IPv6, ASN IPv4/IPv6)
 - Auto-downloaded from `cdn.jsdelivr.net` (ip-location-db)
-- Resolution merges results (last non-zero field wins)
+- Tree is compacted with `mergeResolutions` (last non-zero field wins)
 - Local IPs via `localNetworkCIDRs` in `server/server.go`
 
 ## Environment Variables
@@ -79,20 +80,20 @@ make format             # Run before committing
 
 1. Update definitions in `internal/metrics/metrics.go`
 2. Instrument in `internal/server/server.go`
-3. Update `e2e/metrics-expected.prometheus`
+3. Update `tests/e2e/metrics-expected.prometheus`
 4. Run `make test-e2e`
 
 ### Changing Database Sources
 
-1. Update URLs in `internal/ipinfo/resolver.go` constants
+1. Update URLs in `internal/ipinfo/fetcher.go` constants
 2. Adjust parser functions if CSV format changes
 3. Test with `make run` (auto-downloads on startup)
 
 ## Release Process
 
-- Semantic versioning with `v` prefix; embedded via ldflags from `git describe --tags`
-- Format: `<tag>-<commits_ahead>-g<short_hash>[-dirty|-broken]`
-- Parsed by `internal/version` package
+- Semantic versioning with `v` prefix
+- `Version` and `Commit` set via ldflags in Makefile (`internal/version` package)
+- Version from git tag (or `dev`); commit from `git describe --always --dirty`
 
 ### Changelog
 
@@ -112,5 +113,6 @@ make format             # Run before committing
 
 ### CI Workflows
 
-- `build-test-lint.yml`: On push/PR - build, lint, test, check clean working dir
-- `publish-docker.yml`: On `v*.*.*` tags - multi-arch Docker to GHCR
+- `build-test-lint.yml`: On push/PR to main - build, lint, test (unit + e2e + integration), check clean working dir
+- `publish-docker.yml`: On push to main and `v*.*.*` tags - multi-arch Docker to GHCR (semver + `develop` tags)
+- `nightly-tests.yml`: Daily at 4 AM UTC - unit, e2e, and integration tests
