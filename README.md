@@ -175,10 +175,11 @@ Check if a client is authorized to access a domain.
 
 **Response:**
 
-| Status | Description |
-| :----- | :---------- |
-| `204`  | Authorized  |
-| `403`  | Forbidden   |
+| Status | Description                              |
+| :----- | :--------------------------------------- |
+| `204`  | Authorized                               |
+| `400`  | Bad request (missing headers/invalid IP) |
+| `403`  | Forbidden                                |
 
 ### `GET /v1/health`
 
@@ -202,7 +203,7 @@ Returns metrics in Prometheus format.
   ```prometheus
   # HELP geoblock_version_info Version information
   # TYPE geoblock_version_info gauge
-  geoblock_version_info{version="0.5.0"} 1
+  geoblock_version_info{version="0.5.7",commit="843cf6c"} 1
   # HELP geoblock_requests_total Total number of requests by status
   # TYPE geoblock_requests_total counter
   geoblock_requests_total{status="allowed"} 3
