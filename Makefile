@@ -11,8 +11,8 @@ ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 DIST_DIR := $(ROOT_DIR)/dist
 
 # Version components from git
-COMMIT  := $(shell git describe --always --dirty --exclude='*')
-TAG     := $(shell git tag --points-at HEAD --sort=-v:refname 'v*' | head -n1)
+COMMIT  := $(shell git describe --always --dirty --exclude='*' 2>/dev/null)
+TAG     := $(shell git tag --points-at HEAD --sort=-v:refname 'v*' 2>/dev/null | head -n1)
 VERSION := $(or $(patsubst v%,%,$(TAG)),dev)
 
 # Build flags
@@ -108,7 +108,7 @@ check: ## Check for untracked or modified files
 # ======================================================================================
 
 .PHONY: test
-test: test-unit test-e2e ## Run all tests
+test: test-unit test-e2e test-integration ## Run all tests
 
 .PHONY: test-unit
 test-unit: ## Run unit tests
@@ -116,8 +116,12 @@ test-unit: ## Run unit tests
 
 .PHONY: test-e2e
 test-e2e: ## Run end-to-end tests
-	docker build -f e2e/Dockerfile -t geoblock-e2e .
+	docker build -f tests/e2e/Dockerfile -t geoblock-e2e .
 	docker run --rm geoblock-e2e
+
+.PHONY: test-integration
+test-integration: docker ## Run integration tests with reverse proxies
+	tests/integration/run.sh
 
 .PHONY: test-coverage
 test-coverage: test-unit ## Generate coverage report

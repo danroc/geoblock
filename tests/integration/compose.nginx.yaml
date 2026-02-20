@@ -1,0 +1,11 @@
+---
+services:
+  nginx:
+    image: nginx:latest
+    depends_on:
+      geoblock:
+        condition: service_healthy
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - "${GEOBLOCK_TEST_PORT:-8080}:80"

@@ -1,0 +1,30 @@
+---
+access_control:
+  default_policy: deny
+  rules:
+    - domains:
+        - whoami-1.test
+      policy: allow
+
+    - domains:
+        - whoami-2.test
+      policy: deny
+
+    - domains:
+        - method-test.test
+      methods:
+        - POST
+        - PUT
+        - DELETE
+      policy: deny
+
+    - domains:
+        - method-test.test
+      methods:
+        - GET
+        - HEAD
+      policy: allow
+
+    - domains:
+        - "*.wildcard.test"
+      policy: allow

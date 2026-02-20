@@ -2,40 +2,43 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+# shellcheck source=../lib.sh
+source "${SCRIPT_DIR}/../lib.sh"
+
 # Constants
 BASE_URL="http://localhost:8080/v1/forward-auth"
 HEALTH_URL="http://localhost:8080/v1/health"
 METRICS_URL="http://localhost:8080/metrics"
 MAX_RETRIES=30
 
-# Test counters
-TESTS_PASSED=0
-TESTS_FAILED=0
+require_commands jq curl
 
-# Check for required commands
-for cmd in jq curl; do
-    if ! command -v "$cmd" >/dev/null 2>&1; then
-        echo ":: Error: $cmd is required but not installed"
-        exit 1
-    fi
-done
+TEMP_DIR="$(mktemp -d)"
 
-CGO_ENABLED=0 make build
+CGO_ENABLED=0 make -C "${ROOT_DIR}" build
 
-export GEOBLOCK_CONFIG_FILE=/app/e2e/config.yaml
+LOG_FILE="${TEMP_DIR}/geoblock.log"
+METRICS_FILE="${TEMP_DIR}/metrics.prometheus"
+
+mkdir -p "${ROOT_DIR}/.cache"
+export GEOBLOCK_CACHE_DIR="${ROOT_DIR}/.cache"
+export GEOBLOCK_CONFIG_FILE="${SCRIPT_DIR}/config.yaml"
 export GEOBLOCK_PORT=8080
 export GEOBLOCK_LOG_LEVEL=debug
 export GEOBLOCK_LOG_FORMAT=json
 
-# Graceful shutdown
 cleanup() {
     if [ -n "${SERVER_PID:-}" ]; then
         kill "$SERVER_PID" 2>/dev/null || true
     fi
+    rm -rf "${TEMP_DIR}"
 }
 trap cleanup EXIT
 
-./dist/geoblock &> geoblock.log &
+"${ROOT_DIR}/dist/geoblock" &> "${LOG_FILE}" &
 SERVER_PID=$!
 
 # Health check with timeout
@@ -49,138 +52,96 @@ while ! curl -fs "$HEALTH_URL"; do
     sleep 1
 done
 
-function run_single_test() {
-    local test_name=$1
-    shift
-
-    local expected_status=$1
-    shift
-
-    echo -n ":: Testing: $test_name ... "
-
-    local status
-    status=$(curl -s -o /dev/null -w "%{http_code}" "$@")
-
-    if [ "$status" -ne "$expected_status" ]; then
-        echo "FAILED"
-        echo "   Expected: $expected_status"
-        echo "   Actual:   $status"
-        TESTS_FAILED=$((TESTS_FAILED + 1))
-        return 1
-    else
-        echo "PASSED"
-        TESTS_PASSED=$((TESTS_PASSED + 1))
-        return 0
-    fi
-}
-
-# Track if any test failed
-ANY_FAILED=0
-
-run_test() {
-    run_single_test "$@" || ANY_FAILED=1
-}
-
 echo ""
 echo "=== Running E2E Tests ==="
 
 # Invalid request tests
-run_test 'missing "X-Forwarded-Host" header' 400 \
+assert_status 400 'missing "X-Forwarded-Host" header' \
     "$BASE_URL" \
     -H "X-Forwarded-For: 127.0.0.1" \
     -H "X-Forwarded-Method: GET"
 
-run_test 'invalid source IP address' 400 \
+assert_status 400 'invalid source IP address' \
     "$BASE_URL" \
     -H "X-Forwarded-For: invalid-ip" \
     -H "X-Forwarded-Host: country-blocked.test" \
     -H "X-Forwarded-Method: GET"
 
-run_test 'missing "X-Forwarded-For" header' 400 \
+assert_status 400 'missing "X-Forwarded-For" header' \
     "$BASE_URL" \
     -H "X-Forwarded-Host: country-allowed.test" \
     -H "X-Forwarded-Method: GET"
 
-run_test 'missing "X-Forwarded-Method" header' 400 \
+assert_status 400 'missing "X-Forwarded-Method" header' \
     "$BASE_URL" \
     -H "X-Forwarded-For: 8.8.8.8" \
     -H "X-Forwarded-Host: country-allowed.test"
 
 # Domain + country tests
-run_test 'blocked by domain+country' 403 \
+assert_status 403 'blocked by domain+country' \
     "$BASE_URL" \
     -H "X-Forwarded-For: 8.8.8.8" \
     -H "X-Forwarded-Host: country-blocked.test" \
     -H "X-Forwarded-Method: GET"
 
-run_test 'allowed by domain+country' 204 \
+assert_status 204 'allowed by domain+country' \
     "$BASE_URL" \
     -H "X-Forwarded-For: 8.8.8.8" \
     -H "X-Forwarded-Host: country-allowed.test" \
     -H "X-Forwarded-Method: GET"
 
 # Local network tests
-run_test 'allowed local network (IPv4)' 204 \
+assert_status 204 'allowed local network (IPv4)' \
     "$BASE_URL" \
     -H "X-Forwarded-For: 127.0.0.1" \
     -H "X-Forwarded-Host: local.test" \
     -H "X-Forwarded-Method: GET"
 
-run_test 'allowed local network (IPv6)' 204 \
+assert_status 204 'allowed local network (IPv6)' \
     "$BASE_URL" \
     -H "X-Forwarded-For: ::1" \
     -H "X-Forwarded-Host: local.test" \
     -H "X-Forwarded-Method: GET"
 
 # ASN blocking test (8.8.8.8 = AS15169 = Google)
-run_test 'blocked by ASN' 403 \
+assert_status 403 'blocked by ASN' \
     "$BASE_URL" \
     -H "X-Forwarded-For: 8.8.8.8" \
     -H "X-Forwarded-Host: asn-blocked.test" \
     -H "X-Forwarded-Method: GET"
 
 # HTTP method tests
-run_test 'blocked by method (POST)' 403 \
+assert_status 403 'blocked by method (POST)' \
     "$BASE_URL" \
     -H "X-Forwarded-For: 8.8.8.8" \
     -H "X-Forwarded-Host: method-test.test" \
     -H "X-Forwarded-Method: POST"
 
-run_test 'allowed by method (GET)' 204 \
+assert_status 204 'allowed by method (GET)' \
     "$BASE_URL" \
     -H "X-Forwarded-For: 8.8.8.8" \
     -H "X-Forwarded-Host: method-test.test" \
     -H "X-Forwarded-Method: GET"
 
 # Wildcard domain test
-run_test 'allowed by wildcard domain' 204 \
+assert_status 204 'allowed by wildcard domain' \
     "$BASE_URL" \
     -H "X-Forwarded-For: 8.8.8.8" \
     -H "X-Forwarded-Host: api.wildcard.test" \
     -H "X-Forwarded-Method: GET"
 
 # Default policy fallback test
-run_test 'denied by default policy' 403 \
+assert_status 403 'denied by default policy' \
     "$BASE_URL" \
     -H "X-Forwarded-For: 8.8.8.8" \
     -H "X-Forwarded-Host: unknown-domain.test" \
     -H "X-Forwarded-Method: GET"
 
-echo ""
-echo "=== Test Summary ==="
-TOTAL_TESTS=$((TESTS_PASSED + TESTS_FAILED))
-echo ":: Passed: $TESTS_PASSED/$TOTAL_TESTS"
-echo ":: Failed: $TESTS_FAILED/$TOTAL_TESTS"
+print_summary "E2E" || exit 1
 
-if [ "$ANY_FAILED" -ne 0 ]; then
-    echo ""
-    echo ":: Some tests FAILED"
-    exit 1
-fi
 echo ""
-
 echo "=== Verifying Metrics ==="
-curl -s "$METRICS_URL" > metrics.prometheus
+curl -s "$METRICS_URL" > "${METRICS_FILE}"
 
 # Filter function to remove dynamic values for comparison
 filter_metrics() {
@@ -194,15 +155,15 @@ filter_metrics() {
 }
 
 echo -n ":: Comparing metrics ... "
-diff <(filter_metrics < metrics.prometheus) \
-     <(filter_metrics < e2e/metrics-expected.prometheus)
+diff <(filter_metrics < "${METRICS_FILE}") \
+     <(filter_metrics < "${SCRIPT_DIR}/metrics-expected.prometheus")
 echo "PASSED"
 
 echo ""
 echo "=== Verifying Logs ==="
 echo -n ":: Comparing logs ... "
-diff <(jq --sort-keys 'del(.time, .version, .commit)' e2e/expected.log) \
-     <(jq --sort-keys 'del(.time, .version, .commit)' geoblock.log)
+diff <(jq --sort-keys 'del(.time, .version, .commit)' "${SCRIPT_DIR}/expected.log") \
+     <(jq --sort-keys 'del(.time, .version, .commit)' "${LOG_FILE}")
 echo "PASSED"
 
 echo ""
@@ -224,7 +185,7 @@ echo "PASSED"
 
 # Verify shutdown message in logs
 echo -n ":: Checking shutdown message ... "
-if ! grep -q "Shutting down server" geoblock.log; then
+if ! grep -q "Shutting down server" "${LOG_FILE}"; then
     echo "FAILED"
     echo "   Expected: Shutdown message in logs"
     echo "   Actual:   Message not found"
