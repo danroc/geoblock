@@ -37,6 +37,9 @@ jobs:
       - name: Lint
         run: make lint
 
+      - name: Shellcheck
+        run: find . -name '*.sh' -exec shellcheck -x -P SCRIPTDIR {} +
+
       - name: Build
         run: make build
 
@@ -45,6 +48,9 @@ jobs:
 
       - name: Run e2e tests
         run: make test-e2e
+
+      - name: Run integration tests
+        run: make test-integration
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5

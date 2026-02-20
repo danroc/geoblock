@@ -6,6 +6,7 @@
 dist/
 examples/
 grafana/
+tests/integration/
 scripts/
 coverage.txt
 coverage.out

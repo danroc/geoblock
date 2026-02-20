@@ -1,0 +1,30 @@
+---
+services:
+  whoami-1:
+    labels:
+      - "traefik.http.routers.whoami-1.rule=Host(`whoami-1.test`)"
+      - "traefik.http.routers.method-test.rule=Host(`method-test.test`)"
+      - "traefik.http.routers.wildcard.rule=Host(`sub.wildcard.test`)"
+      - "traefik.http.routers.unknown.rule=Host(`unknown.test`)"
+
+  whoami-2:
+    labels:
+      - "traefik.http.routers.whoami-2.rule=Host(`whoami-2.test`)"
+
+  traefik:
+    image: traefik:latest
+    depends_on:
+      geoblock:
+        condition: service_healthy
+    labels:
+      - "traefik.http.middlewares.geoblock.forwardauth.address=http://geoblock:8080/v1/forward-auth"
+      - "traefik.http.middlewares.geoblock.forwardauth.trustForwardHeader=true"
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.middlewares=geoblock@docker"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "${GEOBLOCK_TEST_PORT:-8080}:80"

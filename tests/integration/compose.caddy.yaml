@@ -1,0 +1,11 @@
+---
+services:
+  caddy:
+    image: caddy:latest
+    depends_on:
+      geoblock:
+        condition: service_healthy
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+    ports:
+      - "${GEOBLOCK_TEST_PORT:-8080}:80"
