@@ -35,21 +35,14 @@ Gather the data by running these commands:
 
    Where `<ref>` is $ARGUMENTS if the tag exists, or `HEAD` otherwise.
 
-4. Get merged PRs since the previous tag date:
+4. Extract PR numbers from the commit messages (step 3) and fetch their details:
 
    ```
-   gh pr list --repo danroc/geoblock --state merged --limit 200 \
-     --search "merged:>=<previous_tag_date>" \
+   gh pr view <number> --repo danroc/geoblock \
      --json number,title,author,url,mergedAt
    ```
 
-   Where `<previous_tag_date>` is the date of the previous tag:
-
-   ```
-   git log -1 --format=%as <previous_tag>
-   ```
-
-   Keep only PRs whose number (as `#<number>`) appears in the commit messages from
+   Run this for each PR number referenced (as `#<number>`) in the commit messages from
    step 3.
 
 Format the output as Markdown using this template:
