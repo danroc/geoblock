@@ -7,13 +7,13 @@ Gather the data by running these commands:
 
 1. Get the previous tag:
 
-   ```
+   ```bash
    git describe --tags --abbrev=0 HEAD
    ```
 
    If $ARGUMENTS already exists as a tag, use:
 
-   ```
+   ```bash
    git describe --tags --abbrev=0 $ARGUMENTS^
    ```
 
@@ -21,7 +21,7 @@ Gather the data by running these commands:
 
    If $ARGUMENTS exists as a tag:
 
-   ```
+   ```bash
    git log -1 --format=%as $ARGUMENTS
    ```
 
@@ -29,7 +29,7 @@ Gather the data by running these commands:
 
 3. Get commit messages between the previous tag (from step 1) and the release ref:
 
-   ```
+   ```bash
    git log <previous_tag>..<ref> --pretty=format:"%s"
    ```
 
@@ -37,9 +37,8 @@ Gather the data by running these commands:
 
 4. Extract PR numbers from the commit messages (step 3) and fetch their details:
 
-   ```
-   gh pr view <number> --repo danroc/geoblock \
-     --json number,title,author,url,mergedAt
+   ```bash
+   gh pr view <number> --repo danroc/geoblock --json number,title,author,url,mergedAt
    ```
 
    Run this for each PR number referenced (as `#<number>`) in the commit messages from
@@ -90,3 +89,22 @@ Rules:
 - Audience: self-hosters / homelab operators
 - Be operational and concise; no marketing language
 - Output Markdown only
+
+After generating the release notes, ask the user whether to create or update the GitHub
+release for $ARGUMENTS using the generated notes. If the user agrees, run:
+
+```bash
+gh release view $ARGUMENTS --repo danroc/geoblock
+```
+
+- If the release exists, update it:
+
+  ```bash
+  gh release edit $ARGUMENTS --repo danroc/geoblock --notes "<notes>"
+  ```
+
+- If it does not exist, create it:
+
+  ```bash
+  gh release create $ARGUMENTS --repo danroc/geoblock --title "$ARGUMENTS" --notes "<notes>"
+  ```
