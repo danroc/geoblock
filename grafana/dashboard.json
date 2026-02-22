@@ -35,13 +35,13 @@
       "type": "grafana",
       "id": "grafana",
       "name": "Grafana",
-      "version": "12.3.2"
+      "version": "12.3.3"
     },
     {
       "type": "datasource",
       "id": "loki",
       "name": "Loki",
-      "version": "12.3.2"
+      "version": "12.3.3"
     },
     {
       "type": "panel",
@@ -155,7 +155,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "12.3.2",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -229,7 +229,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "12.3.2",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -293,7 +293,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "12.3.2",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -357,7 +357,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "12.3.2",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -425,7 +425,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "12.3.2",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -493,7 +493,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "12.3.2",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -630,7 +630,7 @@
           "zoom": 4
         }
       },
-      "pluginVersion": "12.3.2",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -782,7 +782,7 @@
           "zoom": 4
         }
       },
-      "pluginVersion": "12.3.2",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -917,7 +917,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.3.2",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -1025,7 +1025,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.3.2",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -1104,7 +1104,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.3.2",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -1179,7 +1179,7 @@
           }
         ]
       },
-      "pluginVersion": "12.3.2",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -1305,7 +1305,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.3.2",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -1417,7 +1417,7 @@
           "sort": "desc"
         }
       },
-      "pluginVersion": "12.3.2",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -1515,7 +1515,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.3.2",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -1661,7 +1661,7 @@
           "sort": "desc"
         }
       },
-      "pluginVersion": "12.3.2",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -1774,7 +1774,7 @@
           "sort": "desc"
         }
       },
-      "pluginVersion": "12.3.2",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -1868,7 +1868,7 @@
           }
         ]
       },
-      "pluginVersion": "12.3.2",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -1958,7 +1958,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "12.3.2",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -2051,7 +2051,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "12.3.2",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -2115,7 +2115,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "12.3.2",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -2179,7 +2179,7 @@
         "textMode": "value_and_name",
         "wideLayout": true
       },
-      "pluginVersion": "12.3.2",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -2251,7 +2251,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "12.3.2",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -2315,7 +2315,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "12.3.2",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -2406,7 +2406,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.3.2",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -2490,7 +2490,7 @@
           }
         ]
       },
-      "pluginVersion": "12.3.2",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -2582,7 +2582,7 @@
         "showThresholdMarkers": true,
         "sizing": "auto"
       },
-      "pluginVersion": "12.3.2",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -2623,11 +2623,11 @@
               },
               {
                 "color": "yellow",
-                "value": 1
+                "value": 10
               },
               {
                 "color": "red",
-                "value": 5
+                "value": 50
               }
             ]
           },
@@ -2641,7 +2641,7 @@
         "x": 16,
         "y": 97
       },
-      "id": 35,
+      "id": 36,
       "options": {
         "minVizHeight": 75,
         "minVizWidth": 75,
@@ -2657,7 +2657,7 @@
         "showThresholdMarkers": true,
         "sizing": "auto"
       },
-      "pluginVersion": "12.3.2",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -2666,14 +2666,14 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "(sum(increase(geoblock_requests_total{status=\"invalid\"}[$__range])) / sum(increase(geoblock_requests_total[$__range])) * 100) or vector(0)",
+          "expr": "(sum(increase(geoblock_requests_total{status=\"denied\"}[$__range])) / sum(increase(geoblock_requests_total[$__range])) * 100) or vector(0)",
           "instant": true,
           "legendFormat": "__auto",
           "range": false,
           "refId": "A"
         }
       ],
-      "title": "Invalid Request Rate",
+      "title": "Denial Rate",
       "type": "gauge"
     },
     {
@@ -2698,11 +2698,11 @@
               },
               {
                 "color": "yellow",
-                "value": 10
+                "value": 1
               },
               {
                 "color": "red",
-                "value": 50
+                "value": 5
               }
             ]
           },
@@ -2716,7 +2716,7 @@
         "x": 20,
         "y": 97
       },
-      "id": 36,
+      "id": 35,
       "options": {
         "minVizHeight": 75,
         "minVizWidth": 75,
@@ -2732,7 +2732,7 @@
         "showThresholdMarkers": true,
         "sizing": "auto"
       },
-      "pluginVersion": "12.3.2",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -2741,14 +2741,14 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "(sum(increase(geoblock_requests_total{status=\"denied\"}[$__range])) / sum(increase(geoblock_requests_total[$__range])) * 100) or vector(0)",
+          "expr": "(sum(increase(geoblock_requests_total{status=\"invalid\"}[$__range])) / sum(increase(geoblock_requests_total[$__range])) * 100) or vector(0)",
           "instant": true,
           "legendFormat": "__auto",
           "range": false,
           "refId": "A"
         }
       ],
-      "title": "Denial Rate",
+      "title": "Invalid Request Rate",
       "type": "gauge"
     }
   ],
@@ -2825,6 +2825,6 @@
   "timezone": "browser",
   "title": "Geoblock",
   "uid": "geoblock",
-  "version": 9,
+  "version": 10,
   "weekStart": ""
 }
