@@ -11,8 +11,8 @@ ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 DIST_DIR := $(ROOT_DIR)/dist
 
 # Version components from git
-COMMIT  := $(shell git describe --always --dirty --exclude='*' 2>/dev/null)
-TAG     := $(shell git tag --points-at HEAD --sort=-v:refname 'v*' 2>/dev/null | head -n1)
+COMMIT  := $(shell git describe --always --dirty --exclude='*')
+TAG     := $(shell git tag --points-at HEAD --sort=-v:refname 'v*' | head -n1)
 VERSION := $(or $(patsubst v%,%,$(TAG)),dev)
 
 # Build flags
