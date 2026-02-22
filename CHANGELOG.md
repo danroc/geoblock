@@ -7,12 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.8] - 2026-02-22
+
 ### Added
 
+- Add linux/arm/v7 to Docker platforms ([#444](https://github.com/danroc/geoblock/pull/444))
 - Add integration tests for reverse proxies ([#435](https://github.com/danroc/geoblock/pull/435))
 
 ### Changed
 
+- Reposition Grafana dashboard tiles ([#443](https://github.com/danroc/geoblock/pull/443))
 - Rename `New` to `NewTree` ([#425](https://github.com/danroc/geoblock/pull/425))
 - Add `.dockerignore` and cache dependency layer ([#431](https://github.com/danroc/geoblock/pull/431))
 - Improve healthcheck wget options ([#430](https://github.com/danroc/geoblock/pull/430))
@@ -331,7 +335,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add CIDR unmarshalling and validation
 - Add autonomous systems to configuration
 
-[Unreleased]: https://github.com/danroc/geoblock/compare/v0.5.7...HEAD
+[Unreleased]: https://github.com/danroc/geoblock/compare/v0.5.8...HEAD
+[0.5.8]: https://github.com/danroc/geoblock/compare/v0.5.7...v0.5.8
 [0.5.7]: https://github.com/danroc/geoblock/compare/v0.5.6...v0.5.7
 [0.5.6]: https://github.com/danroc/geoblock/compare/v0.5.5...v0.5.6
 [0.5.5]: https://github.com/danroc/geoblock/compare/v0.5.4...v0.5.5
