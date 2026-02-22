@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.9] - 2026-02-22
+
+### Fixed
+
+- Fix Docker image reporting "dev" as version ([#446](https://github.com/danroc/geoblock/pull/446))
+
 ## [0.5.8] - 2026-02-22
 
 ### Added
@@ -335,7 +341,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add CIDR unmarshalling and validation
 - Add autonomous systems to configuration
 
-[Unreleased]: https://github.com/danroc/geoblock/compare/v0.5.8...HEAD
+[Unreleased]: https://github.com/danroc/geoblock/compare/v0.5.9...HEAD
+[0.5.9]: https://github.com/danroc/geoblock/compare/v0.5.8...v0.5.9
 [0.5.8]: https://github.com/danroc/geoblock/compare/v0.5.7...v0.5.8
 [0.5.7]: https://github.com/danroc/geoblock/compare/v0.5.6...v0.5.7
 [0.5.6]: https://github.com/danroc/geoblock/compare/v0.5.5...v0.5.6
