@@ -93,7 +93,6 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": null,
   "links": [],
   "liveNow": true,
   "panels": [
@@ -1861,12 +1860,7 @@
         "cellHeight": "sm",
         "enablePagination": true,
         "showHeader": true,
-        "sortBy": [
-          {
-            "desc": true,
-            "displayName": "Requests"
-          }
-        ]
+        "sortBy": []
       },
       "pluginVersion": "12.3.3",
       "targets": [
@@ -2825,6 +2819,7 @@
   "timezone": "browser",
   "title": "Geoblock",
   "uid": "geoblock",
-  "version": 10,
-  "weekStart": ""
+  "version": 11,
+  "weekStart": "",
+  "id": null
 }
