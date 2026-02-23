@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **BREAKING** Change Docker default paths to `/config.yaml` and `/cache` ([#449](https://github.com/danroc/geoblock/pull/449))
+
 ## [0.5.9] - 2026-02-22
 
 ### Fixed

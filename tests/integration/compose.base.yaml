@@ -9,5 +9,5 @@ services:
   geoblock:
     image: geoblock
     volumes:
-      - ./config.yaml:/etc/geoblock/config.yaml
-      - ../../.cache:/var/cache/geoblock
+      - ./config.yaml:/config.yaml
+      - ../../.cache:/cache

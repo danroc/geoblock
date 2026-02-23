@@ -23,10 +23,11 @@ FROM alpine:3.23.3@sha256:25109184c71bdad752c8312a8623239686a9a2071e8825f20acb8f
 
 RUN addgroup -S geoblock \
     && adduser -S geoblock -G geoblock \
-    && mkdir -p /var/cache/geoblock \
-    && chown geoblock:geoblock /var/cache/geoblock
+    && mkdir /cache \
+    && chown geoblock:geoblock /cache
 
-COPY --from=builder /app/dist/geoblock /usr/bin/geoblock
+ENV GEOBLOCK_CACHE_DIR=/cache
+ENV GEOBLOCK_CONFIG_FILE=/config.yaml
 
 USER geoblock
 
@@ -39,5 +40,7 @@ HEALTHCHECK \
     --start-interval=5s \
     --retries=3 \
     CMD wget --spider --no-verbose --tries=1 http://localhost:8080/v1/health || exit 1
+
+COPY --from=builder /app/dist/geoblock /usr/bin/geoblock
 
 ENTRYPOINT ["/usr/bin/geoblock"]

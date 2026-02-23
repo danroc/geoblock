@@ -13,8 +13,8 @@ services:
   geoblock:
     image: ghcr.io/danroc/geoblock:latest
     volumes:
-      - ./config.yaml:/etc/geoblock/config.yaml
-      - geoblock-cache:/var/cache/geoblock
+      - ./config.yaml:/config.yaml
+      - geoblock-cache:/cache
 
   traefik:
     image: traefik:v3
