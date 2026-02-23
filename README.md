@@ -76,9 +76,9 @@ For complete deployment examples with a reverse proxy, see:
 
 ## Configuration
 
-Geoblock uses a single configuration file (`/etc/geoblock/config.yaml` by default) to
-set access control rules. Rules are evaluated sequentially, applying the first match per
-request. If no rules match, the default policy applies.
+Geoblock uses a single configuration file to set access control rules. Rules are
+evaluated sequentially, applying the first match per request. If no rules match, the
+default policy applies.
 
 A rule matches if all specified conditions are met. Rules can include one or more of the
 following criteria:
@@ -145,13 +145,17 @@ access_control:
 
 The following environment variables can be used to configure Geoblock:
 
-| Variable               | Description                    | Default                     |
-| :--------------------- | :----------------------------- | :-------------------------- |
-| `GEOBLOCK_CACHE_DIR`   | Path to IP database cache      | `/var/cache/geoblock`       |
-| `GEOBLOCK_CONFIG_FILE` | Path to the configuration file | `/etc/geoblock/config.yaml` |
-| `GEOBLOCK_PORT`        | Port to listen on              | `8080`                      |
-| `GEOBLOCK_LOG_LEVEL`   | Log level                      | `info`                      |
-| `GEOBLOCK_LOG_FORMAT`  | Log format                     | `json`                      |
+| Variable               | Description                    | Default        |
+| :--------------------- | :----------------------------- | :------------- |
+| `GEOBLOCK_CACHE_DIR`   | Path to IP database cache      | `/cache`       |
+| `GEOBLOCK_CONFIG_FILE` | Path to the configuration file | `/config.yaml` |
+| `GEOBLOCK_PORT`        | Port to listen on              | `8080`         |
+| `GEOBLOCK_LOG_LEVEL`   | Log level                      | `info`         |
+| `GEOBLOCK_LOG_FORMAT`  | Log format                     | `json`         |
+
+> [!NOTE]
+> The standalone binary defaults to `/var/cache/geoblock` for `GEOBLOCK_CACHE_DIR` and
+> `/etc/geoblock/config.yaml` for `GEOBLOCK_CONFIG_FILE`.
 
 - Set `GEOBLOCK_CACHE_DIR` to empty string to disable caching
 - Supported log levels: `trace`, `debug`, `info`, `warn`, `error`, `fatal`, or `panic`
@@ -175,11 +179,11 @@ Check if a client is authorized to access a domain.
 
 **Response:**
 
-| Status | Description                              |
-| :----- | :--------------------------------------- |
-| `204`  | Authorized                               |
-| `400`  | Bad request (missing headers/invalid IP) |
-| `403`  | Forbidden                                |
+| Status | Description |
+| :----- | :---------- |
+| `204`  | Authorized  |
+| `400`  | Bad request |
+| `403`  | Forbidden   |
 
 ### `GET /v1/health`
 
