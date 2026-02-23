@@ -2,7 +2,11 @@
 # Build
 # --------------------------------------------------------------------------------------
 
-FROM golang:1.26.0@sha256:c83e68f3ebb6943a2904fa66348867d108119890a2c6a2e6f07b38d0eb6c25c5 AS builder
+FROM --platform=$BUILDPLATFORM golang:1.26.0@sha256:c83e68f3ebb6943a2904fa66348867d108119890a2c6a2e6f07b38d0eb6c25c5 AS builder
+
+ARG TARGETOS
+ARG TARGETARCH
+ARG TARGETVARIANT
 
 WORKDIR /app
 
@@ -13,7 +17,7 @@ RUN go mod download
 COPY . .
 
 ARG CGO_ENABLED=0
-RUN make clean build
+RUN GOOS=$TARGETOS GOARCH=$TARGETARCH GOARM=${TARGETVARIANT#v} make clean build
 
 # --------------------------------------------------------------------------------------
 # Run
