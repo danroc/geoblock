@@ -162,8 +162,9 @@ access_control:
 
 <!-- prettier-ignore -->
 > [!NOTE]
-> The standalone binary defaults to `/var/cache/geoblock` for cache and
-> `/etc/geoblock/config.yaml` for configuration.
+> The defaults above apply to the Docker image. When running the standalone binary,
+> `GEOBLOCK_CACHE_DIR` defaults to `/var/cache/geoblock` and `GEOBLOCK_CONFIG_FILE`
+> to `/etc/geoblock/config.yaml`.
 
 Set `GEOBLOCK_CACHE_DIR` to an empty string to disable caching. Accepted log levels:
 `trace`, `debug`, `info`, `warn`, `error`, `fatal`, `panic`.
