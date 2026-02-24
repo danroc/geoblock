@@ -155,10 +155,12 @@ The following environment variables can be used to configure Geoblock:
 
 <!-- prettier-ignore -->
 > [!NOTE]
-> The standalone binary defaults to `/var/cache/geoblock` for `GEOBLOCK_CACHE_DIR` and
-> `/etc/geoblock/config.yaml` for `GEOBLOCK_CONFIG_FILE`.
+> The standalone binary uses different default paths:
+>
+> - Cache: `/var/cache/geoblock`
+> - Configuration: `/etc/geoblock/config.yaml`
 
-- Set `GEOBLOCK_CACHE_DIR` to empty string to disable caching
+- Set `GEOBLOCK_CACHE_DIR` to an empty string to disable caching
 - Supported log levels: `trace`, `debug`, `info`, `warn`, `error`, `fatal`, or `panic`
 - Supported log formats: `json` and `text`
 
