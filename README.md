@@ -1,54 +1,71 @@
 <!-- markdownlint-disable MD033 -->
 <h1 align="center">Geoblock</h1>
-<p align="center">
-  <i>Block clients based on their country, ASN, or network.</i>
-</p>
+<!-- markdownlint-enable MD033 -->
 
-<details>
-<summary><b>Table of contents</b></summary>
-<p>
+Forward authentication service for geoblocking. Restricts access based on country, ASN,
+IP network, domain, and HTTP method. Integrates with Traefik, NGINX, and Caddy as a
+forward auth middleware.
 
-- [Introduction](#introduction)
-- [Features](#features)
-- [Installation](#installation)
-  - [Reverse Proxy Integration](#reverse-proxy-integration)
+## Contents <!-- omit from toc -->
+
+- [Quick Start](#quick-start)
+- [How It Works](#how-it-works)
 - [Configuration](#configuration)
 - [Environment Variables](#environment-variables)
 - [HTTP API](#http-api)
   - [`GET /v1/forward-auth`](#get-v1forward-auth)
   - [`GET /v1/health`](#get-v1health)
   - [`GET /metrics`](#get-metrics)
+- [Reverse Proxy Examples](#reverse-proxy-examples)
 - [Monitoring](#monitoring)
 - [Attribution](#attribution)
 
-</p>
-</details>
-<!-- markdownlint-enable MD033 -->
+## Quick Start
 
-## Introduction
+Create a `config.yaml`:
 
-Geoblock is a lightweight authorization service that restricts client access based on:
+```yaml
+---
+access_control:
+  default_policy: deny
+  rules:
+    # Allow from private networks
+    - networks:
+        - 10.0.0.0/8
+        - 172.16.0.0/12
+        - 192.168.0.0/16
+      policy: allow
 
-- Client's country
-- Client's IP address
-- Client's ASN (Autonomous System Number)
-- Requested domain
-- Requested method
+    # Allow from France
+    - countries:
+        - FR
+      policy: allow
+```
 
-It works as a forward authentication service that can be used with reverse proxies such
-as Traefik, NGINX, and Caddy.
+Create a `compose.yaml`:
 
-## Features
+```yaml
+---
+services:
+  geoblock:
+    image: ghcr.io/danroc/geoblock:latest
+    volumes:
+      - ./config.yaml:/config.yaml
+      - geoblock-cache:/cache
 
-- **Flexible:** Supports rules based on countries, domains, methods, networks, and ASNs.
-- **Auto-reload:** Automatically reloads the configuration file when it changes.
-- **Auto-update:** Automatically updates the GeoLite2 databases every day.
-- **Metrics:** Exposes simple metrics to monitor the service and build dashboards.
+volumes:
+  geoblock-cache:
+```
 
-## Installation
+Then configure your reverse proxy to use `http://geoblock:8080/v1/forward-auth` as a
+forward auth endpoint. See [Reverse Proxy Examples](#reverse-proxy-examples) for
+complete setups.
 
-Geoblock should be deployed as a forward authentication service that integrates with
-your existing reverse proxy.
+## How It Works
+
+Geoblock runs alongside your reverse proxy. When a request arrives, the proxy forwards
+it to Geoblock for authorization. Geoblock resolves the client's IP to a country and
+ASN, evaluates the configured rules, and allows or denies the request.
 
 ```mermaid
 flowchart TD
@@ -66,26 +83,19 @@ flowchart TD
   style Geoblock stroke:#f76,stroke-width:3px
 ```
 
-### Reverse Proxy Integration
-
-For complete deployment examples with a reverse proxy, see:
-
-- [Traefik](./examples/traefik/)
-- [Caddy](./examples/caddy/)
-- [NGINX](./examples/nginx/)
+IP geolocation data is sourced from [ip-location-db] and updated automatically every 24
+hours. The configuration file is checked for changes every 5 seconds and reloaded when
+modified.
 
 ## Configuration
 
-Geoblock uses a single configuration file to set access control rules. Rules are
-evaluated sequentially, applying the first match per request. If no rules match, the
-default policy applies.
-
-A rule matches if all specified conditions are met. Rules can include one or more of the
-following criteria:
+Rules are evaluated in order; the first match wins. If no rule matches, the
+`default_policy` applies. A rule matches when all of its conditions are satisfied.
+Available conditions:
 
 - `countries`: List of country codes ([ISO 3166-1 alpha-2][country-codes])
 - `domains`: List of domain names (supports `*` wildcard, e.g., `*.example.com`)
-- `methods`: List of HTTP methods
+- `methods`: List of HTTP methods (`GET`, `HEAD`, `POST`, `PUT`, `DELETE`, `PATCH`)
 - `networks`: List of IP ranges in CIDR notation
 - `autonomous_systems`: List of ASNs
 
@@ -97,7 +107,7 @@ access_control:
   # Default action when no rules match ("allow" or "deny").
   default_policy: deny
 
-  # List of access rules, evaluated in order. The first matching rule’s
+  # List of access rules, evaluated in order. The first matching rule's
   # policy is applied. If no rule matches, the default policy is used.
   #
   # IMPORTANT: Replace these example rules with your own rules.
@@ -143,30 +153,23 @@ access_control:
 
 ## Environment Variables
 
-The following environment variables can be used to configure Geoblock:
-
-| Variable               | Description                    | Default        |
+| Variable               | Description                    | Docker default |
 | :--------------------- | :----------------------------- | :------------- |
 | `GEOBLOCK_CACHE_DIR`   | Path to IP database cache      | `/cache`       |
 | `GEOBLOCK_CONFIG_FILE` | Path to the configuration file | `/config.yaml` |
 | `GEOBLOCK_PORT`        | Port to listen on              | `8080`         |
 | `GEOBLOCK_LOG_LEVEL`   | Log level                      | `info`         |
-| `GEOBLOCK_LOG_FORMAT`  | Log format                     | `json`         |
+| `GEOBLOCK_LOG_FORMAT`  | Log format (`json` or `text`)  | `json`         |
 
 <!-- prettier-ignore -->
 > [!NOTE]
-> The standalone binary uses different default paths:
->
-> - Cache: `/var/cache/geoblock`
-> - Configuration: `/etc/geoblock/config.yaml`
+> The standalone binary defaults to `/var/cache/geoblock` for cache and
+> `/etc/geoblock/config.yaml` for configuration.
 
-- Set `GEOBLOCK_CACHE_DIR` to an empty string to disable caching
-- Supported log levels: `trace`, `debug`, `info`, `warn`, `error`, `fatal`, or `panic`
-- Supported log formats: `json` and `text`
+Set `GEOBLOCK_CACHE_DIR` to an empty string to disable caching. Accepted log levels:
+`trace`, `debug`, `info`, `warn`, `error`, `fatal`, `panic`.
 
 ## HTTP API
-
-The following HTTP endpoints are exposed by Geoblock.
 
 ### `GET /v1/forward-auth`
 
@@ -202,26 +205,15 @@ Check if the service is healthy.
 
 Returns metrics in Prometheus format.
 
-**Response:**
+## Reverse Proxy Examples
 
-- MIME type: `text/plain; version=0.0.4; charset=utf-8`
-- Example:
+Complete Docker Compose examples:
 
-  ```prometheus
-  # HELP geoblock_version_info Version information
-  # TYPE geoblock_version_info gauge
-  geoblock_version_info{version="0.5.7",commit="843cf6c"} 1
-  # HELP geoblock_requests_total Total number of requests by status
-  # TYPE geoblock_requests_total counter
-  geoblock_requests_total{status="allowed"} 3
-  geoblock_requests_total{status="denied"} 2
-  geoblock_requests_total{status="invalid"} 1
-  ```
+- [Traefik](./examples/traefik/)
+- [Caddy](./examples/caddy/)
+- [NGINX](./examples/nginx/)
 
 ## Monitoring
-
-Geoblock exposes Prometheus metrics and structured logs that can be used to monitor the
-service and create dashboards.
 
 **Dashboard:** [grafana/dashboard.json](./grafana/dashboard.json)
 
@@ -229,9 +221,8 @@ service and create dashboards.
 
 ## Attribution
 
-- This project uses the [GeoLite2][geolite2] databases provided by [MaxMind][maxmind].
-- This project uses the database files provided by the [ip-location-db][ip-location-db]
-  project.
+IP geolocation data is sourced from the [ip-location-db] project, which packages
+[GeoLite2] data provided by [MaxMind].
 
 [geolite2]: https://dev.maxmind.com/geoip/geolite2-free-geolocation-data/
 [maxmind]: https://www.maxmind.com/
