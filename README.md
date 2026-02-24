@@ -83,9 +83,8 @@ flowchart TD
   style Geoblock stroke:#f76,stroke-width:3px
 ```
 
-IP geolocation data is sourced from [ip-location-db] and updated automatically every 24
-hours. The configuration file is checked for changes every 5 seconds and reloaded when
-modified.
+IP geolocation data is sourced from [ip-location-db] and updated automatically. The
+configuration file is watched for changes and reloaded when modified.
 
 ## Configuration
 
