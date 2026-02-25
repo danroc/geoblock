@@ -36,7 +36,7 @@ RESET   := \033[0m
 # ======================================================================================
 
 .PHONY: lint
-lint: tidy format lint-golangci ## Run all linters
+lint: tidy format lint-golangci lint-vulncheck ## Run all linters
 
 .PHONY: tidy
 tidy: ## Tidy up dependencies
@@ -49,6 +49,10 @@ format: ## Run code formatters
 .PHONY: lint-golangci
 lint-golangci: ## Run golangci-lint
 	golangci-lint run ./...
+
+.PHONY: lint-vulncheck
+lint-vulncheck: ## Run govulncheck
+	go tool govulncheck ./...
 
 # ======================================================================================
 # @Dependencies
