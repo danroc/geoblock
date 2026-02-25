@@ -45,7 +45,7 @@ func (f *HTTPFetcher) Fetch(ctx context.Context, url string) ([][]string, error)
 		return nil, err
 	}
 
-	resp, err := f.Client.Do(req)
+	resp, err := f.Client.Do(req) // #nosec G704 -- URLs are hardcoded constants
 	if err != nil {
 		return nil, err
 	}
