@@ -174,6 +174,52 @@ func TestCachedFetcher_Fetch(t *testing.T) {
 	}
 }
 
+func TestCachedFetcher_Fetch_PathTraversal(t *testing.T) {
+	t.Parallel()
+
+	cached := ipinfo.NewCachedFetcher(
+		t.TempDir(), time.Hour, &mockFetcher{}, nopLogger{},
+	)
+
+	tests := []struct {
+		name    string
+		url     string
+		wantErr bool
+	}{
+		{
+			name:    "slash resolves to cache dir itself",
+			url:     "/",
+			wantErr: true,
+		},
+		{
+			name:    "trailing dot-dot escapes cache dir",
+			url:     "http://example.com/..",
+			wantErr: true,
+		},
+		{
+			// Only the filename from the URL is used as the cache key ("passwd" in this
+			// case), so directory traversal components in the path have no effect.
+			name:    "dot-dot in path is neutralized by path.Base",
+			url:     "http://example.com/../../../etc/passwd",
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			_, err := cached.Fetch(context.Background(), tt.url)
+			if tt.wantErr && err == nil {
+				t.Fatal("Fetch() error = nil, want path escape error")
+			}
+			if !tt.wantErr && err != nil {
+				t.Fatalf("Fetch() error = %v, want nil", err)
+			}
+		})
+	}
+}
+
 func TestCachedFetcher_Fetch_CachePersistence(t *testing.T) {
 	t.Parallel()
 
