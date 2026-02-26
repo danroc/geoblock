@@ -248,7 +248,7 @@ func TestPrometheusMetrics(t *testing.T) {
 		&mapFetcher{},
 	)
 	engine := newAllowEngine()
-	server := New(":8080", engine, resolver, collector, metrics.Handler())
+	server := New(":8080", engine, resolver, collector, collector.Handler())
 
 	// Record a request so that the requests_total metric appears in output
 	collector.RecordRequest(metrics.RequestRecord{
@@ -290,7 +290,13 @@ func TestNewServer(t *testing.T) {
 		&mapFetcher{},
 	)
 	engine := newAllowEngine()
-	server := New(":8080", engine, resolver, nopRequestCollector{}, metrics.Handler())
+	server := New(
+		":8080",
+		engine,
+		resolver,
+		nopRequestCollector{},
+		http.NotFoundHandler(),
+	)
 
 	if got, want := server.Addr, ":8080"; got != want {
 		t.Errorf("Addr = %q, want %q", got, want)
@@ -315,7 +321,14 @@ func TestServer_Endpoints(t *testing.T) {
 		&mapFetcher{},
 	)
 	engine := newAllowEngine()
-	server := New(":8080", engine, resolver, nopRequestCollector{}, metrics.Handler())
+	server := New(
+		":8080",
+		engine,
+		resolver,
+		nopRequestCollector{},
+		metrics.NewCollector().Handler(),
+	)
+
 	tests := []struct {
 		method string
 		path   string
@@ -562,7 +575,13 @@ func TestServer_HandlerSetup(t *testing.T) {
 		&mapFetcher{},
 	)
 	engine := newAllowEngine()
-	server := New(":8080", engine, resolver, nopRequestCollector{}, metrics.Handler())
+	server := New(
+		":8080",
+		engine,
+		resolver,
+		nopRequestCollector{},
+		http.NotFoundHandler(),
+	)
 
 	req := httptest.NewRequest("GET", "/v1/forward-auth", nil)
 	w := httptest.NewRecorder()

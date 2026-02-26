@@ -356,7 +356,7 @@ func main() {
 	var (
 		address = ":" + options.serverPort
 		engine  = rules.NewEngine(&cfg.AccessControl)
-		srv     = server.New(address, engine, resolver, collector, metrics.Handler())
+		srv     = server.New(address, engine, resolver, collector, collector.Handler())
 	)
 
 	// Start background tasks to update databases, reload configuration, and gracefully
