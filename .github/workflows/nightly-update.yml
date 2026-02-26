@@ -1,0 +1,46 @@
+---
+name: Nightly dependency update
+permissions:
+  contents: read
+
+on:
+  schedule:
+    - cron: '0 3 * * *'  # Every day at 3 AM UTC
+  workflow_dispatch:     # Allow manual triggering
+
+jobs:
+  nightly-update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+
+      - name: Install Go
+        uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6
+        with:
+          go-version: '1.26.0'
+          cache: true
+
+      - name: Install golangci-lint
+        uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20 # v9
+        with:
+          version: v2.10.1
+          install-only: true
+
+      - name: Update dependencies
+        run: make update && make tidy
+
+      - name: Lint
+        run: make lint
+
+      - name: Run unit tests
+        run: make test-unit
+
+      - name: Run e2e tests
+        run: make test-e2e
+
+      - name: Run integration tests
+        run: make test-integration
