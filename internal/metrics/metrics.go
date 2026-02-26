@@ -51,169 +51,168 @@ var requestDurationBuckets = []float64{
 	1.0,
 }
 
-var (
-	// registry is a custom registry to avoid exposing Go runtime metrics.
-	registry = prometheus.NewRegistry()
-
-	// versionInfo exposes version information as a gauge.
-	versionInfo = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "geoblock_version_info",
-			Help: "Version information",
-		},
-		[]string{"version", "commit"},
-	)
-
-	// startTime records when the process started.
-	startTime = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "geoblock_start_time_seconds",
-		Help: "Unix timestamp of when the process started",
-	})
-
-	// requestsTotal tracks the total number of requests by status.
-	requestsTotal = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Name: "geoblock_requests_total",
-			Help: "Total number of requests by status",
-		},
-		[]string{"status"},
-	)
-
-	// requestsByCountry tracks requests by country.
-	requestsByCountry = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Name: "geoblock_requests_by_country_total",
-			Help: "Total number of requests by country",
-		},
-		[]string{"country"},
-	)
-
-	// requestsByMethod tracks requests by HTTP method.
-	requestsByMethod = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Name: "geoblock_requests_by_method_total",
-			Help: "Total number of requests by HTTP method",
-		},
-		[]string{"method"},
-	)
-
-	// requestDuration tracks request processing latency.
-	requestDuration = prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Name:    "geoblock_request_duration_seconds",
-			Help:    "Request processing duration in seconds",
-			Buckets: requestDurationBuckets,
-		},
-		[]string{"status"},
-	)
-
-	// ruleMatches tracks which rules are being matched.
-	ruleMatches = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Name: "geoblock_rule_matches_total",
-			Help: "Total number of requests matched by each rule",
-		},
-		[]string{"rule_index", "action"},
-	)
-
-	// defaultPolicyMatches tracks requests handled by default policy.
-	defaultPolicyMatches = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Name: "geoblock_default_policy_matches_total",
-			Help: "Total number of requests matched by default policy",
-		},
-		[]string{"action"},
-	)
-
-	// configRulesTotal tracks the number of configured rules.
-	configRulesTotal = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "geoblock_config_rules_total",
-		Help: "Number of configured access control rules",
-	})
-
-	// configReloadTotal tracks config reload attempts.
-	configReloadTotal = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Name: "geoblock_config_reload_total",
-			Help: "Total number of configuration reload attempts",
-		},
-		[]string{"result"},
-	)
-
-	// configLastReload records the timestamp of last successful config reload.
-	configLastReload = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "geoblock_config_last_reload_timestamp",
-		Help: "Unix timestamp of last successful config reload",
-	})
-
-	// dbEntries tracks the number of entries in IP databases.
-	dbEntries = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "geoblock_db_entries",
-			Help: "Number of entries in IP database",
-		},
-		[]string{"database", "ip_version"},
-	)
-
-	// dbLastUpdate records the timestamp of last successful database update.
-	dbLastUpdate = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "geoblock_db_last_update_timestamp",
-		Help: "Unix timestamp of last successful database update",
-	})
-
-	// dbLoadDuration records the duration of the last database load.
-	dbLoadDuration = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "geoblock_db_load_duration_seconds",
-		Help: "Duration of last database load in seconds",
-	})
-)
-
-func init() {
-	registry.MustRegister(
-		versionInfo,
-		startTime,
-		requestsTotal,
-		requestsByCountry,
-		requestsByMethod,
-		requestDuration,
-		ruleMatches,
-		defaultPolicyMatches,
-		configRulesTotal,
-		configReloadTotal,
-		configLastReload,
-		dbEntries,
-		dbLastUpdate,
-		dbLoadDuration,
-	)
-
-	versionInfo.WithLabelValues(version.Version, version.Commit).Set(1)
-	startTime.Set(float64(time.Now().Unix()))
+// PrometheusCollector implements the Collector interface using Prometheus metrics.
+type PrometheusCollector struct {
+	registry             *prometheus.Registry
+	versionInfo          *prometheus.GaugeVec
+	startTime            prometheus.Gauge
+	requestsTotal        *prometheus.CounterVec
+	requestsByCountry    *prometheus.CounterVec
+	requestsByMethod     *prometheus.CounterVec
+	requestDuration      *prometheus.HistogramVec
+	ruleMatches          *prometheus.CounterVec
+	defaultPolicyMatches *prometheus.CounterVec
+	configRulesTotal     prometheus.Gauge
+	configReloadTotal    *prometheus.CounterVec
+	configLastReload     prometheus.Gauge
+	dbEntries            *prometheus.GaugeVec
+	dbLastUpdate         prometheus.Gauge
+	dbLoadDuration       prometheus.Gauge
 }
 
-// PrometheusCollector implements the Collector interface using Prometheus metrics.
-type PrometheusCollector struct{}
-
-// NewCollector creates a new PrometheusCollector.
+// NewCollector creates a new PrometheusCollector with its own registry.
 func NewCollector() *PrometheusCollector {
-	return &PrometheusCollector{}
+	c := &PrometheusCollector{
+		registry: prometheus.NewRegistry(),
+
+		versionInfo: prometheus.NewGaugeVec(
+			prometheus.GaugeOpts{
+				Name: "geoblock_version_info",
+				Help: "Version information",
+			},
+			[]string{"version", "commit"},
+		),
+
+		startTime: prometheus.NewGauge(prometheus.GaugeOpts{
+			Name: "geoblock_start_time_seconds",
+			Help: "Unix timestamp of when the process started",
+		}),
+
+		requestsTotal: prometheus.NewCounterVec(
+			prometheus.CounterOpts{
+				Name: "geoblock_requests_total",
+				Help: "Total number of requests by status",
+			},
+			[]string{"status"},
+		),
+
+		requestsByCountry: prometheus.NewCounterVec(
+			prometheus.CounterOpts{
+				Name: "geoblock_requests_by_country_total",
+				Help: "Total number of requests by country",
+			},
+			[]string{"country"},
+		),
+
+		requestsByMethod: prometheus.NewCounterVec(
+			prometheus.CounterOpts{
+				Name: "geoblock_requests_by_method_total",
+				Help: "Total number of requests by HTTP method",
+			},
+			[]string{"method"},
+		),
+
+		requestDuration: prometheus.NewHistogramVec(
+			prometheus.HistogramOpts{
+				Name:    "geoblock_request_duration_seconds",
+				Help:    "Request processing duration in seconds",
+				Buckets: requestDurationBuckets,
+			},
+			[]string{"status"},
+		),
+
+		ruleMatches: prometheus.NewCounterVec(
+			prometheus.CounterOpts{
+				Name: "geoblock_rule_matches_total",
+				Help: "Total number of requests matched by each rule",
+			},
+			[]string{"rule_index", "action"},
+		),
+
+		defaultPolicyMatches: prometheus.NewCounterVec(
+			prometheus.CounterOpts{
+				Name: "geoblock_default_policy_matches_total",
+				Help: "Total number of requests matched by default policy",
+			},
+			[]string{"action"},
+		),
+
+		configRulesTotal: prometheus.NewGauge(prometheus.GaugeOpts{
+			Name: "geoblock_config_rules_total",
+			Help: "Number of configured access control rules",
+		}),
+
+		configReloadTotal: prometheus.NewCounterVec(
+			prometheus.CounterOpts{
+				Name: "geoblock_config_reload_total",
+				Help: "Total number of configuration reload attempts",
+			},
+			[]string{"result"},
+		),
+
+		configLastReload: prometheus.NewGauge(prometheus.GaugeOpts{
+			Name: "geoblock_config_last_reload_timestamp",
+			Help: "Unix timestamp of last successful config reload",
+		}),
+
+		dbEntries: prometheus.NewGaugeVec(
+			prometheus.GaugeOpts{
+				Name: "geoblock_db_entries",
+				Help: "Number of entries in IP database",
+			},
+			[]string{"database", "ip_version"},
+		),
+
+		dbLastUpdate: prometheus.NewGauge(prometheus.GaugeOpts{
+			Name: "geoblock_db_last_update_timestamp",
+			Help: "Unix timestamp of last successful database update",
+		}),
+
+		dbLoadDuration: prometheus.NewGauge(prometheus.GaugeOpts{
+			Name: "geoblock_db_load_duration_seconds",
+			Help: "Duration of last database load in seconds",
+		}),
+	}
+
+	c.registry.MustRegister(
+		c.versionInfo,
+		c.startTime,
+		c.requestsTotal,
+		c.requestsByCountry,
+		c.requestsByMethod,
+		c.requestDuration,
+		c.ruleMatches,
+		c.defaultPolicyMatches,
+		c.configRulesTotal,
+		c.configReloadTotal,
+		c.configLastReload,
+		c.dbEntries,
+		c.dbLastUpdate,
+		c.dbLoadDuration,
+	)
+
+	c.versionInfo.WithLabelValues(version.Version, version.Commit).Set(1)
+	c.startTime.Set(float64(time.Now().Unix()))
+
+	return c
 }
 
 // RecordRequest records comprehensive metrics for a request.
 func (c *PrometheusCollector) RecordRequest(r RequestRecord) {
-	requestsTotal.WithLabelValues(r.Status).Inc()
-	requestDuration.WithLabelValues(r.Status).Observe(r.Duration.Seconds())
+	c.requestsTotal.WithLabelValues(r.Status).Inc()
+	c.requestDuration.WithLabelValues(r.Status).Observe(r.Duration.Seconds())
 
 	if r.Country != "" {
-		requestsByCountry.WithLabelValues(r.Country).Inc()
+		c.requestsByCountry.WithLabelValues(r.Country).Inc()
 	}
 	if r.Method != "" {
-		requestsByMethod.WithLabelValues(r.Method).Inc()
+		c.requestsByMethod.WithLabelValues(r.Method).Inc()
 	}
 
 	if r.IsDefaultPolicy {
-		defaultPolicyMatches.WithLabelValues(r.Action).Inc()
+		c.defaultPolicyMatches.WithLabelValues(r.Action).Inc()
 	} else {
-		ruleMatches.WithLabelValues(
+		c.ruleMatches.WithLabelValues(
 			strconv.Itoa(r.RuleIndex), r.Action,
 		).Inc()
 	}
@@ -221,18 +220,18 @@ func (c *PrometheusCollector) RecordRequest(r RequestRecord) {
 
 // RecordInvalidRequest records metrics for an invalid request.
 func (c *PrometheusCollector) RecordInvalidRequest(duration time.Duration) {
-	requestsTotal.WithLabelValues(StatusInvalid).Inc()
-	requestDuration.WithLabelValues(StatusInvalid).Observe(duration.Seconds())
+	c.requestsTotal.WithLabelValues(StatusInvalid).Inc()
+	c.requestDuration.WithLabelValues(StatusInvalid).Observe(duration.Seconds())
 }
 
 // RecordConfigReload records a config reload attempt.
 func (c *PrometheusCollector) RecordConfigReload(success bool, rulesCount int) {
 	if success {
-		configReloadTotal.WithLabelValues("success").Inc()
-		configLastReload.Set(float64(time.Now().Unix()))
-		configRulesTotal.Set(float64(rulesCount))
+		c.configReloadTotal.WithLabelValues("success").Inc()
+		c.configLastReload.Set(float64(time.Now().Unix()))
+		c.configRulesTotal.Set(float64(rulesCount))
 	} else {
-		configReloadTotal.WithLabelValues("failure").Inc()
+		c.configReloadTotal.WithLabelValues("failure").Inc()
 	}
 }
 
@@ -242,32 +241,14 @@ func (c *PrometheusCollector) RecordDBUpdate(
 	duration time.Duration,
 ) {
 	for key, count := range entries {
-		dbEntries.WithLabelValues(key.DBType, key.IPVersion).Set(float64(count))
+		c.dbEntries.WithLabelValues(key.DBType, key.IPVersion).Set(float64(count))
 	}
 
-	dbLastUpdate.Set(float64(time.Now().Unix()))
-	dbLoadDuration.Set(duration.Seconds())
+	c.dbLastUpdate.Set(float64(time.Now().Unix()))
+	c.dbLoadDuration.Set(duration.Seconds())
 }
 
 // Handler returns an HTTP handler for the metrics endpoint.
-func Handler() http.Handler {
-	return promhttp.HandlerFor(registry, promhttp.HandlerOpts{})
-}
-
-// Reset resets all metrics. This is intended for use in tests only.
-func Reset() {
-	requestsTotal.Reset()
-	requestsByCountry.Reset()
-	requestsByMethod.Reset()
-	requestDuration.Reset()
-	ruleMatches.Reset()
-	defaultPolicyMatches.Reset()
-	configRulesTotal.Set(0)
-	configReloadTotal.Reset()
-	configLastReload.Set(0)
-	dbEntries.Reset()
-	dbLastUpdate.Set(0)
-	dbLoadDuration.Set(0)
-	versionInfo.Reset()
-	versionInfo.WithLabelValues(version.Version, version.Commit).Set(1)
+func (c *PrometheusCollector) Handler() http.Handler {
+	return promhttp.HandlerFor(c.registry, promhttp.HandlerOpts{})
 }
