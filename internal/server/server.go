@@ -56,16 +56,19 @@ func statusString(allowed bool) string {
 	return requestStatusDenied
 }
 
-// localNetworkCIDRs contains the list of local networks CIDRs.
+// localNetworkCIDRs contains the list of local network CIDRs.
 var localNetworkCIDRs = []netip.Prefix{
+	// IPv4
 	netip.MustParsePrefix("10.0.0.0/8"),     // (RFC 1918) Class A private
 	netip.MustParsePrefix("172.16.0.0/12"),  // (RFC 1918) Class B private
 	netip.MustParsePrefix("192.168.0.0/16"), // (RFC 1918) Class C private
 	netip.MustParsePrefix("127.0.0.0/8"),    // (RFC 1122) Loopback
-	netip.MustParsePrefix("169.254.0.0/16"), // (RFC 3927) Link‑local
-	netip.MustParsePrefix("::1/128"),        // (RFC 4291) IPv6 loopback
-	netip.MustParsePrefix("fc00::/7"),       // (RFC 4193) IPv6 unique local
-	netip.MustParsePrefix("fe80::/10"),      // (RFC 4291) IPv6 link‑local
+	netip.MustParsePrefix("169.254.0.0/16"), // (RFC 3927) Link-local
+
+	// IPv6
+	netip.MustParsePrefix("::1/128"),   // (RFC 4291) Loopback
+	netip.MustParsePrefix("fc00::/7"),  // (RFC 4193) Unique local
+	netip.MustParsePrefix("fe80::/10"), // (RFC 4291) Link-local
 }
 
 // isLocalIP checks if the given IP address is a local IP address.

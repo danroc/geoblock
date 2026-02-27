@@ -78,6 +78,7 @@ func envOrDefault(key, fallback string) string {
 	return fallback
 }
 
+// appOptions holds the application configuration from environment variables.
 type appOptions struct {
 	configPath string
 	serverPort string
@@ -160,8 +161,8 @@ type configUpdater interface {
 type configReloader struct {
 	path     string
 	prevStat os.FileInfo
-	// Swappable for testing: stat retrieves file metadata for the config file, and load
-	// parses and returns the configuration from the given path.
+
+	// Swappable for testing
 	stat func(string) (os.FileInfo, error)
 	load func(string) (*config.Configuration, error)
 }

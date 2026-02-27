@@ -9,20 +9,20 @@ import (
 	"github.com/danroc/geoblock/internal/itree"
 )
 
-// Length of the CSV records (number of fields)
+// CSV record lengths (number of fields per record).
 const (
 	asnRecordLength     = 4
 	countryRecordLength = 3
 )
 
-// ErrRecordLength is returned when a CSV record has an unexpected length.
+// AS0 represents the default ASN value for unknown addresses.
+const AS0 uint32 = 0
+
+// Sentinel errors for record parsing.
 var (
 	ErrRecordLength = errors.New("invalid record length")
 	ErrInvalidASN   = errors.New("invalid ASN")
 )
-
-// AS0 represents the default ASN value for unknown addresses.
-const AS0 uint32 = 0
 
 // DBRecord contains the information of a database record.
 type DBRecord struct {

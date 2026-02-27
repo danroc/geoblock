@@ -72,6 +72,7 @@ type DBSourceSpec struct {
 
 // defaultSources defines all database sources to fetch during updates.
 var defaultSources = []DBSourceSpec{
+	// Country databases
 	{
 		Source: DBSource{DBTypeCountry, IPVersion4},
 		URL:    CountryIPv4URL,
@@ -82,6 +83,8 @@ var defaultSources = []DBSourceSpec{
 		URL:    CountryIPv6URL,
 		Parser: ParseCountryRecord,
 	},
+
+	// ASN databases
 	{
 		Source: DBSource{DBTypeASN, IPVersion4},
 		URL:    ASNIPv4URL,
