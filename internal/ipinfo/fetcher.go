@@ -16,10 +16,8 @@ const (
 	ASNIPv6URL     = "https://cdn.jsdelivr.net/npm/@ip-location-db/geolite2-asn/geolite2-asn-ipv6.csv"
 )
 
-const (
-	// The timeout for the HTTP client.
-	clientTimeout = 60 * time.Second
-)
+// clientTimeout is the timeout for the HTTP client.
+const clientTimeout = 60 * time.Second
 
 // Fetcher fetches CSV records from a URL.
 type Fetcher interface {

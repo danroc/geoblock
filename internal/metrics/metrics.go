@@ -37,8 +37,13 @@ const (
 	StatusInvalid = "invalid"
 )
 
-// requestDurationBuckets are the bucket boundaries for request duration histogram.
-// Buckets range from 1ms to 1s to capture both fast requests and occasional slow ones.
+// Result label values for the config reload counter.
+const (
+	ResultSuccess = "success"
+	ResultFailure = "failure"
+)
+
+// requestDurationBuckets defines the histogram bucket boundaries for request duration.
 var requestDurationBuckets = []float64{
 	0.001,
 	0.005,
@@ -53,21 +58,31 @@ var requestDurationBuckets = []float64{
 
 // PrometheusCollector implements the Collector interface using Prometheus metrics.
 type PrometheusCollector struct {
-	registry             *prometheus.Registry
-	versionInfo          *prometheus.GaugeVec
-	startTime            prometheus.Gauge
-	requestsTotal        *prometheus.CounterVec
-	requestsByCountry    *prometheus.CounterVec
-	requestsByMethod     *prometheus.CounterVec
-	requestDuration      *prometheus.HistogramVec
+	registry *prometheus.Registry
+
+	// Process info
+	versionInfo *prometheus.GaugeVec
+	startTime   prometheus.Gauge
+
+	// Request metrics
+	requestsTotal     *prometheus.CounterVec
+	requestsByCountry *prometheus.CounterVec
+	requestsByMethod  *prometheus.CounterVec
+	requestDuration   *prometheus.HistogramVec
+
+	// Rule matching
 	ruleMatches          *prometheus.CounterVec
 	defaultPolicyMatches *prometheus.CounterVec
-	configRulesTotal     prometheus.Gauge
-	configReloadTotal    *prometheus.CounterVec
-	configLastReload     prometheus.Gauge
-	dbEntries            *prometheus.GaugeVec
-	dbLastUpdate         prometheus.Gauge
-	dbLoadDuration       prometheus.Gauge
+
+	// Configuration
+	configRulesTotal  prometheus.Gauge
+	configReloadTotal *prometheus.CounterVec
+	configLastReload  prometheus.Gauge
+
+	// IP database
+	dbEntries      *prometheus.GaugeVec
+	dbLastUpdate   prometheus.Gauge
+	dbLoadDuration prometheus.Gauge
 }
 
 // NewCollector creates a new PrometheusCollector with its own registry.
@@ -75,6 +90,7 @@ func NewCollector() *PrometheusCollector {
 	c := &PrometheusCollector{
 		registry: prometheus.NewRegistry(),
 
+		// Process info
 		versionInfo: prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Name: "geoblock_version_info",
@@ -82,12 +98,12 @@ func NewCollector() *PrometheusCollector {
 			},
 			[]string{"version", "commit"},
 		),
-
 		startTime: prometheus.NewGauge(prometheus.GaugeOpts{
 			Name: "geoblock_start_time_seconds",
 			Help: "Unix timestamp of when the process started",
 		}),
 
+		// Request metrics
 		requestsTotal: prometheus.NewCounterVec(
 			prometheus.CounterOpts{
 				Name: "geoblock_requests_total",
@@ -95,7 +111,6 @@ func NewCollector() *PrometheusCollector {
 			},
 			[]string{"status"},
 		),
-
 		requestsByCountry: prometheus.NewCounterVec(
 			prometheus.CounterOpts{
 				Name: "geoblock_requests_by_country_total",
@@ -103,7 +118,6 @@ func NewCollector() *PrometheusCollector {
 			},
 			[]string{"country"},
 		),
-
 		requestsByMethod: prometheus.NewCounterVec(
 			prometheus.CounterOpts{
 				Name: "geoblock_requests_by_method_total",
@@ -111,7 +125,6 @@ func NewCollector() *PrometheusCollector {
 			},
 			[]string{"method"},
 		),
-
 		requestDuration: prometheus.NewHistogramVec(
 			prometheus.HistogramOpts{
 				Name:    "geoblock_request_duration_seconds",
@@ -121,6 +134,7 @@ func NewCollector() *PrometheusCollector {
 			[]string{"status"},
 		),
 
+		// Rule matching
 		ruleMatches: prometheus.NewCounterVec(
 			prometheus.CounterOpts{
 				Name: "geoblock_rule_matches_total",
@@ -128,7 +142,6 @@ func NewCollector() *PrometheusCollector {
 			},
 			[]string{"rule_index", "action"},
 		),
-
 		defaultPolicyMatches: prometheus.NewCounterVec(
 			prometheus.CounterOpts{
 				Name: "geoblock_default_policy_matches_total",
@@ -137,11 +150,11 @@ func NewCollector() *PrometheusCollector {
 			[]string{"action"},
 		),
 
+		// Configuration
 		configRulesTotal: prometheus.NewGauge(prometheus.GaugeOpts{
 			Name: "geoblock_config_rules_total",
 			Help: "Number of configured access control rules",
 		}),
-
 		configReloadTotal: prometheus.NewCounterVec(
 			prometheus.CounterOpts{
 				Name: "geoblock_config_reload_total",
@@ -149,12 +162,12 @@ func NewCollector() *PrometheusCollector {
 			},
 			[]string{"result"},
 		),
-
 		configLastReload: prometheus.NewGauge(prometheus.GaugeOpts{
 			Name: "geoblock_config_last_reload_timestamp",
 			Help: "Unix timestamp of last successful config reload",
 		}),
 
+		// IP database
 		dbEntries: prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Name: "geoblock_db_entries",
@@ -162,12 +175,10 @@ func NewCollector() *PrometheusCollector {
 			},
 			[]string{"database", "ip_version"},
 		),
-
 		dbLastUpdate: prometheus.NewGauge(prometheus.GaugeOpts{
 			Name: "geoblock_db_last_update_timestamp",
 			Help: "Unix timestamp of last successful database update",
 		}),
-
 		dbLoadDuration: prometheus.NewGauge(prometheus.GaugeOpts{
 			Name: "geoblock_db_load_duration_seconds",
 			Help: "Duration of last database load in seconds",
@@ -175,17 +186,26 @@ func NewCollector() *PrometheusCollector {
 	}
 
 	c.registry.MustRegister(
+		// Process info
 		c.versionInfo,
 		c.startTime,
+
+		// Request metrics
 		c.requestsTotal,
 		c.requestsByCountry,
 		c.requestsByMethod,
 		c.requestDuration,
+
+		// Rule matching
 		c.ruleMatches,
 		c.defaultPolicyMatches,
+
+		// Configuration
 		c.configRulesTotal,
 		c.configReloadTotal,
 		c.configLastReload,
+
+		// IP database
 		c.dbEntries,
 		c.dbLastUpdate,
 		c.dbLoadDuration,
@@ -227,11 +247,11 @@ func (c *PrometheusCollector) RecordInvalidRequest(duration time.Duration) {
 // RecordConfigReload records a config reload attempt.
 func (c *PrometheusCollector) RecordConfigReload(success bool, rulesCount int) {
 	if success {
-		c.configReloadTotal.WithLabelValues("success").Inc()
+		c.configReloadTotal.WithLabelValues(ResultSuccess).Inc()
 		c.configLastReload.Set(float64(time.Now().Unix()))
 		c.configRulesTotal.Set(float64(rulesCount))
 	} else {
-		c.configReloadTotal.WithLabelValues("failure").Inc()
+		c.configReloadTotal.WithLabelValues(ResultFailure).Inc()
 	}
 }
 
