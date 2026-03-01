@@ -54,7 +54,8 @@ Run `make format` before committing to ensure consistent formatting.
 
 ## Release Process
 
-Releases use semantic versioning with a `v` prefix (e.g. `v1.2.3`).
+Releases use semantic versioning. Git tags use a `v` prefix (e.g. `v1.2.3`), but release
+titles omit it (e.g. `1.2.3`).
 
 ### Changelog
 
@@ -70,4 +71,5 @@ Releases use semantic versioning with a `v` prefix (e.g. `v1.2.3`).
 3. `git commit -m "release: X.Y.Z"`
 4. Push, create PR, merge
 5. `git tag vX.Y.Z && git push origin vX.Y.Z`
-6. CI builds and pushes the Docker image to `ghcr.io/danroc/geoblock:X.Y.Z`
+6. `gh release create vX.Y.Z --title X.Y.Z`
+7. CI builds and pushes the Docker image to `ghcr.io/danroc/geoblock:X.Y.Z`

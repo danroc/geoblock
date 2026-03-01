@@ -91,7 +91,7 @@ make format             # Run before committing
 
 ## Release Process
 
-- Semantic versioning with `v` prefix
+- Semantic versioning; git tags use `v` prefix, release titles omit it
 - `Version` and `Commit` set via ldflags in Makefile (`internal/version` package)
 - Version from git tag (or `dev`); commit from `git describe --always --dirty`
 
@@ -109,7 +109,8 @@ make format             # Run before committing
 3. `git commit -m "release: X.Y.Z"`
 4. Push, create PR, merge
 5. `git tag vX.Y.Z && git push origin vX.Y.Z`
-6. CI builds and pushes to `ghcr.io/danroc/geoblock:X.Y.Z` (no `v` prefix)
+6. `gh release create vX.Y.Z --title X.Y.Z`
+7. CI builds and pushes to `ghcr.io/danroc/geoblock:X.Y.Z` (no `v` prefix)
 
 ### CI Workflows
 
