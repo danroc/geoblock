@@ -6,6 +6,9 @@ Forward authentication service for geoblocking. Restricts access based on countr
 IP network, domain, and HTTP method. Integrates with Traefik, NGINX, and Caddy as a
 forward auth middleware.
 
+Useful for reducing exposure to automated scanners that probe internet-facing services
+for vulnerabilities, exposed files, and default credentials.
+
 ## Contents <!-- omit from toc -->
 
 - [Quick Start](#quick-start)
