@@ -440,6 +440,8 @@ func TestStopServer(t *testing.T) {
 func TestRunEvery(t *testing.T) {
 	t.Run("executes function on each tick", func(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
 		callCount := 0
 		wantCallCount := 3
 		done := make(chan struct{})
