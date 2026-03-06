@@ -56,5 +56,9 @@ func (f *HTTPFetcher) Fetch(ctx context.Context, url string) ([][]string, error)
 		return nil, fmt.Errorf("unexpected status: %s", resp.Status)
 	}
 
-	return csv.NewReader(resp.Body).ReadAll()
+	records, err := csv.NewReader(resp.Body).ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("read response: %w", err)
+	}
+	return records, nil
 }
