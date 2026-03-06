@@ -3,6 +3,7 @@
 package config
 
 import (
+	"fmt"
 	"io"
 	"regexp"
 
@@ -51,7 +52,7 @@ func read(data []byte) (*Configuration, error) {
 func ReadConfig(reader io.Reader) (*Configuration, error) {
 	data, err := io.ReadAll(reader)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("read config: %w", err)
 	}
 	return read(data)
 }

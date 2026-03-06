@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"net/netip"
 )
 
@@ -18,7 +19,7 @@ func (c *CIDR) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 	prefix, err := netip.ParsePrefix(network)
 	if err != nil {
-		return err
+		return fmt.Errorf("parse CIDR: %w", err)
 	}
 
 	c.Prefix = prefix

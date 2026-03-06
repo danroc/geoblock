@@ -3,6 +3,7 @@ package ipinfo
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/netip"
 	"strconv"
 
@@ -79,12 +80,12 @@ func (l *Loader) Load(
 func parseIPRange(record []string) (netip.Addr, netip.Addr, error) {
 	startIP, err := netip.ParseAddr(record[0])
 	if err != nil {
-		return netip.Addr{}, netip.Addr{}, err
+		return netip.Addr{}, netip.Addr{}, fmt.Errorf("parse start IP: %w", err)
 	}
 
 	endIP, err := netip.ParseAddr(record[1])
 	if err != nil {
-		return netip.Addr{}, netip.Addr{}, err
+		return netip.Addr{}, netip.Addr{}, fmt.Errorf("parse end IP: %w", err)
 	}
 
 	return startIP, endIP, nil
