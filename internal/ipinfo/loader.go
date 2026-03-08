@@ -33,7 +33,7 @@ type DBRecord struct {
 }
 
 // ParserFunc is a function that parses a CSV record into a database record.
-type ParserFunc func([]string) (*DBRecord, error)
+type ParserFunc func([]string) (DBRecord, error)
 
 // Loader loads database records from a source into an interval tree.
 type Loader struct {
@@ -92,17 +92,17 @@ func parseIPRange(record []string) (netip.Addr, netip.Addr, error) {
 }
 
 // ParseCountryRecord parses a country database record.
-func ParseCountryRecord(record []string) (*DBRecord, error) {
+func ParseCountryRecord(record []string) (DBRecord, error) {
 	if len(record) != countryRecordLength {
-		return nil, ErrRecordLength
+		return DBRecord{}, ErrRecordLength
 	}
 
 	startIP, endIP, err := parseIPRange(record)
 	if err != nil {
-		return nil, err
+		return DBRecord{}, err
 	}
 
-	return &DBRecord{
+	return DBRecord{
 		StartIP: startIP,
 		EndIP:   endIP,
 		Resolution: Resolution{
@@ -112,22 +112,22 @@ func ParseCountryRecord(record []string) (*DBRecord, error) {
 }
 
 // ParseASNRecord parses an ASN database record.
-func ParseASNRecord(record []string) (*DBRecord, error) {
+func ParseASNRecord(record []string) (DBRecord, error) {
 	if len(record) != asnRecordLength {
-		return nil, ErrRecordLength
+		return DBRecord{}, ErrRecordLength
 	}
 
 	startIP, endIP, err := parseIPRange(record)
 	if err != nil {
-		return nil, err
+		return DBRecord{}, err
 	}
 
 	asn, err := strconv.ParseUint(record[2], 10, 32)
 	if err != nil {
-		return nil, ErrInvalidASN
+		return DBRecord{}, ErrInvalidASN
 	}
 
-	return &DBRecord{
+	return DBRecord{
 		StartIP: startIP,
 		EndIP:   endIP,
 		Resolution: Resolution{
