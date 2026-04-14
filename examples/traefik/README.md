@@ -1,5 +1,10 @@
 # Traefik Example
 
+## Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/)
+- [Docker Compose](https://docs.docker.com/compose/install/)
+
 ## Deploying
 
 Run `docker compose up` to start the following services defined in the
@@ -10,8 +15,15 @@ Run `docker compose up` to start the following services defined in the
 - `geoblock`: Geoblock service
 - `traefik`: Reverse proxy
 
-This example will use the configuration defined in the
-[`config.yaml`](./config.yaml) file.
+This example will use the configuration defined in the [`config.yaml`](./config.yaml)
+file.
+
+## How it works
+
+The rules in [`config.yaml`](./config.yaml) are configured to:
+
+- **Allow** requests where the host is `whoami-1.local`
+- **Deny** requests where the host is `whoami-2.local`
 
 ## Testing
 
