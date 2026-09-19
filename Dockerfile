@@ -2,7 +2,7 @@
 # Build
 # --------------------------------------------------------------------------------------
 
-FROM --platform=$BUILDPLATFORM golang:1.27.1@sha256:03fd17ca31f26e3c8d5b83ae0606044133c59e0788784dd6f371da59cdb3b46f AS builder
+FROM --platform=$BUILDPLATFORM golang:1.27.1@sha256:3680233e3204827fbdc66088528ae6d4b3d034f51d03a99d454f6de034888244 AS builder
 
 ARG TARGETOS
 ARG TARGETARCH
