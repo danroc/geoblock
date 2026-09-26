@@ -466,14 +466,14 @@ func assertCounterValue(
 
 func BenchmarkRecordRequest(b *testing.B) {
 	c := NewCollector()
-	for range b.N {
+	for b.Loop() {
 		record(c, StatusAllowed)
 	}
 }
 
 func BenchmarkRecordInvalidRequest(b *testing.B) {
 	c := NewCollector()
-	for range b.N {
+	for b.Loop() {
 		c.RecordInvalidRequest(time.Millisecond)
 	}
 }
