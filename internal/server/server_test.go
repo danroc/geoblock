@@ -50,7 +50,7 @@ func parseCSVString(s string) [][]string {
 		return nil
 	}
 	var records [][]string
-	for _, line := range strings.Split(strings.TrimRight(s, "\n"), "\n") {
+	for line := range strings.SplitSeq(strings.TrimRight(s, "\n"), "\n") {
 		records = append(records, strings.Split(line, ","))
 	}
 	return records
