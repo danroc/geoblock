@@ -30,7 +30,7 @@ make test               # Unit + e2e + integration tests
 make test-unit          # Unit tests with coverage
 make test-e2e           # Dockerized e2e tests (tests/e2e/)
 make test-integration   # Integration tests with reverse proxies
-make lint               # All linters (tidy + format + golangci-lint)
+make lint               # All linters (tidy + format + golangci-lint + govulncheck)
 make format             # Run before committing
 ```
 
@@ -117,3 +117,4 @@ make format             # Run before committing
 - `build-test-lint.yml`: On push/PR to main - build, lint, test (unit + e2e + integration), check clean working dir
 - `publish-docker.yml`: On push to main and `v*.*.*` tags - multi-arch Docker to GHCR (semver + `develop` tags)
 - `nightly-tests.yml`: Daily at 4 AM UTC - unit, e2e, and integration tests
+- `nightly-update.yml`: Daily at 3 AM UTC - dependency update
