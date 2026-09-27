@@ -5,6 +5,7 @@ package config
 import (
 	"fmt"
 	"io"
+	"reflect"
 	"regexp"
 
 	"github.com/go-playground/validator/v10"
@@ -20,13 +21,13 @@ var domainNameRegex = regexp.MustCompile(
 // isDomainNameField checks if the value of the given field is a valid domain name. It
 // also allows labels to be a single * wildcard.
 func isDomainNameField(field validator.FieldLevel) bool {
-	domain, ok := field.Field().Interface().(string)
+	domain, ok := reflect.TypeAssert[string](field.Field())
 	return ok && domainNameRegex.MatchString(domain)
 }
 
 // isCIDRField checks if the value of the given field is a valid CIDR.
 func isCIDRField(field validator.FieldLevel) bool {
-	_, ok := field.Field().Interface().(CIDR)
+	_, ok := reflect.TypeAssert[CIDR](field.Field())
 	return ok
 }
 

@@ -8,7 +8,11 @@ linters:
   enable:
     - revive
     - gosec
+    - modernize
   settings:
+    modernize:
+      disable:
+        - omitzero
     revive:
       severity: warning
       confidence: 0.8
