@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.2] - 2026-10-14
+
+### Changed
+
+- **Note:** This release contains only internal refactoring and dependency updates.
+
 ## [0.6.1] - 2026-04-13
 
 ### Changed
@@ -353,7 +359,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add CIDR unmarshalling and validation
 - Add autonomous systems to configuration
 
-[Unreleased]: https://github.com/danroc/geoblock/compare/v0.6.1...HEAD
+[Unreleased]: https://github.com/danroc/geoblock/compare/v0.6.2...HEAD
+[0.6.2]: https://github.com/danroc/geoblock/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/danroc/geoblock/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/danroc/geoblock/compare/v0.5.9...v0.6.0
 [0.5.9]: https://github.com/danroc/geoblock/compare/v0.5.8...v0.5.9
