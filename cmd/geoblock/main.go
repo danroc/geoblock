@@ -132,15 +132,27 @@ type updater interface {
 	Update(ctx context.Context) error
 }
 
-// autoUpdate updates the databases at regular intervals.
+// autoUpdate updates the databases at regular intervals, retrying transient
+// failures with backoff. The previously loaded databases keep serving while an
+// update is in progress or failing.
 func autoUpdate(ctx context.Context, resolver updater) {
 	runEvery(ctx, autoUpdateInterval, func() {
-		if err := resolver.Update(ctx); err != nil {
+		if err := retryWithBackoff(
+			ctx,
+			func() error { return resolver.Update(ctx) },
+			warnRetry,
+		); err != nil {
 			log.Error().Err(err).Msg("Cannot update databases")
 		} else {
 			log.Info().Msg("Databases updated")
 		}
 	})
+}
+
+// warnRetry logs a failed database update attempt and the backoff delay before
+// the next retry.
+func warnRetry(err error, delay time.Duration) {
+	log.Warn().Err(err).Dur("delay", delay).Msg("Cannot update databases, retrying")
 }
 
 // loadConfig reads the configuration file from the given path and returns it.
@@ -350,7 +362,12 @@ func main() {
 			cacheLogger{},
 		),
 	)
-	if err := resolver.Update(ctx); err != nil {
+
+	if err := retryWithBackoff(
+		ctx,
+		func() error { return resolver.Update(ctx) },
+		warnRetry,
+	); err != nil {
 		log.Fatal().Err(err).Msg("Cannot initialize database")
 	}
 
