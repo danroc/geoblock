@@ -70,11 +70,18 @@ run_tests_for_proxy() {
     teardown "${proxy}"
 
     echo ":: Starting ${proxy} stack..."
-    compose "${proxy}" up -d
+    if ! compose "${proxy}" up -d; then
+        echo ":: Error: ${proxy} stack failed to start"
+        echo ":: Dumping logs for debugging..."
+        compose "${proxy}" logs || true
+        teardown "${proxy}"
+        TESTS_FAILED=$((TESTS_FAILED + 1))
+        return
+    fi
 
     if ! wait_for_healthy; then
         echo ":: Dumping logs for debugging..."
-        compose "${proxy}" logs
+        compose "${proxy}" logs || true
         teardown "${proxy}"
         TESTS_FAILED=$((TESTS_FAILED + 1))
         return
