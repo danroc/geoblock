@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Retry database updates with exponential backoff (startup and daily refresh) to survive transient CDN outages
+- Dump container logs when the integration test stack fails to start
+
 ## [0.6.2] - 2026-10-14
 
 ### Changed
