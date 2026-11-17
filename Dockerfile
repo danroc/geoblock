@@ -40,7 +40,7 @@ EXPOSE 8080
 HEALTHCHECK \
     --interval=10s \
     --timeout=10s \
-    --start-period=30s \
+    --start-period=60s \
     --start-interval=5s \
     --retries=3 \
     CMD wget --spider --no-verbose --tries=1 http://localhost:8080/v1/health || exit 1

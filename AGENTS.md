@@ -40,7 +40,7 @@ make format             # Run before committing
 - Use `atomic.Pointer[T]` for concurrent reads/writes (see `rules.Engine.config`, `ipinfo.Resolver.db`)
 - YAML via `goccy/go-yaml`; validation tags like `validate:"required,oneof=allow deny"` (see `config/schema.go`)
 - Custom types implement `UnmarshalYAML` (e.g., `config.CIDR` wraps `netip.Prefix`)
-- Use `_test` package suffix; table-driven tests with `name`, `config`, `query`, `want` fields
+- Prefer `_test` package suffix (same package only to test unexported code); table-driven tests with `name`, `config`, `query`, `want` fields
 - Return errors, don't panic; use `#nosec G304` for justified gosec exceptions
 - Structured logging: `log.Error().Err(err).Str("path", path).Msg(...)`
 
@@ -87,7 +87,7 @@ make format             # Run before committing
 
 1. Update URLs in `internal/ipinfo/fetcher.go` constants
 2. Adjust parser functions if CSV format changes
-3. Test with `make run` (auto-downloads on startup)
+3. Test with `GEOBLOCK_CACHE_DIR= make run` (empty disables the 12h cache, forcing a download)
 
 ## Release Process
 
@@ -114,7 +114,7 @@ make format             # Run before committing
 
 ### CI Workflows
 
-- `build-test-lint.yml`: On push/PR to main - build, lint, test (unit + e2e + integration), check clean working dir
+- `build-test-lint.yml`: On push/PR to main - build, lint, shellcheck, test (unit + e2e + integration), check clean working dir
 - `publish-docker.yml`: On push to main and `v*.*.*` tags - multi-arch Docker to GHCR (semver + `develop` tags)
 - `nightly-tests.yml`: Daily at 4 AM UTC - unit, e2e, and integration tests
 - `nightly-update.yml`: Daily at 3 AM UTC - dependency update
